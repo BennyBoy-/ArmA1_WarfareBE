@@ -1,0 +1,72 @@
+;Last modified 5/31/8
+;*****************************************************************************************
+;Description: Creates an HQ construction site.
+;*****************************************************************************************
+
+_type = _this Select 0
+_side = _this Select 1
+_position = _this Select 2
+_direction = _this Select 3
+
+_commanderAI = false
+if (Count _this > 4) then {_commanderAI = _this Select 4};
+
+_HQ = Call Compile Format["%1Base",Str _side]
+_MHQ = Call Compile Format["%1MHQ",Str _side]
+
+if (IsNull _MHQ) then {Goto "UndeployHQ"};
+if (GetDammage _MHQ >= 1) then {Exit};
+
+#DeployMHQ
+
+	if (!_commanderAI) then {_position = GetPos _MHQ;_direction = GetDir _MHQ + 180};
+
+	; exe remove killed mhq handler
+	_MHQ removeAllEventHandlers "killed"
+	DeleteVehicle _MHQ
+
+	_HQName = Call Compile Format["%1StructureNames Select %1HEADQUARTERSTYPE",Str _side]
+	_HQ = _HQName CreateVehicle _position
+	_HQ SetDir _direction
+
+	_HQ SetVehicleInit Format["[this,%1,%2] ExecVM ""Client\Init\Init_BaseStructure.sqf""",_type,_direction]
+	ProcessInitCommands
+
+	_HQ AddEventHandler ["hit",{_this Call StructureDamaged}];
+	_HQ AddEventHandler ["killed",{_this Call StructureDestroyed}];
+
+	[_side,CMDSIDEMESSAGE,MSGMHQDEPLOYED] Exec "Server\Server_CommandToSide.sqs"
+
+	Call Compile Format["%1MHQ = ObjNull;%1Base = _HQ;%1MHQDeployed = true",Str _side]
+	Call Compile Format["PublicVariable ""%1MHQ"";PublicVariable ""%1Base"";PublicVariable ""%1MHQDeployed""",Str _side]
+	Exit
+
+#UndeployHQ
+
+	;If it was not deployed then this cannot be done.
+	_deployed = Call Compile Format["%1MHQDeployed",Str _side]
+	if (!_deployed) then {Exit};
+
+	;HQ must still be intact to undeploy it.
+	if (IsNull _HQ) then {Exit};
+	if (GetDammage _HQ >= 1) then {Exit};
+
+	_position = GetPos _HQ
+	_direction = GetDir _HQ + 180
+	DeleteVehicle _HQ
+
+	_HQName = "BMP2_MHQ"
+	if (_side == West) then {_HQName = "M113_MHQ"};
+
+	_MHQ = _HQName CreateVehicle _position
+	_MHQ SetDir _direction
+	; exe add killed mhq handler
+	_MHQ AddEventHandler ["killed", {[_side] ExecVM "Server\Functions\Server_addKilledMHQFunc.sqf"}]
+	
+	Call Compile Format["%1MHQ = _MHQ;%1Base = _MHQ;%1MHQDeployed = false",Str _side]
+	Call Compile Format["PublicVariable ""%1MHQ"";PublicVariable ""%1Base"";PublicVariable ""%1MHQDeployed""",Str _side]
+
+	[_side,CMDSIDEMESSAGE,MSGHQMOBILIZED] Exec "Server\Server_CommandToSide.sqs"
+
+;*****************************************************************************************
+;3/26/7 MM - Created file.

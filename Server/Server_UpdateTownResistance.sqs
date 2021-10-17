@@ -1,0 +1,220 @@
+;Last modified 3/23/8
+;*****************************************************************************************
+;Description: This manages a town's resistance (spawning, deactivating, etc.)
+;[town] Exec "Server\Server_UpdateTownResistance.sqs"
+;*****************************************************************************************
+
+_location = _this Select 0
+_defenses = _this Select 1
+
+Goto "Init"
+
+#Update
+
+	if (_location == eastStartingLocation || _location == westStartingLocation) then {Goto "Quit"};
+	if (!_resistanceActive) then {Goto "WaitForEnemy"};
+
+	if (time - _timeInactive > RESISTANCEINACTIVETIME) then {Goto "InactivateResistance"};
+
+	_active = false
+	_count = 0
+	_total = Count _teams
+	if (_total < 1) then {Goto "Quit"};
+
+	#CheckTeam
+
+		_team = _teams Select _count
+
+		if (!(_team Call IsTeamAlive)) then {_teams Set[_count,GrpNull];_teamsAvailable Set[_count,false];DeleteGroup _team};
+
+		;If any team exists then keep script active.
+		if (_teamsAvailable Select _count) then {_active = true};
+
+		_count = _count + 1
+		if (_count < _total) then {Goto "CheckTeam"};
+
+		if (!_active) then {Goto "Quit"};
+
+#WaitForEnemy
+~3
+
+	_objects = NearestObjects[_locationCenter,[eastSoldierBaseClass,westSoldierBaseClass,"Air","Car","Motorcycle","Tank"],_detectionRange]
+	_objects = [_objects Call GetLiveUnits,200] Call GetUnitsBelowHeight
+	_enemies = (West countSide _objects) + (East countSide _objects)
+
+	if (_enemies < 1) then {Goto "Update"} else {_timeInactive = time};
+	if (_resistanceActive) then {Goto "Update"};
+
+;Create resistance stats for town.
+#CreateResistance
+
+	_resistanceActive = true
+
+	_teamCount = 0
+	_totalTeams = Count _resistanceTeamTypes
+	_teams = []
+
+	#CreateTeam
+
+		;If team was previously destroyed then do not create it.
+		if !(_teamsAvailable Select _teamCount) then {_teams = _teams + [GrpNull];Goto "CreateNextTeam"};
+
+		;Get list of units to create for team.
+		_unitTypes = Call Compile Format["Res%1Units",_resistanceTeamTypes Select _teamCount]
+
+		_leaderType = _unitTypes Select 0
+		_leaderName = _unitTypes Select 0
+		if (!(_leaderType In soldierUnits)) then {_leaderName = GSOLDIER};
+
+		_position = ([_locationPosition,10,_patrolRange] Call GetRandomPosition)
+		_team = CreateGroup Resistance
+		_leader = _team CreateUnit [_leaderName,_position,[],0,"FORM"]
+		_leader SetSkill 1
+		[_leader,_position,50] Call PlaceSafe
+		_position = GetPos _leader
+
+		_teams = _teams + [_team]
+		resistanceTeams = _teams
+		
+		
+		[_team,_location,_patrolRange,Resistance] Spawn AITownResitance;
+		
+		[_leader,Resistance] Call InitUnit
+
+		_count = 1
+		if (!(_leaderType In soldierUnits)) then {_count = 0};
+
+		_total = Count _unitTypes
+		if (_total < 2 && _leaderType In soldierUnits) then {Goto "CreateDefenses"};
+
+		#CreateUnit
+
+			_unitName = _unitTypes Select _count
+			if (!(_unitName In soldierUnits)) then {Goto "CreateVehicle"};
+
+			_unit = _team CreateUnit [_unitName,_position,[],0.2,"FORM"]
+			_unit SetSkill 1
+			[_unit,Resistance] Call InitUnit
+
+			Goto "CreateNextUnit"
+
+		#CreateVehicle
+
+			_vehicle = _unitName CreateVehicle _position
+			[_vehicle,Resistance] Call InitUnit
+
+			if (_count == 0) then {_leader MoveInDriver _vehicle;Goto "CreateGunner"};
+
+			_driver = _team CreateUnit [GSOLDIER,_position,[],0.2,"FORM"]
+			_driver SetSkill 1
+			_driver MoveInDriver _vehicle
+			[_driver,Resistance] Call InitUnit
+
+		#CreateGunner
+
+			if (_vehicle EmptyPositions "gunner" < 1) then {Goto "CreateNextUnit"};
+
+			_gunner = _team CreateUnit [GSOLDIER,_position,[],0.2,"FORM"]
+			_gunner SetSkill 1
+			_gunner MoveInGunner _vehicle
+			[_gunner,Resistance] Call InitUnit
+
+		#CreateNextUnit
+
+			_count = _count + 1
+			if (_count < _total) then {Goto "CreateUnit"};
+
+		#CreateDefenses
+
+			;Only add defenses to team 0.
+			if (_teamCount != 0) then {Goto "CreateNextTeam"};
+
+			;Get only available defenses.
+			_defenses = _defenses - [ObjNull]
+			_defenses = (_defenses Call GetUndestroyedUnits)
+			_empty = []
+			{if (_x EmptyPositions "gunner" > 0) then {_empty = _empty + [_x]};} ForEach _defenses
+
+			;Create troops & man the defenses.
+			{_unit = _team CreateUnit [GSOLDIER,_position,[],0.2,"FORM"];_unit SetSkill 1;_unit MoveInGunner _x;[_unit,Resistance] Call InitUnit} ForEach _empty
+
+		#CreateNextTeam
+
+			_teamCount = _teamCount + 1
+			if (_teamCount < _totalTeams) then {Goto "CreateTeam"};
+
+	goto "WaitForEnemy"
+
+;Make Resistance dormant.  Delete any active units.
+#InactivateResistance
+
+	_resistanceActive = false
+
+	_count = 0
+	_total = Count _teams
+
+	if (_total < 1) then {Goto "Quit"};
+
+	#InactivateTeam
+
+		_team = _teams Select _count
+		if (IsNull _team) then {_teamsAvailable Set[_count,false];Goto "InactivateNextTeam"};
+
+		;Don't delete defenses.
+		{if (Vehicle _x In _defenses) then {UnassignVehicle _x;_x Action ["EJECT",Vehicle _x]};} ForEach Units _team
+		~2
+		_vehicles = [_team,false] Call GetTeamVehicles
+		{DeleteVehicle _x} ForEach _vehicles
+		{DeleteVehicle _x} ForEach Units _team
+		DeleteGroup _team
+
+		#InactivateNextTeam
+
+			_count = _count + 1
+			if (_count < _total) then {Goto "InactivateTeam"};
+
+	;Delete any destroyed defenses.
+	_defenses = _defenses - [ObjNull]
+	_usableDefenses = _defenses Call GetUndestroyedUnits
+	{if (!(_x In _usableDefenses)) then {DeleteVehicle _x};} ForEach _defenses
+
+	_defenses = _defenses - [ObjNull]
+
+	Goto "Update"
+
+#Init
+
+	;Resistance is spawned from town's center (not town's depot).
+	_locationPosition = GetMarkerPos Format["%1CenterMarker",Str _location]
+	_locationCenter = "Logic" CreateVehicle _locationPosition
+
+	_timeInactive = time
+	_resistanceActive = false
+
+	;Get town variables.
+	_name = Str _location
+
+	_detectionRange = Call Compile Format["%1Range",_name]
+	_probability = Call Compile Format["%1Probability",_name]
+	_resistanceTeamTypes = Call Compile Format["%1ResistanceTeamTypes",_name]
+
+	_patrolRange = _detectionRange * DETECTIONTOPATROLRANGERATIO
+
+	if (Count _resistanceTeamTypes < 1) then {Goto "Quit"};
+
+	_teamsAvailable = []
+
+	;Set teams available to spawn.  If they are wiped out then element gets set false.
+	{_teamsAvailable = _teamsAvailable + [true]} ForEach _resistanceTeamTypes
+
+	;Randomize available teams.  Note that element 0 is not randomized so there is at least one team.
+	for [{_count = Count _resistanceTeamTypes - 1},{_count > 0},{_count = _count - 1}] do {if ((Random 100) > _probability) then {_teamsAvailable Set [_count,false]}};
+
+	Goto "Update"
+
+#Quit
+	
+	DeleteVehicle _locationCenter
+
+;*****************************************************************************************
+;1/31/7 MM - Created file.

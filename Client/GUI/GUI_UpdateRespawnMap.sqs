@@ -1,0 +1,143 @@
+;Last modified 3/2/8
+
+_display = _this Select 0
+
+Goto "InitMenu"
+
+#Update
+~0.1
+
+	_timeLeft = 30 - (time - _timeStarted)
+
+	if (!dialog) then {Goto "Quit"};
+	if (_timeLeft <= 0 || !respawnInProgress) then {CloseDialog 0;Goto "Quit"};
+
+	_locationBar CtrlSetText Format[Localize "STRWFRESPAWNINGAT",_name]
+	_timerBar CtrlSetText Format[Localize "STRWFRESPAWNIN",_timeLeft - (_timeLeft % 1)]
+
+
+#UpdateActions
+
+	if (mouseButtonUp == 0) then {Goto "SelectRespawn"};
+	Goto "Update"
+
+;Creates the command menu.
+#InitMenu
+
+	fastTravelInProgress = false
+
+	_locationBar = _display DisplayCtrl IDCMENUINFO
+	_timerBar = _display DisplayCtrl IDCMENUTITLE
+	_timeStarted = time
+
+	_showMessages = showMessagesOnScreen
+	showMessagesOnScreen = false
+
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+	menuButton = -1
+
+	_messageTime = 1
+
+	;Menu buttons.
+	menuExit = false
+
+	_name = Localize "STRWFBASE"
+	
+	_mobileSpawn = ""
+	if (side player == WEST) then {_mobileSpawn = "M113Ambul"} else {_mobileSpawn = "BMP2Ambul"};
+
+#RespawnSelections
+
+	_positionObject = "Logic" CreateVehicle deathLocation
+	_town = [_positionObject] Call GetClosestLocation
+
+	;Add the cc respawn system.
+	_list = [SideJoined] Call GetFactories;
+	_cclist = Call GetCommandCenters;
+	_cclist = _cclist + _list
+	
+	;adding the mobile respawn;
+	_mobileSpawnArray = [];
+	_mobileSpawnList = [];
+	_mobileSpawnArray = nearestObjects [deathLocation, ["Tank"], 700];
+	{_type = typeOf _x;if((_type == format ["%1",_mobileSpawn]) && (getDammage _x < 1)) then {_mobileSpawnList = _mobileSpawnList + [_x]};} forEach _mobileSpawnArray;
+	
+	if ((IsNull _town) and (Count _cclist < 1) and (Count _mobileSpawnList < 1)) then {CloseDialog 0;Goto "Quit"};
+	if ((_positionObject Distance _town > RESPAWNRANGE) and (Count _cclist < 1) and (Count _mobileSpawnList < 1)) then {CloseDialog 0;Goto "Quit"};
+
+	_map = _display DisplayCtrl IDCMENUIMAGE
+	CtrlMapAnimClear _map
+	_map CtrlMapAnimAdd [0,.1,GetPos _town]
+	CtrlMapAnimCommit _map
+
+	_camps = [_town,sideJoined] Call GetFriendlyCamps
+	if ((Count _camps < 1) and (Count _cclist < 1) and (Count _mobileSpawnList < 1)) then {CloseDialog 0;Goto "Quit"};
+
+	_base = Call Compile Format["%1Base",sideJoinedText]
+	_baseObject = "Logic" CreateVehicle GetPos _base
+
+	if (Call Compile Format["%1MHQDeployed",sideJoinedText]) then {Goto "CreateMarkers"};
+	if (IsNull commanderTeam) then {Goto "GetNearestBarracks"};
+
+	;If player is the commander then default respawn is by MHQ.
+	if (commanderTeam == Group player) then {Goto "CreateMarkers"};
+
+#GetNearestBarracks
+
+	;If the MHQ is not deployed then try to find the nearest barracks.
+	_type = Call Compile Format["%1StructureNames Select %1BARRACKSTYPE",sideJoinedText];
+
+	_list = []
+	{if (TypeOf _x == _type && GetDammage _x < 1) then {_list = _list + [_x]};} ForEach baseStructures;
+
+	if (Count _list > 0) then {_sorted = [_positionObject,_list] Call SortByDistance;_baseObject SetPos GetPos (_sorted Select 0)};
+
+#CreateMarkers
+	
+	_camps = _camps + _cclist + _mobileSpawnList + [_baseObject]
+	_respawnMarkers = [_camps,"TempRespawnMarker","Select","ColorGreen"] Call CreateObjectMarkers
+	{_x SetMarkerSizeLocal [2,2]} ForEach _respawnMarkers
+
+	Goto "Update"
+
+#SelectRespawn
+
+	mouseButtonUp = -1
+
+	_map = _display DisplayCtrl IDCMENUIMAGE
+	_position = _map PosScreenToWorld[mouseX,mouseY]
+	_destination = ObjNull
+	_near = 100000
+
+	{_distance = [GetPos _x,_position] Call GetDistance;if (_distance < _near) then {_near = _distance;_destination = _x}} ForEach _camps
+
+	if (_near > 500) then {Goto "Update"};
+
+	_name = Call Compile Format["%1Name",Str _town]
+	if (_destination == _baseObject) then {_name = Localize "STRWFBASE"};
+	if (_destination in _mobileSpawnList) then {_name = "Mobile Respawn"};
+	if (_destination in _cclist) then {_name = "Base"};
+
+	respawnLocation = GetPos _destination
+	_marker = "TempRespawnDestinationMarker"
+	DeleteMarkerLocal _marker 
+	CreateMarkerLocal [_marker ,GetPos _destination]
+	_marker  SetMarkerTypeLocal "Select"
+	_marker SetMarkerColorLocal "ColorYellow"
+	_marker SetMarkerSizeLocal [1.15,1.15]
+
+	Goto "Update"
+
+#Quit
+
+	DeleteVehicle _baseObject
+	DeleteVehicle _positionObject
+	DeleteMarkerLocal "TempRespawnDestinationMarker"
+	{DeleteMarkerLocal _x} ForEach _respawnMarkers
+	{DeleteMarkerLocal _x} ForEach _fastTravelMarkers
+	for [{_count = Count Waypoints player},{_count >= 0},{_count = _count - 1}] do {DeleteMarkerLocal Format["PlayerWPMarker%1",_count]};
+	showMessagesOnScreen = _showMessages
+	Exit
+
+;1/4/8 MM - Created file.

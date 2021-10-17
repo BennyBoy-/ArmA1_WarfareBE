@@ -1,0 +1,67 @@
+;Last modified 10/26/7
+;*****************************************************************************************
+;Description: Manages an AI controlled salvage vehicle.
+;*****************************************************************************************
+_side = _this Select 0
+_vehicle = _this Select 1
+
+Goto "Init"
+
+#Update
+~15
+
+	if (!Alive _driver || !CanMove _vehicle) then {Goto "Exit"};
+	if (IsNull _wreckage) then {Goto "CheckForNearbySalvage"};
+	if (_wreckage Distance _vehicle < SALVAGERRANGE) then {Goto "Update"};
+
+#CheckForNearbySalvage
+
+	;If there is no current salvage target or it is far away check for something closer.
+	_objects = NearestObjects[_vehicle,["Air","Car","Motorcycle","Tank"],SALVAGERDETECTIONRANGE]
+	_salvage = _objects Call GetDestroyedUnits
+
+	if (Count _salvage < 1) then {Goto "CheckKnownSalvage"};
+	_newWreckage = _salvage Select 0
+
+	;If nearby wreckage is closer then reassign.	
+	if (IsNull _wreckage) then {_wreckage = _newWreckage;_driver DoMove ([GetPos _wreckage,6,SALVAGERRANGE - 2] Call GetRandomPosition);Goto "CheckKnownSalvage"};
+	if (_driver Distance _wreckage > _driver Distance _newWreckage) then {_wreckage = _newWreckage;_driver DoMove ([GetPos _wreckage,6,SALVAGERRANGE - 2] Call GetRandomPosition);Goto "CheckKnownSalvage"};
+
+;If nothing neaby then check if there is something on the list of spotted salvage targets.
+#CheckKnownSalvage
+
+	_salvage = +(Call Compile Format["%1KnownSalvage",_sideText])
+	if (Count _salvage < 1) then {Goto "Update"};
+
+	;Find and assign closest as salvager's target.
+	_nearest = MAXSALVAGERTRAVELRANGE + 1
+	if (!IsNull _wreckage) then {_nearest = _driver Distance _wreckage};
+	{_distance = _x Distance _vehicle;if (_distance < _nearest) then {_nearest = _distance;_wreckage = _x};} ForEach _salvage
+
+	if (!IsNull _wreckage) then {_driver DoMove ([GetPos _wreckage,6,SALVAGERRANGE - 5] Call GetRandomPosition)};
+
+	Goto "Update"
+
+#Init
+
+	_sideText = Str _side
+
+	Call Compile Format["%1AISalvagers = %1AISalvagers + [_vehicle]",_sideText]
+	Call Compile Format["total%1AISalvagers = Count %1AISalvagers;PublicVariable ""%1AISalvagers""",_sideText]
+
+	_driver = Driver _vehicle
+	_wreckage = ObjNull
+	Goto "Update"
+
+#Exit
+
+	Call Compile Format["%1AISalvagers = %1AISalvagers - [_vehicle]",_sideText]
+	Call Compile Format["total%1AISalvagers = Count %1AISalvagers;PublicVariable ""%1AISalvagers""",_sideText]
+	[_side,CMDSIDEMESSAGE,MSGSALVAGERDESTROYED] Exec "Server\Server_CommandToSide.sqs"
+	~30
+
+	if (!IsNull _vehicle) then {_vehicle SetDammage 1};
+	if (!IsNull _driver) then {_driver SetDammage 1;DeleteGroup Group _driver};
+
+;*****************************************************************************************
+;8/25/7 MM - Created file.

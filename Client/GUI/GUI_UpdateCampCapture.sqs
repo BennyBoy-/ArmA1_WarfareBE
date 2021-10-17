@@ -1,0 +1,58 @@
+;Last modified 4/8/8
+;*****************************************************************************************
+;Description: Update progress bar on camp capture.
+;*****************************************************************************************
+
+_lastInRange = false
+
+#Update
+~1
+
+#SkipUpdateDelay
+
+	if (townCaptureProgressBarActive) then {Goto "Update"};
+
+	_camps = GetPos player NearObjects["WarfareBCamp",5]
+
+	_inRange = (!(IsNull campInRange) || barracksInRange || lightFactoryInRange || heavyFactoryInRange || aircraftFactoryInRange || airportInRange || depotInRange)
+
+	if (Count _camps < 1 && !IsNull currentCutDisplay && !_inRange) then {cutText["","PLAIN"]};
+	if (Count _camps < 1) then {Goto "Update"};
+
+	_camp = _camps Select 0
+	_sideID = Call Compile Format["%1SideID",Str _camp]
+	_timeLeft = Call Compile Format["%1SupplyValue",Str _camp]
+
+	if (_sideID == sideID && !IsNull currentCutDisplay && (!(IsNull campInRange) && !_lastInRange)) then {CutText["","PLAIN"]};
+
+	_lastInRange = !(IsNull campInRange)
+
+	if (_sideID == sideID) then {Goto "Update"};
+
+	_setBar = false
+
+	if (!IsNull currentCutDisplay) then {Goto "UpdateProgress"};
+
+	CutRsc["CampCaptureProgress","PLAIN",0]
+	@(!IsNull currentCutDisplay)
+
+	_setBar = true
+
+#UpdateProgress
+
+	_control = currentCutDisplay DisplayCtrl IDCGENERICTEXT
+	_backgroundControl = currentCutDisplay DisplayCtrl IDCGENERICLABEL
+	_position = CtrlPosition _control
+	_maxWidth = (CtrlPosition _backgroundControl Select 2) - 0.02
+
+	_position Set[2,_maxWidth * _timeLeft / 100]
+	_control CtrlSetPosition _position
+
+	if (_setBar) then {_control CtrlCommit 0} else {_control CtrlCommit 2.5};
+
+	@ (CtrlCommitted _control)
+
+Goto "SkipUpdateDelay"
+
+;*****************************************************************************************
+;10/26/7 MM - Created file.

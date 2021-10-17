@@ -1,0 +1,655 @@
+;Last modified 4/25/8
+
+_display = _this Select 0
+
+_display Call InitInfoBar
+
+Goto "InitMenu"
+
+#Update
+~0.1
+
+#SkipUpdateDelay
+
+	;If unit dies or is no longer on his/her side (team killing).
+	if (!(Alive player) || Side player != sideJoined || menuExit) then {CloseDialog 0;Goto "Quit"};
+	if (!dialog) then {Goto "Quit"};
+
+	_display Call DisplayInfoBar
+	
+	if (unitIndex == 1) then {_currentUnit = lbCurSel 1987;unitIndex = -1;Goto "UnitSwaped";};
+
+#UpdateActions
+
+	if (menuTemplateListClicked) then {Goto "AddTemplate"};
+	if (menuPrimaryListClicked) then {Goto "AddPrimary"};
+	if (menuSecondaryListClicked) then {Goto "AddSecondary"};
+	if (menuSidearmListClicked) then {Goto "AddSidearm"};
+	if (menuMiscListClicked) then {Goto "AddMisc"};
+	if (menuAmmoListClicked) then {Goto "AddAmmo"};
+
+	if (menuButton == 1) then {Goto "OpenHelp"};
+	if (menuButton == 11) then {Goto "Vote"};
+	if (menuButton == 52) then {Goto "OpenTeamMenu"};
+	if (menuButton == 53) then {Goto "OpenMissionMap"};
+	if (menuButton == 55) then {Goto "OpenConstruction"};
+
+	if (menuButton == 100) then {Goto "Primary"};
+	if (menuButton == 101) then {Goto "Secondary"};
+
+	if (menuButton >= 104 && menuButton <= 115) then {Goto "Inventory"};
+	if (menuButton >= 116 && menuButton <= 122) then {Goto "SidearmInventory"};
+
+	if (menuButton == 123) then {Goto "Buy"};
+	if (menuButton == 124) then {Goto "Reset"};
+
+	Goto "Update"
+
+#InitMenu
+
+	_showMessages = showMessagesOnScreen
+	showMessagesOnScreen = false
+
+	;Menu buttons.
+	menuExit = false
+
+	_initCurrent = true
+	_currentValue = 0
+
+	menuPrimaryListClicked = false
+	menuSecondaryListClicked = false
+	menuSidearmListClicked = false
+	menuMiscListClicked = false
+	menuTemplateListClicked = false
+	menuAmmoListClicked = false
+
+	_primaryWeapons = Call Compile Format["%1PrimaryWeapons",sideJoinedText]
+	_primaryAmmo = Call Compile Format["%1PrimaryAmmo",sideJoinedText]
+	_primaryNames = Call Compile Format["%1PrimaryNames",sideJoinedText]
+	_primaryImages = Call Compile Format["%1PrimaryImages",sideJoinedText]
+	_primaryCosts = Call Compile Format["%1PrimaryCosts",sideJoinedText]
+	_primaryAmmoNames = Call Compile Format["%1PrimaryAmmoNames",sideJoinedText]
+	_primaryAmmoCosts = Call Compile Format["%1PrimaryAmmoCosts",sideJoinedText]
+	_primaryAmmoSpaces = Call Compile Format["%1PrimaryAmmoSpaces",sideJoinedText]
+	_primaryAmmoImages = Call Compile Format["%1PrimaryAmmoImages",sideJoinedText]
+
+	_secondaryWeapons = Call Compile Format["%1SecondaryWeapons",sideJoinedText]
+	_secondaryAmmo = Call Compile Format["%1SecondaryAmmo",sideJoinedText]
+	_secondaryNames = Call Compile Format["%1SecondaryNames",sideJoinedText]
+	_secondaryImages = Call Compile Format["%1SecondaryImages",sideJoinedText]
+	_secondaryCosts = Call Compile Format["%1SecondaryCosts",sideJoinedText]
+	_secondaryAmmoNames = Call Compile Format["%1SecondaryAmmoNames",sideJoinedText]
+	_secondaryAmmoCosts = Call Compile Format["%1SecondaryAmmoCosts",sideJoinedText]
+	_secondaryAmmoSpaces = Call Compile Format["%1SecondaryAmmoSpaces",sideJoinedText]
+	_secondaryAmmoImages = Call Compile Format["%1SecondaryAmmoImages",sideJoinedText]
+
+	_sidearms = Call Compile Format["%1Sidearms",sideJoinedText]
+	_sidearmAmmo = Call Compile Format["%1SidearmAmmo",sideJoinedText]
+	_sidearmNames = Call Compile Format["%1SidearmNames",sideJoinedText]
+	_sidearmAmmoNames = Call Compile Format["%1SidearmAmmoNames",sideJoinedText]
+	_sidearmImages = Call Compile Format["%1SidearmImages",sideJoinedText]
+	_sidearmCosts = Call Compile Format["%1SidearmCosts",sideJoinedText]
+	_sidearmAmmoImages = Call Compile Format["%1SidearmAmmoImages",sideJoinedText]
+
+	_miscWeapons = Call Compile Format["%1MiscWeapons",sideJoinedText]
+	_miscNames = Call Compile Format["%1MiscNames",sideJoinedText]
+	_miscCosts = Call Compile Format["%1MiscCosts",sideJoinedText]
+	_miscImages = Call Compile Format["%1MiscImages",sideJoinedText]
+	_miscSpaces = Call Compile Format["%1MiscSpaces",sideJoinedText]
+	_miscIsSidarmAmmo = Call Compile Format["%1MiscIsSidearmAmmo",sideJoinedText];
+
+	_templateNames = Call Compile Format["%1TemplateNames",sideJoinedText]
+	_templatePrimary = Call Compile Format["%1TemplatePrimary",sideJoinedText]
+	_templatePrimaryAmmo = Call Compile Format["%1TemplatePrimaryAmmo",sideJoinedText]
+	_templateSecondary = Call Compile Format["%1TemplateSecondary",sideJoinedText]
+	_templateSecondaryAmmo = Call Compile Format["%1TemplateSecondaryAmmo",sideJoinedText]
+	_templateSidearms = Call Compile Format["%1TemplateSidearms",sideJoinedText]
+	_templateMisc = Call Compile Format["%1TemplateMisc",sideJoinedText]
+	_templateAmount = Call Compile Format["%1TemplateAmount",sideJoinedText]
+	_templateMisc1 = Call Compile Format["%1TemplateMisc1",sideJoinedText]
+	_templateAmount1 = Call Compile Format["%1TemplateAmount1",sideJoinedText]
+	_templateCosts = Call Compile Format["%1TemplateCosts",sideJoinedText]
+	
+	;Gear assignement (AI/player).
+	lbClear 1987;
+	_index = 0;
+	_unitsArray = [];
+	{_unitsArray = _unitsArray + [_x]} forEach units group player;
+	_label = "";
+	{_label = GetText (configFile >> "CfgVehicles" >> Typeof _x >> "displayName");_index = lbAdd[1987,_label];lbSetValue [1987,_index,0];} forEach _unitsArray;
+	lbSetCurSel[1987,0];
+	_currentUnit = lbCurSel 1987;
+	unitIndex = -1;
+
+	;All gear that belongs to player's side.
+	_sideGear = _primaryWeapons + _primaryAmmo + _secondaryWeapons + _secondaryAmmo + _sidearms + _sidearmAmmo + _miscWeapons
+
+	_costLayout = "$%1%2 %3"
+	if (Localize "STRWFCURRENCYPOSITION" == "Back") then {_costLayout = "%1$%2 %3"};
+
+	lbClear IDCGENERICLIST
+
+	_count = 1
+	_totalLoadouts = Count _templateNames
+
+	#AddTemplateToList
+
+		_spacer = " "
+		if (_templateCosts Select _count > 99) then {_spacer = ""};
+
+		_text = Format[_costLayout,_templateCosts Select _count,_spacer,_templateNames Select _count]
+
+		;Set text and data for list entry.
+		_selection = lbAdd[IDCGENERICLIST,_text]
+		lbSetPicture [IDCGENERICLIST,_selection,_primaryImages Select (_templatePrimary Select _count)]
+
+		_count = _count  + 1
+
+		if (_count < _totalLoadouts) then {Goto "AddTemplateToList"};
+
+	_count = 1
+	_totalPrimary = Count _primaryNames
+
+	#AddPrimaryToList
+
+		_spacer = " "
+		if (_primaryCosts Select _count > 99) then {_spacer = ""};
+
+		_text = Format [_costLayout,_primaryCosts Select _count,_spacer,_primaryNames Select _count]
+		_selection = lbAdd[IDCGENERICLIST + 1,_text]
+		lbSetValue[IDCGENERICLIST + 1,_selection,_count]
+		lbSetPicture [IDCGENERICLIST + 1,_selection,_primaryImages Select _count]
+		_count = _count + 1
+		if (_count < _totalPrimary) then {Goto "AddPrimaryToList"};
+
+	_count = 1
+	_totalSecondary = Count _secondaryNames
+	if (_totalSecondary <= 1) then {Goto "InitSidearmList"};
+
+	#AddSecondaryToList
+
+		_spacer = " "
+		if (_secondaryCosts Select _count > 99) then {_spacer = ""};
+
+		_text = Format [_costLayout,_secondaryCosts Select _count,_spacer,_secondaryNames Select _count]
+
+		_selection = lbAdd[IDCGENERICLIST + 2,_text]
+		lbSetValue[IDCGENERICLIST + 2,_selection,_count]
+		lbSetPicture [IDCGENERICLIST + 2,_selection,_secondaryImages Select _count]
+
+		_count = _count + 1
+		if (_count < _totalSecondary) then {Goto "AddSecondaryToList"};
+
+	#InitSidearmList
+
+	_count = 1
+	_totalSidearms = Count _sidearmNames
+	if (_totalSidearms <= 1) then {Goto "InitMiscList"};
+
+	#AddSidearmToList
+
+		_spacer = " "
+		if (_sidearmCosts Select _count > 99) then {_spacer = ""};
+
+		_text = Format [_costLayout,_sidearmCosts Select _count,_spacer,_sidearmNames Select _count]
+
+		_selection = lbAdd[IDCGENERICLIST + 3,_text]
+		lbSetValue[IDCGENERICLIST + 3,_selection,_count]
+		lbSetPicture [IDCGENERICLIST + 3,_selection,_sidearmImages Select _count]
+
+		_count = _count + 1
+		if (_count < _totalSidearms) then {Goto "AddSidearmToList"}
+
+	#InitMiscList
+
+	_count = 1
+	_total = Count _miscNames
+	if (_total <= 1) then {Goto "InitAmmoList"};
+
+	#AddMiscToList
+
+		_spacer = " "
+		if (_miscCosts Select _count > 99) then {_spacer = ""};
+
+		_text = Format [_costLayout,_miscCosts Select _count,_spacer,_miscNames Select _count]
+
+		_selection = lbAdd[IDCGENERICLIST + 4,_text]
+		lbSetValue[IDCGENERICLIST + 4,_selection,_count]
+		lbSetPicture [IDCGENERICLIST + 4,_selection,_miscImages Select _count]
+
+		_count = _count + 1
+		if (_count < _total) then {Goto "AddMiscToList"}
+
+	#InitAmmoList
+
+	_blanks = []
+	{_blanks = _blanks + [0]} ForEach _sidearmCosts
+
+	_ammoList = _primaryAmmo + _secondaryAmmo + _sidearmAmmo
+	_ammoCostsList = _primaryAmmoCosts + _secondaryAmmoCosts + _blanks
+	_ammoSpacesList = _primaryAmmoSpaces + _secondaryAmmoSpaces + _blanks
+	_ammoNamesList = _primaryAmmoNames + _secondaryAmmoNames + _sidearmAmmoNames
+	_ammoImagesList = _primaryAmmoImages + _secondaryAmmoImages + _sidearmAmmoImages
+
+	_ammo = []
+	_ammoCosts = []
+	_ammoSpaces = []
+	_ammoNames = []
+	_ammoImages = []
+
+	_total = Count _ammoList
+	_count = 0
+
+;Remove duplicates.
+#CreateAmmoList
+
+	_currentAmmo = _ammoList Select _count
+	if (_currentAmmo In _ammo) then {Goto "AddNextAmmo"};
+	if ((_ammoNamesList Select _count) == "") then {Goto "AddNextAmmo"};
+
+	_ammo = _ammo + [_currentAmmo]
+	_ammoCosts = _ammoCosts + [_ammoCostsList Select _count]
+	_ammoSpaces = _ammoSpaces + [_ammoSpacesList Select _count]
+	_ammoNames = _ammoNames + [_ammoNamesList Select _count]
+	_ammoImages = _ammoImages + [_ammoImagesList Select _count]
+
+	#AddNextAmmo
+
+	_count = _count + 1
+	if (_count < _total) then {Goto "CreateAmmoList"}
+
+	_total = Count _ammo
+	_count = 0
+
+	#AddAmmoToList
+
+		_spacer = " "
+		if (_ammoCosts Select _count > 99) then {_spacer = ""};
+
+		_text = Format [_costLayout,_ammoCosts Select _count,_spacer,_ammoNames Select _count]
+
+		_selection = lbAdd[IDCGENERICLIST + 5,_text]
+		lbSetValue[IDCGENERICLIST + 5,_selection,_count]
+		lbSetPicture [IDCGENERICLIST + 5,_selection,_ammoImages Select _count]
+
+		_count = _count + 1
+		if (_count < _total) then {Goto "AddAmmoToList"}
+
+#GetCurrentLoadout
+
+	_currentLoadout = Weapons (_unitsArray select _currentUnit)
+	_originalLoadout = Weapons (_unitsArray select _currentUnit)
+	_currentAmmo = Magazines (_unitsArray select _currentUnit)
+	_originalAmmo = Magazines (_unitsArray select _currentUnit)
+
+	;Remove equipment that does not belong to player's side.
+	_delete = []
+	{if (!(_x In _sideGear)) then {_delete = _delete + [_x]};} ForEach _currentLoadout
+	_currentLoadout = _currentLoadout - _delete
+
+	_delete = []
+	{if (!(_x In _sideGear)) then {_delete = _delete + [_x]};} ForEach _currentAmmo
+	_currentAmmo = _currentAmmo - _delete
+
+#DisplayInventory
+
+	_count = 0
+	_total = Count _currentLoadout
+	_currentSidearm = 0
+
+	_currentPrimary = 0;CtrlSetText[IDCGENERICIMAGE,"\Ca\UI\Data\ui_gear_gun_gs.paa"]
+	_currentSecondary = 0;CtrlSetText[IDCGENERICIMAGE + 1,"\Ca\UI\Data\ui_gear_sec_gs.paa"]
+	_currentSidearm = 0;CtrlSetText[IDCGENERICIMAGE + 2,"\Ca\UI\Data\ui_gear_hgun_gs.paa"]
+	_upgradeCost = 0
+
+	#DisplayPrimaryInventoryItem
+
+		_item = _currentLoadout Select _count
+		_primary = _primaryWeapons Find _item
+		_secondary = _secondaryWeapons Find _item
+		_sidearm = _sidearms Find _item
+
+		if (_primary != -1) then {_currentPrimary = _primary;_upgradeCost = _upgradeCost + (_primaryCosts Select _primary);CtrlSetText[IDCGENERICIMAGE,_primaryImages Select _primary]};
+		if (_secondary != -1) then {_currentSecondary = _secondary;_upgradeCost = _upgradeCost + (_secondaryCosts Select _secondary);CtrlSetText[IDCGENERICIMAGE + 1,_secondaryImages Select _secondary]};
+		if (_sidearm != -1) then {_currentSidearm = _sidearm;_upgradeCost = _upgradeCost + (_sidearmCosts Select _sidearm);CtrlSetText[IDCGENERICIMAGE + 2,_sidearmImages Select _sidearm]};
+
+		_count = _count + 1
+		? (_count < _total):goto "DisplayPrimaryInventoryItem"
+
+	_data = [IDCGENERICIMAGE + 3,IDCGENERICIMAGE + 15,_currentLoadout,_currentAmmo] Call DisplayInventory
+	_spaceUsed = _data Select 0
+	_upgradeCost = _upgradeCost + (_data Select 1)
+	_inventorySlots = _data Select 2
+	_sidearmSlots = _data Select 3
+
+	if (_initCurrent) then {_initCurrent = false;_currentValue = _upgradeCost};
+
+	_cost = _upgradeCost - _currentValue
+
+	CtrlSetText[IDCGENERICLABEL,Format["%1",_currentValue]]
+	CtrlSetText[IDCGENERICLABEL + 1,Format["%1",_upgradeCost]]
+	CtrlSetText[IDCGENERICLABEL + 2,Format["%1",_cost]]
+
+	Goto "SkipUpdateDelay"
+
+	_templatePrimary = Call Compile Format["%1TemplatePrimary",sideJoinedText]
+	_templatePrimaryAmmo = Call Compile Format["%1TemplatePrimaryAmmo",sideJoinedText]
+	_templateSecondary = Call Compile Format["%1TemplateSecondary",sideJoinedText]
+	_templateSecondaryAmmo = Call Compile Format["%1TemplateSecondaryAmmo",sideJoinedText]
+	_templateSidearms = Call Compile Format["%1TemplateSidearms",sideJoinedText]
+	_templateMisc = Call Compile Format["%1TemplateMisc",sideJoinedText]
+	_templateAmount = Call Compile Format["%1TemplateAmount",sideJoinedText]
+	_templateMisc1 = Call Compile Format["%1TemplateMisc1",sideJoinedText]
+	_templateAmount1 = Call Compile Format["%1TemplateAmount1",sideJoinedText]
+	_templateCosts = Call Compile Format["%1TemplateCosts",sideJoinedText]
+
+#AddTemplate
+
+	menuTemplateListClicked = false
+
+	_index = lbCurSel IDCGENERICLIST
+	if (_index == -1) then {Goto "Update"};
+
+	_index = _index + 1
+	_primary = _templatePrimary Select _index
+	_secondary = _templateSecondary Select _index
+	_sidearm = _templateSidearms Select _index
+	_currentLoadout = [_primaryWeapons Select _primary,_secondaryWeapons Select _secondary,_sideArms Select _sidearm]
+	_currentAmmo = []
+
+	for [{_count = _templatePrimaryAmmo Select _index},{_count > 0},{_count = _count - 1}] do {_currentAmmo = _currentAmmo + [_primaryAmmo Select (_templatePrimary Select _index)]};
+	for [{_count = _templateSecondaryAmmo Select _index},{_count > 0},{_count = _count - 1}] do {_currentAmmo = _currentAmmo + [_secondaryAmmo Select (_templateSecondary Select _index)]};
+	for [{_count = _templateAmount Select _index},{_count > 0},{_count = _count - 1}] do {_currentAmmo = _currentAmmo + [_miscWeapons Select (_templateMisc Select _index)]};
+	for [{_count = _templateAmount1 Select _index},{_count > 0},{_count = _count - 1}] do {_currentAmmo = _currentAmmo + [_miscWeapons Select (_templateMisc1 Select _index)]};
+	for [{_count = 4},{_count > 0},{_count = _count - 1}] do {_currentAmmo = _currentAmmo + [_sidearmAmmo Select (_templateSidearms Select _index)]};
+
+	_currentAmmo = _currentAmmo - [""]
+	_currentLoadout = _currentLoadout - [""]
+	Goto "DisplayInventory"
+
+#AddPrimary
+
+	;ToDo: check if secondary is allowed with primary.
+
+	menuPrimaryListClicked = false
+
+	_weaponSelection = lbCurSel (IDCGENERICLIST + 1)
+	if (_weaponSelection == -1) then {Goto "Update"};
+
+	_lastPrimary = _primaryWeapons Select _currentPrimary
+	_lastAmmo = _primaryAmmo Select _currentPrimary
+
+	_currentLoadout = _currentLoadout - [_lastPrimary]
+	_currentPrimary = lbValue[IDCGENERICLIST + 1,_weaponSelection]
+	_currentLoadout = _currentLoadout + [_primaryWeapons Select _currentPrimary]
+
+	_addNew = false
+	;If ammo existed for last primary then try to replace it with new weapon's ammo.
+	if (_lastAmmo In _inventorySlots) then {_currentAmmo = [_lastAmmo,_primaryAmmo Select _currentPrimary,_currentAmmo,_spaceUsed] Call ReplaceInventoryAmmo} else {_addNew = true};
+
+	_spaceNeeded = _primaryAmmoSpaces Select _currentPrimary
+	if (_spaceUsed + _spaceNeeded > 12) then {Goto "DisplayInventory"};
+	if (!_addNew) then {Goto "DisplayInventory"};
+
+	_currentAmmo = _currentAmmo + [_primaryAmmo Select _currentPrimary]
+	Goto "DisplayInventory"
+
+#AddSecondary
+
+	;ToDo: check if secondary is allowed with primary.
+	menuSecondaryListClicked = false
+
+	_weaponSelection = lbCurSel (IDCGENERICLIST + 2)
+	if (_weaponSelection == -1) then {Goto "Update"};
+
+	_lastSecondary = _secondaryWeapons Select _currentSecondary
+	_lastAmmo = _secondaryAmmo Select _currentSecondary
+
+	_currentLoadout = _currentLoadout - [_lastSecondary]
+	_currentSecondary = lbValue[IDCGENERICLIST + 2,_weaponSelection]
+	_currentLoadout = _currentLoadout + [_secondaryWeapons Select _currentSecondary]
+
+	_addNew = false
+	;If ammo existed for last secondary then try to replace it with new weapon's ammo.
+	if (_lastAmmo In _inventorySlots) then {_currentAmmo = [_lastAmmo,_secondaryAmmo Select _currentSecondary,_currentAmmo,_spaceUsed] Call ReplaceSecondaryInventoryAmmo} else {_addNew = true};
+
+	_spaceNeeded = _secondaryAmmoSpaces Select _currentSecondary
+	if (_spaceUsed + _spaceNeeded > 12) then {Goto "DisplayInventory"};
+	if (!_addNew) then {Goto "DisplayInventory"};
+
+	_currentAmmo = _currentAmmo + [_secondaryAmmo Select _currentSecondary]
+	Goto "DisplayInventory"
+
+#AddSidearm
+
+	menuSidearmListClicked = false
+
+	_weaponSelection = lbCurSel (IDCGENERICLIST + 3)
+	if (_weaponSelection == -1) then {Goto "Update"};
+
+	_currentLoadout = _currentLoadout - [_sidearms Select _currentSidearm]
+	_currentSidearm = lbValue[IDCGENERICLIST + 3,_weaponSelection]
+	_currentLoadout = _currentLoadout + [_sidearms Select _currentSidearm]
+
+	Goto "DisplayInventory"
+
+#AddMisc
+
+	menuMiscListClicked = false
+
+	_selection = lbCurSel (IDCGENERICLIST + 4)
+	if (_selection == -1) then {Goto "Update"};
+
+	_index = lbValue[IDCGENERICLIST + 4,_selection]
+
+	_space = _miscSpaces Select _index
+	if (!(_miscIsSidarmAmmo Select _index) && _spaceUsed + _space > 12) then {Goto "Update"};
+
+	_currentAmmo = _currentAmmo + [_miscWeapons Select _index]
+
+	Goto "DisplayInventory"
+
+#AddAmmo
+
+	menuAmmoListClicked = false
+
+	_selection = lbCurSel (IDCGENERICLIST + 5)
+	if (_selection == -1) then {Goto "Update"};
+
+	_index = lbValue[IDCGENERICLIST + 5,_selection]
+
+	_space = _ammoSpaces Select _index
+	if (_spaceUsed + _space > 12) then {Goto "Update"};
+
+	_currentAmmo = _currentAmmo + [_ammo Select _index]
+
+	Goto "DisplayInventory"
+
+#Primary
+
+	menuButton = -1
+	_currentLoadout = _currentLoadout - [_primaryWeapons Select _currentPrimary]
+
+	Goto "DisplayInventory"
+
+#Secondary
+
+	menuButton = -1
+	_currentLoadout = _currentLoadout - [_secondaryWeapons Select _currentSecondary]
+
+	Goto "DisplayInventory"
+
+#Inventory
+
+	_slot = menuButton - 104
+	menuButton = -1
+
+	if (_slot >= Count _inventorySlots) then {Goto "Update"};
+
+	_index = _currentAmmo Find (_inventorySlots Select _slot)
+	if (_index != -1) then {_currentAmmo Set[_index,"**DELETE**"];_currentAmmo = _currentAmmo - ["**DELETE**"]};
+	Goto "DisplayInventory"
+
+#SidearmInventory
+
+	_slot = menuButton - 116
+	menuButton = -1
+
+	if (_slot >= Count _sidearmSlots) then {Goto "Update"};
+
+	_index = _currentAmmo Find (_sidearmSlots Select _slot)
+	if (_index != -1) then {_currentAmmo Set[_index,"**DELETE**"];_currentAmmo = _currentAmmo - ["**DELETE**"]};
+	Goto "DisplayInventory"
+
+#Buy
+
+	menuButton = -1
+	
+	_sortedobj = objNull;
+	_type = Call Compile Format["%1StructureNames Select %1BARRACKSTYPE",sideJoinedText];
+	_list = [];
+	{if (TypeOf _x == _type && GetDammage _x < 1) then {_list = _list + [_x]};} ForEach baseStructures;
+	if (Count _list > 0) then {_sorted = [player,_list] Call SortByDistance;_sortedobj = (_sorted Select 0)};
+
+	if (!isPlayer(_unitsArray select _currentUnit)) then {if ((isNull(_sortedObj)) || ((_unitsArray select _currentUnit) Distance _sortedobj > AIPURCHASEGEAR)) then {[playerSide, "HQ"] sideChat "the selected unit is too far from the barracks";Goto "Update";};};
+	
+	if (_cost > Call GetPlayerFunds) then {Goto "Update"};
+
+	-_cost Call ChangePlayerFunds
+	[(_unitsArray select _currentUnit),_currentLoadout,_currentAmmo] Call EquipLoadout
+
+	_originalLoadout = _currentLoadout
+	_originalAmmo = _currentAmmo
+
+	respawnWeapons = _currentLoadout
+	respawnAmmo = _currentAmmo
+
+	_initCurrent = true
+
+	Goto "DisplayInventory"
+
+#Reset
+
+	menuButton = -1
+
+	_currentLoadout = _originalLoadout
+	_currentAmmo = _originalAmmo
+
+	Goto "DisplayInventory"
+	
+#UnitSwaped
+
+	_currentLoadout = Weapons (_unitsArray select _currentUnit)
+	_originalLoadout = Weapons (_unitsArray select _currentUnit)
+	_currentAmmo = Magazines (_unitsArray select _currentUnit)
+	_originalAmmo = Magazines (_unitsArray select _currentUnit)
+
+	;Remove equipment that does not belong to player's side.
+	_delete = []
+	{if (!(_x In _sideGear)) then {_delete = _delete + [_x]};} ForEach _currentLoadout
+	_currentLoadout = _currentLoadout - _delete
+
+	_delete = []
+	{if (!(_x In _sideGear)) then {_delete = _delete + [_x]};} ForEach _currentAmmo
+	_currentAmmo = _currentAmmo - _delete
+
+	_count = 0
+	_total = Count _currentLoadout
+	_currentSidearm = 0
+
+	_currentPrimary = 0;CtrlSetText[IDCGENERICIMAGE,"\Ca\UI\Data\ui_gear_gun_gs.paa"]
+	_currentSecondary = 0;CtrlSetText[IDCGENERICIMAGE + 1,"\Ca\UI\Data\ui_gear_sec_gs.paa"]
+	_currentSidearm = 0;CtrlSetText[IDCGENERICIMAGE + 2,"\Ca\UI\Data\ui_gear_hgun_gs.paa"]
+	_upgradeCost = 0
+
+	#renew
+
+		_item = _currentLoadout Select _count
+		_primary = _primaryWeapons Find _item
+		_secondary = _secondaryWeapons Find _item
+		_sidearm = _sidearms Find _item
+
+		if (_primary != -1) then {_currentPrimary = _primary;_upgradeCost = _upgradeCost + (_primaryCosts Select _primary);CtrlSetText[IDCGENERICIMAGE,_primaryImages Select _primary]};
+		if (_secondary != -1) then {_currentSecondary = _secondary;_upgradeCost = _upgradeCost + (_secondaryCosts Select _secondary);CtrlSetText[IDCGENERICIMAGE + 1,_secondaryImages Select _secondary]};
+		if (_sidearm != -1) then {_currentSidearm = _sidearm;_upgradeCost = _upgradeCost + (_sidearmCosts Select _sidearm);CtrlSetText[IDCGENERICIMAGE + 2,_sidearmImages Select _sidearm]};
+
+		_count = _count + 1
+		? (_count < _total):goto "renew"
+
+	_data = [IDCGENERICIMAGE + 3,IDCGENERICIMAGE + 15,_currentLoadout,_currentAmmo] Call DisplayInventory
+	_spaceUsed = _data Select 0
+	_upgradeCost = _upgradeCost + (_data Select 1)
+	_inventorySlots = _data Select 2
+	_sidearmSlots = _data Select 3
+
+	_currentValue = _upgradeCost
+
+	_cost = _upgradeCost - _currentValue
+
+	CtrlSetText[IDCGENERICLABEL,Format["%1",_currentValue]]
+	CtrlSetText[IDCGENERICLABEL + 1,Format["%1",_upgradeCost]]
+	CtrlSetText[IDCGENERICLABEL + 2,Format["%1",_cost]]
+
+	Goto "Update";
+
+#OpenConstruction
+
+	menuButton = -1
+
+	if (!IsNull HQInRange) then {CloseDialog 0;constructionVehicle = HQInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull campInRange) then {CloseDialog 0;constructionVehicle = campInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull repairTruckInRange) then {CloseDialog 0;constructionVehicle = repairTruckInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+
+	Goto "Update"
+
+#OpenHelp
+
+	CloseDialog 0
+	CreateDialog "HelpMenu"
+	Goto "Quit"
+
+#OpenMissionMap
+
+	CloseDialog 0
+	CreateDialog "MissionMap"
+	Goto "Quit"
+
+#OpenTeamMenu
+
+	CloseDialog 0
+	CreateDialog "TeamMenu"
+	Goto "Quit"
+
+#Vote
+
+	;If no vote in progress then request one.
+	_voteTime = Call Compile Format["%1CommanderVoteTime",sideJoinedText]
+	if (_voteTime <= 0) then {Goto "RequestVote"};
+
+	CloseDialog 0
+	CreateDialog "CommanderVoteMenu"
+	Goto "Quit"
+
+#RequestVote
+
+	menuButton = -1
+	_timeToWait = time + 3
+
+	[CMDREQUESTCOMMANDERVOTE] Exec "Client\Client_CommandToServer.sqs"
+
+	@ (Call Compile Format["%1CommanderVoteTime > 0",sideJoinedText] || time >= _timeToWait || !dialog ||!Alive player)
+
+	if (!Alive player || !Dialog) then {Goto "Quit"};
+	if (time > _timeToWait) then {Goto "Update"};
+
+	CloseDialog 0
+	CreateDialog "CommanderVoteMenu"
+	Goto "Quit"
+
+#Quit
+
+	showMessagesOnScreen = _showMessages
+
+	Exit
+
+;3/4/8 MM - Created file.

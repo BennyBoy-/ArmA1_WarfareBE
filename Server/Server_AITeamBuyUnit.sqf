@@ -1,0 +1,22 @@
+_factoryType = _this Select 0;
+_factory = _this Select 1;
+_team = _this Select 2;
+_teamType = _this Select 3;
+_side = Side (Leader _team);
+_factoryName = eastStructures Select _factoryType;
+_templates = EastAITeamTemplates;
+_teamMembers = Units _team Call GetLiveUnits;
+_exit = 0;
+if (_side == West) then {_factoryName = westStructures Select _factoryType;_templates = WestAITeamTemplates};
+_template = +(_templates Select _teamType);
+_teamMembers = Units _team Call GetLiveUnits;
+_teamMembers = _teamMembers - [Leader _team];
+{_index = _template Find TypeOf _x;if (_index >= 0) then {_template Set[_index," "]};} ForEach _teamMembers;
+_template = _template - [" "];
+if (_exit == 0)then{
+if (Count _template < 1) exitwith {_exit = 1;};
+_units = Call Compile Format["%1%2Units",_side,_factoryName];
+_index = _units Find (_template Select (Random (Count _template - 1)));
+if (_index == -1) exitwith {_exit = 1;};
+[_factoryType,_index,_factory,false,_team] spawn Sbuyunit;
+};

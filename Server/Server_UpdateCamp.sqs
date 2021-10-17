@@ -1,0 +1,94 @@
+;Last modified 3/22/8
+;*****************************************************************************************
+;Description: Update camp's status.
+;*****************************************************************************************
+_camp = _this Select 0
+_town = _this Select 1
+
+Goto "Init"
+
+#Update
+~_delay
+
+	_objects = NearestObjects[_camp,[westSoldierBaseClass,eastSoldierBaseClass,"Car","Motorcycle","Tank"],5]
+	_livingUnits = _objects Call GetLiveUnits
+
+	_west = West CountSide _livingUnits
+	_east = East CountSide _livingUnits
+
+	if (_east > 0 && _west > 0) then {Goto "Update"};
+
+	_sideID = Call Compile Format["%1SideID",_campName]
+
+	_supply = Call Compile Format["%1SupplyValue",_townName]
+	_timeToCapture = Call Compile Format["%1SupplyValue",_campName]
+	_force = (_east + _west) * _delay
+
+	if (_sideID == EASTID && _east > 0) then {_timeToCapture = _timeToCapture + _east};
+	if (_sideID == EASTID && _west > 0) then {_timeToCapture = _timeToCapture - _west};
+	if (_sideID == WESTID && _west > 0) then {_timeToCapture = _timeToCapture + _west};
+	if (_sideID == WESTID && _east > 0) then {_timeToCapture = _timeToCapture - _east};
+	if (_sideID != EASTID && _sideID != WESTID) then {_timeToCapture = _timeToCapture - _force};
+
+	if (_timeToCapture > _supply) then {_timeToCapture = _supply};
+	if (_timeToCapture <= 0) then {Goto "Capture"};
+
+	_townSideID = Call Compile Format["%1SideID",_townName]
+
+	;If camp has not been contested and supply has increased then re-adjust camp.
+	if (_timeToCapture == _lastSupply && _force == 0 && _sideID == _townSideID) then {_timeToCapture = _supply};
+
+	_lastSupply = _supply
+
+	if (_timeToCapture == Call Compile Format["%1SupplyValue",_campName]) then {Goto "Update"};
+
+	;If camp value has changed then update it.
+	Call Compile Format["%1SupplyValue = _timeToCapture;PublicVariable ""%1SupplyValue""",_campName]
+	Goto "Update"
+
+#Capture
+
+	_captureSideID = WESTID
+	if (_sideID == WESTID || (_sideID == RESISTANCEID && _east > 0)) then {_captureSideID = EASTID};
+
+	Call Compile Format["%1SideID = _captureSideID;PublicVariable ""%1SideID""",_campName]
+
+	;Inform clients to clean up, change marker, etc.
+	[CMDCAMPCAPTURED,_town,_captureSideID,_camp] Exec "Server\Server_CommandToClients.sqs"
+
+	;Set flag to new side.
+	_texture = "\ca\misc\data\sever_vlajka.paa";
+	_defenses = westDefenseNames
+	if (_captureSideID == WESTID) then {_texture = "\ca\misc\data\usa_vlajka.pac";_defenses = eastDefenseNames};
+
+	;Delete previous side's defenses.
+	_defenseObjects = NearestObjects[_camp,_defenses,45]
+	{DeleteVehicle _x} ForEach _defenseObjects
+
+	_objects = NearestObjects[_camp,["FlagCarrierSouth"],20]
+	if (Count _objects > 0) then {(_objects Select 0) SetFlagTexture _texture};
+
+	if (_townSideID == _captureSideID) then {_timeToCapture = _supply} else {_timeToCapture = Call Compile Format["%1StartingSupplyValue",_townName]};
+	_sideID = _captureSideID
+
+	Call Compile Format["%1SupplyValue = _timeToCapture;PublicVariable ""%1SupplyValue""",_campName]
+	Goto "Update"
+
+#Init
+
+	_delay = 3
+	_townName = Str _town
+	_campName = Str _camp
+
+	_sideID = Call Compile Format["%1SideID",_campName]
+	_max = Call Compile Format["%1MaxSupplyValue",_townName]
+	_supply = Call Compile Format["%1SupplyValue",_townName]
+	_lastSupply = _supply
+
+	;Stagger execution cycle of each location.
+	~((Random 200) / 100)
+
+	Goto "Update"
+
+;*****************************************************************************************
+;10/24/7 MM - Created file.

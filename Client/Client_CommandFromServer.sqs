@@ -1,0 +1,80 @@
+;Last modified 8/22/7
+;*****************************************************************************************
+;Description: Checks for commands from the server & executes them.
+;*****************************************************************************************
+
+_count = 0
+_total = Count clientCommandPV
+_delay = (250 / _total) / 1000
+
+_param1 = 0
+_param2 = 0
+_param3 = 0
+
+#CheckForCommand
+~_delay
+
+	_command = Call Compile Format["%1",clientCommandPV Select _count]
+
+	;If a request for a command has been received, execute it, clear the request, and retransmit.
+	if (_command != 0) then {Goto "RunCommand"};
+
+	#CheckForNextCommand
+
+		_count = _count + 1
+		if (_count < _total) then {Goto "CheckForCommand"};
+
+	_count = 0
+	goto "CheckForCommand"
+
+#RunCommand
+
+	;Network usage stats.
+	clientCommandsSent = clientCommandsSent + 1
+
+	_side = 0
+	_parameters = 0
+
+	;Start with MSBs & work our way to the LSBs.
+
+	;Extract parameter count & remove it so only the side & client ID remains.
+	if (_command >= CMDPARAMETERBIT1) then {_parameters = 2;_command = _command - CMDPARAMETERBIT1};
+	if (_command >= CMDPARAMETERBIT0) then {_parameters = _parameters + 1;_command = _command - CMDPARAMETERBIT0};
+
+	;Extract side from command & remove it so only the client ID remains.
+	if (_command >= WESTID) then {_side = WESTID;_command = _command - WESTID};
+	if (_command >= EASTID) then {_side = EASTID;_command = _command - EASTID};
+
+	;If this command is for a specific side then only execute it if client belongs to that side.
+	if (_side != 0 && _side != sideID) then {Goto "ClearCommand"};
+
+	;_command should now only contain client's ID.
+
+	;If this client's ID does not match the command then it is not the intended client so do not execute.
+	if (_command != 0 && _command != clientID) then {Goto "ClearCommand"};
+
+	_params = []
+
+	;Collect any additional parameters that were sent.
+	if (_parameters > 0) then {Call Compile Format["_param1 = %1P1",clientCommandPV Select _count];_params = _params + [_param1]};
+	if (_parameters > 1) then {Call Compile Format["_param2 = %1P2",clientCommandPV Select _count];_params = _params + [_param2]};
+	if (_parameters > 2) then {Call Compile Format["_param3 = %1P3",clientCommandPV Select _count];_params = _params + [_param3]};
+
+;player sidechat format["CMDfromServer (1%:%2): %3",_count,clientCommandPV Select _count,_params]
+
+	;Execute command.
+	Call Compile Format["_params Call CLTFNC%1",clientCommandPV Select _count]
+
+	;Clear the request so that if a new one arrives it will be detected.
+	;Note this is done client-side only so it will not affect other clients.
+	#ClearCommand
+
+		;Network usage stats.
+		publicVariablesSent = publicVariablesSent + _parameters + 2
+
+		Call Compile Format["%1 = 0",clientCommandPV Select _count]
+
+	Goto "CheckForNextCommand"
+
+;*****************************************************************************************
+;1/22/7 MM - Created file.

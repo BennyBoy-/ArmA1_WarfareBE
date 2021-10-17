@@ -1,0 +1,184 @@
+;Last modified 3/16/8
+;*****************************************************************************************
+;Description: Display end of game statistics.
+;*****************************************************************************************
+
+_side = _this Select 0
+
+Goto "Init"
+
+#Update
+~0.1
+
+	_eastRecruitedCount = _eastRecruitedCount + _eastRecruitedRate
+	if (_eastRecruitedCount > eastUnitsCreated) then {_eastRecruitedCount = eastUnitsCreated};
+	_eastRecruitedCounter CtrlSetText Format["%1",_eastRecruitedCount - (_eastRecruitedCount % 1)]
+
+	_eastCasualtyCount = _eastCasualtyCount + _eastCasualtiesRate
+	if (_eastCasualtyCount > eastCasualties) then {_eastCasualtyCount = eastCasualties};
+	_eastCasualtyCounter CtrlSetText Format["%1",_eastCasualtyCount - (_eastCasualtyCount % 1)]
+
+	_eastCreatedCount = _eastCreatedCount + _eastCreatedRate
+	if (_eastCreatedCount > eastVehiclesCreated) then {_eastCreatedCount = eastVehiclesCreated};
+	_eastCreatedCounter CtrlSetText Format["%1",_eastCreatedCount - (_eastCreatedCount % 1)]
+
+	_eastLostCount = _eastLostCount + _eastLostRate
+	if (_eastLostCount > eastVehiclesLost) then {_eastLostCount = eastVehiclesLost};
+	_eastLostCounter CtrlSetText Format["%1",_eastLostCount - (_eastLostCount % 1)]
+
+	_westRecruitedCount = _westRecruitedCount + _westRecruitedRate
+	if (_westRecruitedCount > westUnitsCreated) then {_westRecruitedCount = westUnitsCreated};
+	_westRecruitedCounter CtrlSetText Format["%1",_westRecruitedCount - (_westRecruitedCount % 1)]
+
+	_westCasualtyCount = _westCasualtyCount + _westCasualtiesRate
+	if (_westCasualtyCount > westCasualties) then {_westCasualtyCount = westCasualties};
+	_westCasualtyCounter CtrlSetText Format["%1",_westCasualtyCount - (_westCasualtyCount % 1)]
+
+	_westCreatedCount = _westCreatedCount + _westCreatedRate
+	if (_westCreatedCount > westVehiclesCreated) then {_westCreatedCount = westVehiclesCreated};
+	_westCreatedCounter CtrlSetText Format["%1",_westCreatedCount - (_westCreatedCount % 1)]
+
+	_westLostCount = _westLostCount + _westLostRate
+	if (_westLostCount > westVehiclesLost) then {_westLostCount = westVehiclesLost};
+	_westLostCounter CtrlSetText Format["%1",_westLostCount - (_westLostCount % 1)]
+
+	_timePassed = _timePassed + 0.1
+	if (_timePassed < 8) then {Goto "Update"};
+Exit
+
+#Init
+
+_width = 0.4
+TitleText["","PLAIN"]
+~0.5
+TitleRsc["EndOfGameStats","PLAIN",0]
+
+_eastCreatedRate = eastVehiclesCreated / 5 * .1
+_eastLostRate = eastVehiclesLost / 5 * .1
+_eastRecruitedRate = eastUnitsCreated / 5 * .1
+_eastCasualtiesRate = eastCasualties / 5 * .1
+
+_westCreatedRate = westVehiclesCreated / 5 * .1
+_westLostRate = westVehiclesLost / 5 * .1
+_westRecruitedRate = westUnitsCreated / 5 * .1
+_westCasualtiesRate = westCasualties / 5 * .1
+
+@ (!IsNull currentTitleDisplay)
+
+_gameOverTitle = currentTitleDisplay DisplayCtrl IDCMenuInfo
+_westRecruitedCounter = currentTitleDisplay DisplayCtrl IDCWest
+_westRecruitedBar = currentTitleDisplay DisplayCtrl IDCWest + 1
+_westCasualtyCounter = currentTitleDisplay DisplayCtrl IDCWest + 2
+_westCasualtyBar = currentTitleDisplay DisplayCtrl IDCWest + 3
+_westCreatedCounter = currentTitleDisplay DisplayCtrl IDCWest + 4
+_westCreatedBar = currentTitleDisplay DisplayCtrl IDCWest + 5
+_westLostCounter = currentTitleDisplay DisplayCtrl IDCWest + 6
+_westLostBar = currentTitleDisplay DisplayCtrl IDCWest + 7
+
+_gameOverTitle CtrlSetText Format[Localize "STRWFGAMEOVER",_side]
+_position = CtrlPosition _westRecruitedBar
+_recruited = _width * (westUnitsCreated / 500)
+if (_recruited > _width) then {_recruited = _width};
+_position Set[2,0]
+_westRecruitedBar CtrlSetPosition _position
+_westRecruitedBar CtrlCommit 0
+_position Set[2,_recruited]
+_westRecruitedBar CtrlSetPosition _position
+_westRecruitedBar CtrlCommit 8
+
+_position = CtrlPosition _westCasualtyBar
+_casualties = _width * (westCasualties / 500)
+if (_casualties > _width) then {_casualties = _width};
+_position Set[2,0]
+_westCasualtyBar CtrlSetPosition _position
+_westCasualtyBar CtrlCommit 0
+_position Set[2,_casualties]
+_westCasualtyBar CtrlSetPosition _position
+_westCasualtyBar CtrlCommit 8
+
+
+_position = CtrlPosition _westCreatedBar
+_created = _width * (westVehiclesCreated / 150)
+if (_created > _width) then {_created = _width};
+_position Set[2,0]
+_westCreatedBar CtrlSetPosition _position
+_westCreatedBar CtrlCommit 0
+_position Set[2,_created]
+_westCreatedBar CtrlSetPosition _position
+_westCreatedBar CtrlCommit 8
+
+_position = CtrlPosition _westLostBar
+_lost = _width * (westVehiclesLost / 150)
+if (_lost > _width) then {_lost = _width};
+_position Set[2,0]
+_westLostBar CtrlSetPosition _position
+_westLostBar CtrlCommit 0
+_position Set[2,_lost]
+_westLostBar CtrlSetPosition _position
+_westLostBar CtrlCommit 8
+
+_eastRecruitedCounter = currentTitleDisplay DisplayCtrl IDCEast
+_eastRecruitedBar = currentTitleDisplay DisplayCtrl IDCEast + 1
+_eastCasualtyCounter = currentTitleDisplay DisplayCtrl IDCEast + 2
+_eastCasualtyBar = currentTitleDisplay DisplayCtrl IDCEast + 3
+_eastCreatedCounter = currentTitleDisplay DisplayCtrl IDCEast + 4
+_eastCreatedBar = currentTitleDisplay DisplayCtrl IDCEast + 5
+_eastLostCounter = currentTitleDisplay DisplayCtrl IDCEast + 6
+_eastLostBar = currentTitleDisplay DisplayCtrl IDCEast + 7
+
+_position = CtrlPosition _eastRecruitedBar
+_recruited = _width * (eastUnitsCreated / 500)
+if (_recruited > _width) then {_recruited = _width};
+_position Set[2,0]
+_eastRecruitedBar CtrlSetPosition _position
+_eastRecruitedBar CtrlCommit 0
+_position Set[2,_recruited]
+_eastRecruitedBar CtrlSetPosition _position
+_eastRecruitedBar CtrlCommit 8
+
+_position = CtrlPosition _eastCasualtyBar
+_casualties = _width * (eastCasualties / 500)
+if (_casualties > _width) then {_casualties = _width};
+_position Set[2,0]
+_eastCasualtyBar CtrlSetPosition _position
+_eastCasualtyBar CtrlCommit 0
+_position Set[2,_casualties]
+_eastCasualtyBar CtrlSetPosition _position
+_eastCasualtyBar CtrlCommit 8
+
+
+_position = CtrlPosition _eastCreatedBar
+_created = _width * (eastVehiclesCreated / 150)
+if (_created > _width) then {_created = _width};
+_position Set[2,0]
+_eastCreatedBar CtrlSetPosition _position
+_eastCreatedBar CtrlCommit 0
+_position Set[2,_created]
+_eastCreatedBar CtrlSetPosition _position
+_eastCreatedBar CtrlCommit 8
+
+_position = CtrlPosition _eastLostBar
+_lost = _width * (eastVehiclesLost / 150)
+if (_lost > _width) then {_lost = _width};
+_position Set[2,0]
+_eastLostBar CtrlSetPosition _position
+_eastLostBar CtrlCommit 0
+_position Set[2,_lost]
+_eastLostBar CtrlSetPosition _position
+_eastLostBar CtrlCommit 8
+
+_timePassed = 0
+_eastCasualtyCount = 0
+_eastRecruitedCount = 0
+_eastCreatedCount = 0
+_eastLostCount = 0
+
+_westCasualtyCount = 0
+_westRecruitedCount = 0
+_westCreatedCount = 0
+_westLostCount = 0
+
+Goto "Update"
+
+;*****************************************************************************************
+;11/7/7 MM - Created file.

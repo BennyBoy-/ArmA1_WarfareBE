@@ -1,0 +1,60 @@
+;Last modified 3/6/7
+;Description: Updates positions on map of any Advanced Squad leaders.
+;Updates marker visibility if a team activates or inactivates.
+;*****************************************************************************************
+
+_side = _this Select 0
+_sideText = Str _side
+
+_infantryTypes = Call Compile Format["%1InfantryTeamTypes",_sideText]
+_lightTypes = Call Compile Format["%1LightTeamTypes",_sideText]
+_heavyTypes = Call Compile Format["%1HeavyTeamTypes",_sideText]
+_airTypes = Call Compile Format["%1AirTeamTypes",_sideText]
+
+~5
+
+_label = ""
+
+#Update
+~1
+
+	_count = 0
+	_teams = Call Compile Format["%1Teams",_sideText]
+	_total = Count _teams
+
+	#UpdateMarker
+
+		_marker = Format["%1AdvancedSquad%2Marker",_sideText,_count + 1]
+		_team = _teams Select _count
+
+		_markerType = "CommandTeam"
+		if (IsPlayer Leader _team) then {Goto "ChangeMarker"};
+
+		_teamName = Format["%1Team%2",_sideText,_count + 1]
+		_teamType = Call Compile Format["%1AITeamType",_teamName]
+
+		if (_teamType In _infantryTypes) then {_markerType = "InfantryTeam"};
+		if (_teamType In _lightTypes) then {_markerType = "LightTeam"};
+		if (_teamType In _heavyTypes) then {_markerType = "HeavyTeam"};
+		if (_teamType In _airTypes) then {_markerType = "AirTeam"};
+
+	#ChangeMarker
+
+		_marker SetMarkerTypeLocal _markerType
+
+		if (Count (Units _team Call GetLiveUnits) < 1) then {_marker SetMarkerTypeLocal "Empty";Goto "UpdateNextMarker"};
+		if (!Alive Leader _team) then {_marker SetMarkerTypeLocal "Marker";Goto "UpdateNextMarker"};
+		if (IsPlayer Leader _team) then {_label = Format["%1 [%2]",Name Leader _team,_count + 1]} else {_label = Format["[%1]",_count + 1]};
+
+		_marker SetMarkerTextLocal _label
+		_marker SetMarkerPosLocal GetPos Leader _team
+
+		#UpdateNextMarker
+
+			_count = _count + 1
+			if (_count < _total) then {Goto "UpdateMarker"};
+
+		Goto "Update"
+
+;*****************************************************************************************
+;2/11/7 MM - Created file.

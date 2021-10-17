@@ -1,0 +1,1107 @@
+;Last modified 6/4/8
+
+_display = _this Select 0
+
+_display Call InitInfoBar
+
+Goto "InitMenu"
+
+#Update
+~0.1
+
+#SkipUpdateDelay
+
+	if (menuExit) then {CloseDialog 0;Goto "Quit"};
+	if (!Alive player || !Dialog) then {Goto "Quit"};
+
+	;If unit dies or is no longer on his/her side (team killing).
+	if (Side player != sideJoined) then {CloseDialog 0;Goto "Quit"};
+
+	fireMissionRadius = SliderPosition 221011
+	"playerFireMissionMarker" SetMarkerSizeLocal [fireMissionRadius,fireMissionRadius]
+
+	if (fireMissionInProgress) then {CtrlSetText[221012,"Cancel Fire Mission"]} else {CtrlSetText[221012,"Request Fire Mission"]};
+	if (playerMissionDescription == Localize "STRWFNONE") then {CtrlShow [221030,false]} else {CtrlShow [221030,true]};
+
+	_display Call DisplayInfoBar
+
+	_commanderTeam = Call Compile Format ["%1CommanderTeam",sideJoinedText];
+
+	if (IsNull _commanderTeam) then {CtrlShow[221013,false];Goto "UpdateMessageLog"}
+	if (Group player == _commanderTeam) then {CtrlShow[221013,true]} else {CtrlShow[221013,false]};
+	if (Group player != _commanderTeam && _commandOn) then {Goto "TurnCommandOff"};
+
+#UpdateCommand
+
+	if (!_commandOn) then {Goto "UpdateMessageLog"};
+
+	_refresh = false
+
+	_teams = Call Compile Format["%1Teams",sideJoinedText]
+
+	_selectedTeam = lbCurSel 221017
+	if (_selectedTeam == -1) then {_selectedTeam = 0;lbSetCurSel [221017,0]};
+
+	_team = _teams Select _selectedTeam
+	_teamSlot = lbValue [221017,_selectedTeam]
+
+	_teamName = Format["%1Team%2",sideJoinedText,_teamSlot]
+	_teamCommand = Call Compile Format["%1AIMission",_teamName]
+	_teamType = Call Compile Format["%1AITeamType",_teamName]
+	_playerTeam = false
+
+	if (IsPlayer Leader _team) then {CtrlShow[221022,false];_playerTeam = true;_teamCommand = Call Compile Format["%1Mission",_teamName];_teamType = 0} else {CtrlShow[221022,true]};
+	if (_teamSlot != _lastTeamSlot) then {lbSetCurSel [221016,_teamType]};
+	_lastTeamSlot = _teamSlot
+
+	CtrlSetText[221014,Format["AI Team %1 (%2)",_teamSlot,MISLABELS Select _teamCommand]]
+	if (_playerTeam) then {CtrlSetText[221014,Format["%1 [%2] (%3)",Name Leader _team,_teamSlot,PLAYERMISSIONTEXT Select _teamCommand]]};
+
+	_position = Call Compile Format["[%1AIMissionX,%1AIMissionY]",_teamName]
+	if (_playerTeam) then {_position = Call Compile Format["[%1MissionX,%1MissionY]",_teamName]};
+
+	_missionMarker SetMarkerTypeLocal "Move"
+	_missionMarker SetMarkerShapeLocal "ICON"
+	_missionMarker SetMarkerSizeLocal [1,1]
+	if (_playerTeam && _teamCommand == 3) then {_missionMarker SetMarkerTypeLocal "Defend"};
+	if (_playerTeam && _teamCommand == 2) then {_missionMarker SetMarkerTypeLocal "Attack"};
+	if (_playerTeam && _teamCommand == 4) then {_missionMarker SetMarkerSizeLocal [AIPATROLRANGE,AIPATROLRANGE];_missionMarker SetMarkerShapeLocal "Ellipse"};
+	if (!_playerTeam && _teamCommand == MISDEFENDBASE) then {_missionMarker SetMarkerTypeLocal "Defend"};
+	if (!_playerTeam && _teamCommand == MISCAPTURELOCATIONS) then {_missionMarker SetMarkerTypeLocal "Attack"};
+	if (!_playerTeam && _teamCommand == MISPATROL) then {_missionMarker SetMarkerSizeLocal [AIPATROLRANGE,AIPATROLRANGE];_missionMarker SetMarkerShapeLocal "Ellipse"};
+
+	_missionMarker SetMarkerPosLocal _position
+
+;	if (menuCommand In _destinationCommands) then {CtrlSetText [IDCMENUINFO,Localize "STRWFCLICKONMAP"]} else {CtrlSetText [IDCMENUINFO,""]};
+
+	_selectedType = lbValue[221016,lbCurSel 221016]
+	if (_selectedType == _teamType) then {Goto "UpdateMessageLog"};
+
+	_lastTeamType = _selectedType
+	Call Compile Format["%1AITeamType = _selectedType",_teamName]
+	Call Compile Format["PublicVariable ""%1AITeamType""",_teamName]
+
+#UpdateMessageLog
+
+	if (IsNull _commanderTeam && _commandOn) then {Goto "TurnOffCommand"};
+
+	_messageTime = _messageTime + 0.1
+	if (_messageTime < 0.5) then {Goto "UpdateActions"};
+
+	_messageTime = 0
+
+	lbClear IDCGenericList
+	{lbAdd[IDCGenericList,_x]} ForEach messageLog
+
+#UpdateActions
+
+	if (menuCheckBox) then {CtrlSetText [IDCGenericCheckbox,"\Warfare\Images\CheckboxChecked.paa"]} else {CtrlSetText [IDCGenericCheckbox,"\Warfare\Images\CheckboxEmpty.paa"]};
+	if (menuMissionClicked) then {Goto "CheckForMission"};
+
+	if (menuButton == 4 && !_addWP) then {_addWP = true;_messageBar CtrlSetFade 0;_messageBar CtrlSetText Localize "STRWFCLICKONMAPWPS";_messageBar CtrlSetTextColor [0,1,0,1];_messageBar CtrlCommit 0;_messageBar CtrlShow true};
+	if (menuButton != 4 && _addWP) then {_addWP = false;_messageBar CtrlShow false};
+
+	if (menuButton == 12 && !_setSupportWP) then {_setSupportWP = true;_messageBar CtrlSetFade 0;_messageBar CtrlSetText Localize "STRWFCLICKONMAPFIREMISSION";_messageBar CtrlSetTextColor [0,1,0,1];_messageBar CtrlCommit 0;_messageBar CtrlShow true};
+	if (menuButton != 12 && _setSupportWP) then {_setSupportWP = false;_messageBar CtrlShow false};
+;	[_messageBar,1.5,0.75,Localize "STRWFNOAVAILABLETOWNS",[1,0,0,1]] Spawn ShowGUIMessage
+
+	if (mouseButtonUp == 0) then {Goto "ClickOnMap"};
+
+	if (menuButton == 1) then {Goto "OpenHelp"};
+	if (menuButton == 2) then {Goto "CheckForMission"};
+	if (menuButton == 3 && !noFastTravel) then {Goto "FastTravel"};
+	if (menuButton == 5) then {Goto "WPToMission"};
+	if (menuButton == 6) then {Goto "WPToFriendly"};
+	if (menuButton == 7) then {Goto "WPToHostile"};
+	if (menuButton == 8) then {Goto "WPToBase"};
+	if (menuButton == 9) then {Goto "WPToCamp"};
+	if (menuButton == 10) then {Goto "ClearWPs"};
+	if (menuButton == 11) then {Goto "Vote"};
+	if (menuButton == 13) then {Goto "RequestFireMission"};
+	if (menuButton == 14) then {Goto "CommandTeams"};
+
+	if (menuButton == 15) then {Goto "CommandMove"};
+	if (menuButton == 16) then {Goto "CommandCaptureTowns"};
+	if (menuButton == 17) then {Goto "CommandDefendBase"};
+	if (menuButton == 18) then {Goto "CommandPatrol"};
+	if (menuButton == 19) then {Goto "RespawnAITeam"};
+
+	if (menuButton == 52) then {Goto "OpenTeamMenu"};
+	if (menuButton == 54) then {Goto "OpenGearMenu"};
+	if (menuButton == 55) then {Goto "OpenConstruction"};
+
+	if (menuButton == 101) then {Goto "AbortMission"};
+	
+	if (menuButton == 601) then {menuButton = -1;if (DEFAULTVIEWDISTANCE < 3500) then {DEFAULTVIEWDISTANCE = DEFAULTVIEWDISTANCE + 100;[playerSide, "HQ"] sidechat format ["View Distance increased to: %1",DEFAULTVIEWDISTANCE];setViewDistance DEFAULTVIEWDISTANCE;} else {[playerSide, "HQ"] sidechat "View Distance cannot be higher than 3500 meters."}; Goto "Update";};
+	if (menuButton == 602) then {menuButton = -1;if (DEFAULTVIEWDISTANCE > 100) then {DEFAULTVIEWDISTANCE = DEFAULTVIEWDISTANCE - 100;[playerSide, "HQ"] sidechat format ["View Distance decreased to: %1",DEFAULTVIEWDISTANCE];setViewDistance DEFAULTVIEWDISTANCE;} else {[playerSide, "HQ"] sidechat "View Distance cannot be lower than 100 meters."}; Goto "Update";};
+	if (menuButton == 603) then {menuButton = -1;CloseDialog 0;CreateDialog "classMenu";Exit;};
+	if (menuButton == 604) then {menuButton = -1;CloseDialog 0;CreateDialog "SupportInterface";Exit;};
+	
+	Goto "Update"
+
+;Creates the command menu.
+#InitMenu
+
+	if (fastTravelInProgress) then {CloseDialog 0;Exit};
+
+	_setPlayerMission = false
+	OnMapSingleClick "true"
+
+	CtrlShow [221003,false]
+	CtrlShow [221005,false]
+	(_display DisplayCtrl 221003) CtrlSetFade 1
+
+	_supportSlider = _display DisplayCtrl 221012
+
+	CtrlShow [IDCErrorMessage,false]
+	_messageBar = _display DisplayCtrl IDCErrorMessage
+
+	_addWP = false
+	_setSupportWP = false
+
+	menuCheckBox = showMessagesOnScreen
+	showMessagesOnScreen = false
+
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+	menuButton = -1
+
+	_messageTime = 1
+
+	;Menu buttons.
+	menuExit = false
+	menuMissionClicked = false
+
+	_team = Group player
+	_name = ""
+	_WPName = Localize "STRWFMOVE"
+
+	if (IsNil "totalPlayerWPs") then {totalPlayerWPs = 0};
+
+	if (noFastTravel) then {CtrlEnable [IDCGENERICBUTTON + 10,false]};
+	if (!enableArtillery) then {CtrlShow [221009,false];CtrlShow [221010,false];CtrlShow [221011,false];CtrlShow [221012,false]};
+	
+	_checkArr = upgradeVerifyEast;
+	if (side player == west) then {_checkArr = upgradeVerify};
+
+	SliderSetRange[221011,5,150]
+	SliderSetPosition[221011,fireMissionRadius]
+	SliderSetSpeed[221011,5,10]
+
+	;Yes/no prompt.
+	CtrlShow [IDCGenericLabel + 25,false]
+	CtrlShow [IDCGenericButton + 25,false]
+	CtrlShow [IDCGenericButton + 26,false]
+	CtrlEnable [IDCGenericButton + 25,false]
+	CtrlEnable [IDCGenericButton + 26,false]
+
+	for [{_count = 0},{_count < totalPlayerWPs},{_count = _count + 1}] do {DeleteMarkerLocal Format["PlayerWPMarker%1",_count]};
+	[Waypoints player,"Select"] Call ShowWaypoints
+
+	_fastTravelMarkers = []
+
+	"playerFireMission" SetMarkerSizeLocal [fireMissionRadius,fireMissionRadius]
+	
+	(_display DisplayCtrl 15263) CtrlSetTooltip "Open up Class Actions Menu."
+	(_display DisplayCtrl 15264) CtrlSetTooltip "Open up Support Menu."
+	(_display DisplayCtrl 221002) CtrlSetTooltip "Double click mission to see briefing."
+	(_display DisplayCtrl 221008) CtrlSetTooltip "Clear all waypoints on map."
+	(_display DisplayCtrl 221010) CtrlSetTooltip "Set Fire Mission location on map."
+	(_display DisplayCtrl 221011) CtrlSetTooltip "Set radius of Fire Mission area."
+	(_display DisplayCtrl (IDCGENERICBUTTON + 10)) CtrlSetTooltip "Quickly travel between base or friendly nearby towns."
+
+#InitCommander
+
+	(_display DisplayCtrl 221016) CtrlSetTooltip "Change AI team type."
+	(_display DisplayCtrl 221017) CtrlSetTooltip "Select AI controlled player slot."
+	(_display DisplayCtrl 221018) CtrlSetTooltip "Move to position on map."
+	(_display DisplayCtrl 221019) CtrlSetTooltip "Capture nearby towns."
+	(_display DisplayCtrl 221020) CtrlSetTooltip "Return to base & defend it."
+	(_display DisplayCtrl 221021) CtrlSetTooltip "Patrol area on map."
+	(_display DisplayCtrl 221022) CtrlSetTooltip "Respawn AI team at nearest factory."
+
+	_missionMarker = ""
+	_commandOn = false
+	_teams = Call Compile Format["%1Teams",sideJoinedText]
+	_teamType = -1
+
+	_selectedTeam = -1
+	_lastTeamSlot = -1
+
+	_types = Call Compile Format["%1AITeamTemplateDescriptions",sideJoinedText]
+	_count = 0
+	{if (_x != "") then {_selection = lbAdd[221016,_x];lbSetValue [221016,_selection,_count]};_count = _count + 1} ForEach _types
+
+	lbClear 221017
+	_count = 0
+	{_index = lbAdd[221017,Format["%1",_count + 1]];lbSetValue[221017,_index,_count + 1];_count = _count + 1} ForEach _teams
+	lbSetCurSel [221017,0]
+
+	_IDCs = [221014,221015,221016,221017,221018,221019,221020,221021,221022]
+	{CtrlShow[_x,false]} ForEach _IDCs
+
+	Goto "GetMissions"
+
+#ClearWPs
+
+	menuButton = -1
+	_team = Group player
+	totalPlayerWPs = 0
+
+	;Clear any commander mission WPs.
+	_name = Format["%1Team%2",sideJoinedText,clientID]
+	Call Compile Format["%1Mission = 0;PublicVariable ""%1Mission""",_name]
+	Call Compile Format["%1MissionX = -1;PublicVariable ""%1MissionX""",_name]
+	Call Compile Format["%1MissionY = -1;PublicVariable ""%1MissionY""",_name]
+
+	;Clear any old WPs & markers.
+	for [{_count = Count Waypoints player},{_count >= 0},{_count = _count - 1}] do {DeleteWaypoint[_team,_count];DeleteMarkerLocal Format["PlayerWPMarker%1",_count]};
+	Goto "Update"
+
+#ClickOnMap
+
+	_team = Group player
+	mouseButtonUp = -1
+
+	if (menuButton == 103) then {Goto "FastTravelToDestination"};
+	if (menuButton == 12) then {Goto "SetFireMission"};
+	if (menuButton == 104) then {Goto "CommandSetMove"};
+	if (menuButton == 105) then {Goto "CommandSetPatrol"};
+	if (menuButton != 4) then {Goto "Update"};
+
+#AddWPs
+
+	_map = _display DisplayCtrl IDCMENUIMAGE;
+	_position = _map PosScreenToWorld[mouseX,mouseY]
+
+#CreateWP
+
+	_WP = [_team,_position,0,"move","full","aware",_WPName] Call CreateWP
+	totalPlayerWPs = totalPlayerWPs + 1
+
+	if (_setPlayerMission) then {playerMissionWP = _WP};
+
+	_setPlayerMission = false
+
+	;Clear any old markers.
+	for [{_count = Count Waypoints player},{_count >= 0},{_count = _count - 1}] do {DeleteMarkerLocal Format["PlayerWPMarker%1",_count]};
+	[Waypoints player,"Select"] Call ShowWaypoints
+
+	Goto "Update"
+
+#CheckForMission
+
+	menuButton = -1
+	menuMissionClicked = false
+	_selection = lbCurSel 221002
+	if (_selection == -1) then {Goto "Update"};
+
+	_location = _missionLocations Select _selection
+	if (IsNull _location) then {[_messageBar,1.5,0.75,Localize "STRWFNOMISSIONSAVAILABLE",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"}
+
+	Goto "PreviewMission"
+
+#GetMissions
+
+	menuButton = -1
+	_unsorted = [sideJoined] Call GetHostileLocations
+
+	if (Count _unsorted < 1) then {Goto "SkipUpdateDelay"};
+	_missionLocations = [player,_unsorted] Call SortByDistance
+
+	{lbAdd[221002,Format[Localize "STRWFPLAYERCAPTURETOWN",Call Compile Format["%1Name",_x]]]} ForEach _missionLocations
+
+	if (gotoMission && IsNull playerMissionLocation) then {gotoMission = false;lbSetCurSel [221002,0];Goto "CheckForMission"};
+
+	Goto "SkipUpdateDelay"
+
+#PreviewMission
+
+	_map = _display DisplayCtrl IDCMENUIMAGE
+	CtrlMapAnimClear _map
+	_map CtrlMapAnimAdd [2,.075,GetPos _location]
+	CtrlMapAnimCommit _map
+
+	_range = Call Compile Format["%1Range * TOWNCAPTUREASSISTRANGEMODIFIER",Str _location];
+
+	_marker = "tempPlayerMissionAreaMarker"
+	CreateMarkerLocal [_marker,GetMarkerPos Format["%1CenterMarker",Str _location]]
+	_marker SetMarkerColorLocal "ColorBlack"
+	_marker SetMarkerBrushLocal "FDiagonal"
+	_marker SetMarkerSizeLocal [_range,_range]
+	_marker SetMarkerShapeLocal "Ellipse"
+
+	_marker1 = "tempPlayerObjectiveMarker"
+	CreateMarkerLocal [_marker1,_location]
+	_marker1 SetMarkerColorLocal "ColorRed"
+	_marker1 SetMarkerSizeLocal [TOWNCAPTURERANGE,TOWNCAPTURERANGE]
+	_marker1 SetMarkerShapeLocal "Ellipse"
+
+	_marker2 = "tempPlayerMissionMarker"
+	CreateMarkerLocal [_marker2,_location]
+	_marker2 SetMarkerTextLocal Localize "STRWFCAPTURETOWN"
+	_marker2 SetMarkerTypeLocal "Select"
+	_marker2 SetMarkerSizeLocal [1.25,1.25]
+	_marker2 SetMarkerColorLocal "ColorRed"
+
+	_name = Call Compile Format["%1Name",Str _location]
+	_description = Format[Localize "STRWFPLAYERCAPTURETOWN1",_name]
+
+	CtrlShow [221003,true]
+	CtrlShow [221005,true]
+
+	_IDCs = [221002,221006,221007,221008,221013,221030,IDCGENERICBUTTON + 10]
+	{CtrlShow[_x,false]} ForEach _IDCs
+
+	if (enableArtillery) then {CtrlShow [221009,false];CtrlShow [221010,false];CtrlShow [221011,false];CtrlShow [221012,false]};
+
+	_button = _display DisplayCtrl 221004
+	_button CtrlSetText "ACCEPT"
+
+	_briefing = _display DisplayCtrl 221003
+	_briefing CtrlSetPosition [0.65,0.25,.24,.24]
+	_briefing CtrlCommit 0
+	_briefing CtrlSetPosition [0.65,0.25,.24,.54]
+	_briefing CtrlSetFade 0
+
+	_button CtrlSetPosition [0.65,0.798,.24,.035]
+	_button CtrlCommit 0.35
+	_briefing CtrlCommit 0.35
+
+	@ (CtrlCommitted _button)
+
+	;Add mission briefing to message log.
+	lbClear 221003
+	lbAdd[221003,Format[Localize "STRWFBRIEFINGCAPTURE0",_name]]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE1"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE2"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE3"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE4"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE5"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE6"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE7"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE8"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE9"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE10"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE11"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE12"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE13"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE14"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE15"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE16"]
+	lbAdd[221003,Localize "STRWFBRIEFINGCAPTURE17"]
+
+#WaitForMissionChoice
+
+	@ (!Alive player || !Dialog || menuButton != -1)
+
+	if (menuButton != 2) then {Goto "CloseBriefing"};
+	if (playerMissionDescription == Localize "STRWFNONE") then {Goto "CloseBriefing"};
+
+	;Prompt player to cancel current mission before accepting new mission.
+	menuYes = false
+	menuNo = false
+
+	_description = Format[Localize "STRWFPLAYERCAPTURETOWN1",_name]
+	CtrlSetText [IDCGenericLabel + 25,Localize "STRWFCANCELMISSION"]
+	CtrlShow [IDCGenericLabel + 25,true]
+	CtrlShow [IDCGenericButton + 25,true]
+	CtrlShow [IDCGenericButton + 26,true]
+	CtrlEnable [IDCGenericButton + 25,true]
+	CtrlEnable [IDCGenericButton + 26,true]
+
+	@ (!Alive player || !Dialog || menuYes || menuNo)
+
+	CtrlShow [IDCGenericLabel + 25,false]
+	CtrlShow [IDCGenericButton + 25,false]
+	CtrlShow [IDCGenericButton + 26,false]
+
+;	if (menuButton != -1) then {Goto "CloseBriefing"};
+
+	if (!Alive player || !Dialog) then {Goto "Quit"};
+	if (menuNo) then {menuButton = -1;Goto "WaitForMissionChoice"};
+
+	_newScore = score player - (playerMissionPoints / 2)
+	if (_newScore < 0) then {_newScore = 0}
+
+	;Only count it as a failure if the mission has been engaged for a while.
+	if (time - playerMissionStartTime > 30) then {[CMDREQUESTCHANGESCORE,player,_newScore] Exec "Client\Client_CommandToServer.sqs"};
+
+	[false] Call PlayerMissionEnded
+;	Goto "CheckForMission"
+
+#CloseBriefing
+
+	CtrlShow [IDCGenericLabel + 25,false]
+	CtrlShow [IDCGenericButton + 25,false]
+	CtrlShow [IDCGenericButton + 26,false]
+
+	_briefing = _display DisplayCtrl 221003
+	_briefing CtrlSetPosition [0.65,0.25,.24,.24]
+	_briefing CtrlSetFade 1
+	_briefing CtrlCommit 0.35
+
+	_button = _display DisplayCtrl 221004
+	_button CtrlSetText "PREVIEW"
+
+	_button CtrlSetPosition [0.65,0.418+0.047,.24,.035]
+	_button CtrlCommit 0.35
+
+	@ (CtrlCommitted _button)
+
+	CtrlShow [221003,false]
+	CtrlShow [221005,false]
+
+	_IDCs = [221002,221006,221007,221008,221013,221030,IDCGENERICBUTTON + 10]
+	{CtrlShow[_x,true]} ForEach _IDCs
+
+	if (enableArtillery) then {CtrlShow [221009,true];CtrlShow [221010,true];CtrlShow [221011,true];CtrlShow [221012,true]};
+
+	DeleteMarkerLocal _marker
+	DeleteMarkerLocal _marker1
+	DeleteMarkerLocal _marker2
+
+	if (!Alive player || !Dialog) then {Goto "Quit"};
+	if (menuButton == 2 && Call Compile Format["%1SideID != sideID",Str _location]) then {Goto "AcceptMission"};
+
+	Goto "Update"
+
+#AbortMission
+
+	menuButton = -1
+
+	_newScore = score player - (playerMissionPoints / 2)
+	if (_newScore < 0) then {_newScore = 0}
+
+	;Only count it as a failure if the mission has been engaged for a while.
+	if (time - playerMissionStartTime > 30) then {[CMDREQUESTCHANGESCORE,player,_newScore] Exec "Client\Client_CommandToServer.sqs"};
+
+	[false] Call PlayerMissionEnded
+	CtrlShow [221030,false]
+	Goto "Update"
+
+#AcceptMission
+
+	_marker = "playerMissionAreaMarker"
+	CreateMarkerLocal [_marker,GetMarkerPos Format["%1CenterMarker",Str _location]]
+	_marker SetMarkerColorLocal "ColorBlack"
+	_marker SetMarkerBrushLocal "FDiagonal"
+	_marker SetMarkerSizeLocal [_range,_range]
+	_marker SetMarkerShapeLocal "Ellipse"
+
+	_marker1 = "playerObjectiveMarker"
+	CreateMarkerLocal [_marker1,_location]
+	_marker1 SetMarkerColorLocal "ColorRed"
+	_marker1 SetMarkerSizeLocal [TOWNCAPTURERANGE,TOWNCAPTURERANGE]
+	_marker1 SetMarkerShapeLocal "Ellipse"
+
+	_marker2 = "playerMissionMarker"
+	CreateMarkerLocal [_marker2,_location]
+;	_marker2 SetMarkerTextLocal Localize "STRWFCAPTURETOWN"
+	_marker2 SetMarkerTypeLocal "Select"
+	_marker2 SetMarkerSizeLocal [1.25,1.25]
+	_marker2 SetMarkerColorLocal "ColorBlue"
+
+	playerMissionLocation = _location
+	playerMissionLocationName = _name
+	playerMissionDescription = Format[Localize "STRWFPLAYERCAPTURETOWN",_name]
+	playerMissionPoints = SCORECAPTURETOWN
+	playerMissionStartTime = time
+	_setPlayerMission = true
+	Goto "WPToMission"
+
+#WPToMission
+
+	menuButton = -1
+
+	_WPName = Localize "STRWFCAPTURE"
+
+	if (IsNull playerMissionLocation) then {[_messageBar,1.5,0.75,Localize "STRWFNOTONMISSION",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	_name = playerMissionLocationName;
+	_location = playerMissionLocation;
+	Goto "WPToLocation"
+
+#WPToLocation
+
+	[_messageBar,1.5,0.75,Format[Localize "STRWFWPSETTOLOCATION",_name],[0,1,0,1]] Spawn ShowGUIMessage
+
+	;Clear old WPs.
+	totalPlayerWPs = 0
+	for [{_count = Count Waypoints player},{_count >= 0},{_count = _count - 1}] do {DeleteWaypoint[_team,_count]};
+
+	_position = GetPos _location
+	Goto "CreateWP"
+
+#WPToFriendly
+
+	menuButton = -1
+
+	_WPName = Localize "STRWFTOWN"
+
+	_location = [player,sideJoined] Call GetClosestFriendlyLocation
+	if (!IsNull _location) then {_name = Call Compile Format["%1Name",Str _location];Goto "WPToLocation"};
+	[_messageBar,1.5,0.75,Localize "STRWFNOAVAILABLETOWNS",[1,0,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#WPToHostile
+
+	menuButton = -1
+
+	_WPName = Localize "STRWFTOWN"
+
+	_location = [player,sideJoined] Call GetClosestHostileLocation
+	if (!IsNull _location) then {_name = Call Compile Format["%1Name",Str _location];Goto "WPToLocation"};
+	[_messageBar,1.5,0.75,Localize "STRWFNOAVAILABLETOWNS",[1,0,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#WPToBase
+
+	menuButton = -1
+
+	_WPName = Localize "STRWFBASE"
+
+	_name = Localize "STRWFBASE"
+	_location = Call Compile Format["%1Base",sideJoinedText]
+	Goto "WPToLocation"
+
+#WPToCamp
+
+	menuButton = -1
+	_town = [player,sideJoined] Call GetClosestFriendlyLocation
+	_location = ObjNull
+
+	_WPName = Localize "STRWFCAMP"
+
+	if (!IsNull _town) then {_location = [_town,sideJoined,GetPos player] Call GetClosestFriendlyCamp};
+	if (!IsNull _location) then {_name = Localize "STRWFCAMP";Goto "WPToLocation"};
+
+	[_messageBar,1.5,0.75,Localize "STRWFNOAVAILABLECAMPS",[1,0,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#SetFireMission
+
+	menuButton = -1
+
+	_map = _display DisplayCtrl IDCMENUIMAGE;
+	_position = _map PosScreenToWorld[mouseX,mouseY]
+
+	"playerFireMissionMarker" SetMarkerPosLocal _position
+	"playerFireMissionMarker1" SetMarkerPosLocal _position
+	Goto "Update"
+
+#RequestFireMission
+
+	menuButton = -1
+
+	if (!enableArtillery) then {Goto "Update"};
+
+	_position = GetMarkerPos "playerFireMissionMarker"
+	if ((_position Select 0) == 0 && (_position Select 1) == 0) then {[_messageBar,1.5,0.75,"Set Fire Mission location first!",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	if (fireMissionInProgress) then {fireMissionInProgress = false;[_messageBar,1.5,0.75,"Roger, aborting fire mission.",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	_units = [Group player,GetPos player,10000] Call GetTeamArtillery;
+	if (Count _units < 1) then {[_messageBar,1.5,0.75,Localize "STRWFNOARTILLERY",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	if (IsNil "fireMissionTime") then {fireMissionTime = time - 1000};
+	if (_checkArr select 4) then {FIREMISSIONTIMEOUT=140};
+	if (time - fireMissionTime < FIREMISSIONTIMEOUT) then {[_messageBar,1.5,0.75,"Negative, next fire mission is not available yet.",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+	fireMissionTime = time
+
+	[_messageBar,1.5,0.75,Localize "STRWFBEGINFIREMISSION",[0,1,0,1]] Spawn ShowGUIMessage
+	[GetMarkerPos "playerFireMissionMarker"] Spawn RequestFireMission
+	PlaySound Format["RequestFireMission%1",Round Random 1]
+	Goto "Update"
+
+#FastTravel
+
+	menuButton = -1
+	
+	_base = Call Compile Format["%1Base",sideJoinedText]
+	_location = _base
+	
+	_typeccb = Call Compile Format["%1StructureNames Select %1COMMANDCENTERTYPE",sideJoinedText];
+	_cclistb = []
+	{if (TypeOf _x == _typeccb && GetDammage _x < 1) then {_cclistb = _cclistb + [_x]};} ForEach baseStructures;
+	_countb = 0
+	thereisacc = false
+	_cclistd = []
+	
+	if (Count _cclistb > 0) then {{if (player Distance _x < 3000) then {_cclistd = _cclistd + [_x]};} ForEach _cclistb}
+	
+	{if (player Distance (_cclistb select _countb) < 175) then {_location = _cclistb select _countb;thereisacc = true};_countb = _countb + 1}ForEach _cclistb;
+	if (thereisacc) then {Goto "FastTravelCheckSelections"};
+	
+	if (player Distance _location < BASERANGE) then {Goto "FastTravelCheckSelections"};
+	
+	;Get nearest friendly town.
+	_location = [player,sideJoined] Call GetClosestFriendlyLocation
+	if (!IsNull _location) then {Goto "FastTravelDistanceCheck"};
+
+	_script = [_display DisplayCtrl IDCErrorMessage,1.5,0.75,Localize "STRWFNOAVAILABLETOWNS",[1,0,0,1]] Spawn ShowGUIMessage
+	@ (ScriptDone _script)
+	
+	Goto "Update"
+
+#FastTravelDistanceCheck
+
+	_range = Call Compile Format["%1Range * FASTTRAVELRANGERANGEMODIFIER",Str _location]
+	if (player Distance _location < _range) then {Goto "FastTravelCheckSelections";};
+
+	_script = [_display DisplayCtrl IDCErrorMessage,1.5,0.75,Localize "STRWFTOOFARFROMTOWNBASE",[1,0,0,1]] Spawn ShowGUIMessage
+	@ (ScriptDone _script)
+	Goto "Update"
+
+#FastTravelCheckSelections
+
+	_destinations = []
+	_townNearBase = [_base,sideJoined] Call GetClosestFriendlyLocation
+	_townNearPlayer = [player,sideJoined] Call GetClosestFriendlyLocation
+	_locations = [_base,sideJoined,FASTTRAVELTOWNSFROMBASERANGE] Call GetClosestFriendlyLocations
+
+	;If there are no close locations then take the closest no matter how far.
+	if (Count _locations < 1) then {_locations = [_townNearBase]};
+
+	if (_location == _base) then {_destinations = _locations + _cclistd}
+	if (_location In _cclistb) then {_destinations = _locations + _cclistd}
+	if ((_location In _cclistb) and (player Distance _base < FASTTRAVELTOWNSFROMBASERANGE)) then {_destinations = _locations + _cclistd + [_base]}
+	
+	if ((_location != _base) and !(_location In _cclistb)) then {_destinations = [_location,sideJoined] Call GetFriendlyNearLocations}
+	
+	_destinations = _destinations - [ObjNull]
+
+	_range = 0
+	if (!IsNull _townNearPlayer) then {_range = Call Compile Format["%1Range * FASTTRAVELRANGERANGEMODIFIER",Str _townNearPlayer]};
+
+	if ((_townNearPlayer In _locations) && (player Distance _townNearPlayer < _range)) then {_destinations = _destinations + _cclistd};
+	if ((_townNearPlayer In _locations) && (player Distance _townNearPlayer < _range) && (player Distance _base < FASTTRAVELTOWNSFROMBASERANGE)) then {_destinations = _destinations + _cclistd + [_base]};
+	
+	if (Count _destinations > 0) then {Goto "FastTravelCreateSelections"};
+
+	_script = [_display DisplayCtrl IDCErrorMessage,1.5,0.75,Localize "STRWFNOAVAILABLETOWNS",[1,0,0,1]] Spawn ShowGUIMessage
+	@ (ScriptDone _script)
+
+	Goto "Update"
+
+#FastTravelCreateSelections
+
+	menuButton = 103
+
+	_fastTravelMarkers = [_destinations,"TempMarker","Select","ColorGreen"] Call CreateObjectMarkers
+	{_x SetMarkerSizeLocal [2,2]} ForEach _fastTravelMarkers
+
+	[_display DisplayCtrl IDCErrorMessage,2,0.75,Localize "STRWFCLICKONDESTINATION",[0,1,0,1]] Spawn ShowGUIMessage
+
+	Goto "Update"
+
+#FastTravelToDestination
+
+	if (CanMove Vehicle player) then {Goto "FastTravelCheckDestination"};
+
+	_script = [_display DisplayCtrl IDCErrorMessage,1.5,0.75,Localize "STRWFVEHICLEIMMOBILIZED",[1,0,0,1]] Spawn ShowGUIMessage
+	@ (ScriptDone _script)
+
+	Goto "Update"
+
+#FastTravelCheckDestination
+
+	_map = _display DisplayCtrl IDCMENUIMAGE
+	_position = _map PosScreenToWorld[mouseX,mouseY]
+	_destination = ObjNull
+	_near = 100000
+
+	{_distance = [GetPos _x,_position] Call GetDistance;if (_distance < _near) then {_near = _distance;_destination = _x}} ForEach _destinations
+	
+	if (_near < 500) then {Goto "FastTravelSafetyCheck"};
+
+	_script = [_display DisplayCtrl IDCErrorMessage,1.5,0.75,Localize "STRWFCLICKONDESTINATION",[1,0,0,1]] Spawn ShowGUIMessage
+	@ (ScriptDone _script)
+
+	Goto "Update"
+
+#FastTravelSafetyCheck
+
+	{DeleteMarkerLocal _x} ForEach _fastTravelMarkers
+
+	menuButton = -1
+
+	;Check if destination is safe...
+	_unsafe = false
+	_checkRange = TOWNCAPTURERANGE * 2
+	if ((_location != _base) and !(_location In _cclistb)) then {_unsafe = [_location,sideJoined] Call HasHostileCamp} else {_checkRange = TOWNCAPTURERANGE * 5};
+
+	_objects = NearestObjects[_location,[eastSoldierBaseClass,westSoldierBaseClass,resistanceSoldierBaseClass,"Car","Motorcycle","Tank"],_checkRange]
+	_livingUnits = _objects Call GetLiveUnits
+
+	_enemies = Resistance CountSide _livingUnits
+
+	if (sideJoined == West) then {_enemies = _enemies + (East CountSide _livingUnits)} else {_enemies = _enemies + (West CountSide _livingUnits)};
+	if (_enemies < 3 && !_unsafe) then {Goto "FastTravelInProgressMarkers"};
+
+	_script = [_display DisplayCtrl IDCErrorMessage,1.5,0.75,Localize "STRWFUNSAFEDESTINATION",[1,0,0,1]] Spawn ShowGUIMessage
+	@ (ScriptDone _script)
+
+	Goto "Update"
+
+#FastTravelInProgressMarkers
+
+	_name = Localize "STRWFBASE"
+	if ((_destination != _base) and !(_destination In _cclistd)) then {_name = Call Compile Format["%1Name",Str _destination]};
+	if (_destination In _cclistd) then {_name = "Command Center"};
+	
+	[_display DisplayCtrl IDCErrorMessage,5,2,Format[Localize "STRWFTRAVELINGTO",_name],[0,1,0,1]] Spawn ShowGUIMessage
+
+	fastTravelInProgress = true
+
+	fastTravelDestinationMarker = "FastTravelMarker"
+	CreateMarkerLocal [fastTravelDestinationMarker,GetPos _destination]
+	fastTravelDestinationMarker SetMarkerTypeLocal "Select"
+	fastTravelDestinationMarker SetMarkerColorLocal "ColorGreen"
+	fastTravelDestinationMarker SetMarkerSizeLocal [1.25,1.25]
+
+	ForceMap true
+	MapAnimClear
+	MapAnimAdd [0,.2,GetPos _location]
+	MapAnimCommit
+
+	_compass = ShownCompass
+	_GPS = ShownGPS
+	_pad = ShownPad
+	_radio = ShownRadio
+	_watch = ShownWatch
+
+	ShowCompass false
+	ShowGPS false
+	ShowPad false
+	ShowRadio false
+	ShowWatch false
+
+	_locationPosition = GetPos _location
+
+	;Safe way to disable user input but allow escaping to game menu.
+	_camera = "camera" CamCreate _locationPosition
+	_camera CamSetDir 0
+	_camera CamSetFOV 1
+	_camera cameraEffect["Internal","TOP"]
+
+	_camera camSetTarget _locationPosition
+	_camera CamSetPos [_locationPosition Select 0,(_locationPosition Select 1) + 2,5]
+	_camera CamCommit 0
+
+	_totalDistance = _location Distance _destination
+	_delay = MINFASTTRAVELTIME + _totalDistance / FASTTRAVELSPEED
+	_delay = _delay - (_delay % 1)
+
+	_direction = [_locationPosition,GetPos _destination] Call GetDirTo
+	_x = _locationPosition Select 0
+	_y = _locationPosition Select 1
+
+	_count = 0
+	_total = _delay
+	_markers = []
+
+	CloseDialog 0
+	MapAnimAdd [_delay,0,GetPos _destination]
+	MapAnimCommit
+
+#FastTravelInProgress
+~1
+
+	if (!Alive player) then {Goto "KilledDuringFastTravel"};
+
+	_distance = _totalDistance * (_count / _total)
+	_marker = Format["FastTravelMarker%1",_count]
+	_position = [_x + (Sin _direction) * _distance,_y + (Cos _direction) * _distance]
+	CreateMarkerLocal [_marker,_position]
+	_marker SetMarkerTypeLocal "Dot"
+	_marker SetMarkerColorLocal "ColorRed"
+	_markers = _markers + [_marker]
+
+	_count = _count + 1
+	if (_count < _total) then {Goto "FastTravelInProgress"};
+
+	{DeleteMarkerLocal _x} ForEach _markers
+
+	_arrivalZone = GetPos _destination
+	if (_destination != _base) then {_arrivalZone = Call Compile Format["GetMarkerPos ""%1ArrivalZoneMarker""",Str _destination]};
+	if (_destination In _cclistd) then {_arrivalZone = GetPos _destination}
+	
+	[player,_arrivalZone] Call FastTravelTo
+
+	~1
+	_vehicles = [Group player,false] Call GetTeamVehicles
+	{if (!CanMove _x) then {_x SetPos (GetPos _x)};} ForEach _vehicles
+
+	ForceMap false
+	DeleteMarkerLocal fastTravelDestinationMarker
+
+	fastTravelInProgress = false
+
+	ShowCompass _compass
+	ShowGPS _GPS
+	ShowPad _pad
+	ShowRadio _radio
+	ShowWatch _watch
+
+	_camera CameraEffect["TERMINATE","BACK"]
+	CamDestroy _camera
+
+	CreateDialog "MissionMap"
+	Goto "Quit"
+
+#KilledDuringFastTravel
+
+	_camera CameraEffect["TERMINATE","BACK"]
+	CamDestroy _camera
+
+	{DeleteMarkerLocal _x} ForEach _markers
+	ForceMap false
+	DeleteMarkerLocal fastTravelDestinationMarker
+
+	ShowCompass _compass
+	ShowGPS _GPS
+	ShowPad _pad
+	ShowRadio _radio
+	ShowWatch _watch
+
+	fastTravelInProgress = false
+
+	Goto "Quit"
+
+#CommandTeams
+
+	menuButton = -1
+
+	if (_commandOn) then {Goto "TurnOffCommand"};
+
+	_commandOn = true
+
+	CtrlShow [IDCGENERICBUTTON + 10,false]
+
+	_button = _display DisplayCtrl 221013
+	_button CtrlSetText "Close Command"
+	_button CtrlSetPosition [0.65,0.845,0.24,0.035]
+	_button CtrlCommit 0.35
+
+	;Disable regular mission elements.
+	_IDCs = [221001,221002,221004,221006,221007,221008,221009,221010,221011,221012]
+	{CtrlShow[_x,false]} ForEach _IDCs
+
+	CtrlShow[IDCGENERICBUTTON + 10,false]
+
+	;Enable command elements.
+	_IDCs = [221014,221015,221016,221017,221018,221019,221020,221021,221022]
+	{CtrlShow[_x,true]} ForEach _IDCs
+
+	@ (CtrlCommitted _button)
+
+	_teamName = Format["%1Team%2",sideJoinedText,0]
+	_teams = Call Compile Format["%1Teams",sideJoinedText]
+	_team = _teams Select 0
+
+	if (IsPlayer Leader _team) then {_teamType = 0} else {_teamType = Call Compile Format["%1AITeamType",_teamName]};
+	lbSetCurSel [221016,_teamType]
+
+	_missionMarker = "TempMissionMarker"
+	CreateMarkerLocal [_missionMarker,[0,0]]
+	_missionMarker SetMarkerTypeLocal "Move"
+	_missionMarker SetMarkerSizeLocal [1,1]
+	_missionMarker SetMarkerColorLocal "ColorYellow"
+
+	Goto "Update"
+
+#TurnOffCommand
+
+	_commandOn = false
+
+	_button = _display DisplayCtrl 221013
+	_button CtrlSetText "Command Teams"
+	_button CtrlSetPosition [0.65,0.773,0.24,0.05]
+	_button CtrlCommit 0.35
+
+	;Enable regular mission elements.
+	_IDCs = [221001,221002,221004,221006,221007,221008,221009,221010,221011,221012]
+	{CtrlShow[_x,true]} ForEach _IDCs
+
+	;Disable command elements.
+	_IDCs = [221014,221015,221016,221017,221018,221019,221020,221021,221022]
+	{CtrlShow[_x,false]} ForEach _IDCs
+
+	@ (CtrlCommitted _button)
+
+	CtrlShow[IDCGENERICBUTTON + 10,true]
+
+	DeleteMarkerLocal _missionMarker
+
+	Goto "Update"
+
+#CommandMove
+
+	menuButton = 104
+	[_display DisplayCtrl IDCErrorMessage,2,0.75,Localize "STRWFCLICKONMAP",[0,1,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#CommandSetMove
+
+	menuButton = -1
+
+	_map = _display DisplayCtrl IDCMENUIMAGE;
+	_position = _map PosScreenToWorld[mouseX,mouseY]
+
+	if (_playerTeam) then {Goto "CommandSetPlayerMove"};
+
+	Call Compile Format["%1AIMissionX = _position Select 0;%1AIMissionY = _position Select 1",_teamName]
+	Call Compile Format["PublicVariable ""%1AIMissionX"";PublicVariable ""%1AIMissionY""",_teamName]
+	Call Compile Format["%1AIMission = MISMOVETODESTINATION;PublicVariable ""%1AIMission""",_teamName]
+
+	[_display DisplayCtrl IDCErrorMessage,2,0.75,"Roger, moving to destination.",[0,1,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#CommandSetPlayerMove
+
+	[CMDREQUESTCOMMANDTOPLAYER,PLAYERMISSIONMOVE + _teamSlot,_position Select 0,_position Select 1] Exec "Client\Client_CommandToServer.sqs"
+	Goto "Update"
+
+#CommandCaptureTowns
+
+	menuButton = -1
+
+	if (_playerTeam) then {Goto "CommandPlayerCaptureTowns"};
+
+	Call Compile Format["%1AIMission = MISCAPTURELOCATIONS",_teamName]
+	Call Compile Format["PublicVariable ""%1AIMission""",_teamName]
+
+	[_display DisplayCtrl IDCErrorMessage,2,0.75,"Roger, advancing on nearest town.",[0,1,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#CommandPlayerCaptureTowns
+
+	_team = _teams Select _selectedTeam
+	_location = [Leader _team,sideJoined] Call GetClosestHostileLocation
+	if (IsNull _location) then {Goto "Update"};
+
+	_position = GetPos _location
+	[CMDREQUESTCOMMANDTOPLAYER,PLAYERMISSIONCAPTURELOCATIONS + _teamSlot,_position Select 0,_position Select 1] Exec "Client\Client_CommandToServer.sqs"
+	Goto "Update"
+
+#CommandDefendBase
+
+	menuButton = -1
+
+	if (_playerTeam) then {Goto "CommandPlayerDefendBase"};
+
+	Call Compile Format["%1AIMission = MISDEFENDBASE",_teamName]
+	Call Compile Format["PublicVariable ""%1AIMission""",_teamName]
+
+	[_display DisplayCtrl IDCErrorMessage,2,0.75,"Affirmative, returning to base to defend.",[0,1,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#CommandPlayerDefendBase
+
+	_position = Call Compile Format["GetPos %1Base",sideJoinedText]
+	[CMDREQUESTCOMMANDTOPLAYER,PLAYERMISSIONDEFENDBASE + _teamSlot,_position Select 0,_position Select 1] Exec "Client\Client_CommandToServer.sqs"
+	Goto "Update"
+
+#CommandPatrol
+
+	menuButton = 105
+	[_display DisplayCtrl IDCErrorMessage,2,0.75,Localize "STRWFCLICKONMAP",[0,1,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#CommandSetPatrol
+
+	menuButton = -1
+
+	_map = _display DisplayCtrl IDCMENUIMAGE;
+	_position = _map PosScreenToWorld[mouseX,mouseY]
+
+	if (_playerTeam) then {Goto "CommandSetPlayerPatrol"};
+
+	Call Compile Format["%1AIMissionX = _position Select 0;%1AIMissionY = _position Select 1",_teamName]
+	Call Compile Format["PublicVariable ""%1AIMissionX"";PublicVariable ""%1AIMissionY""",_teamName]
+	Call Compile Format["%1AIMission = MISPATROL;PublicVariable ""%1AIMission""",_teamName]
+
+	[_display DisplayCtrl IDCErrorMessage,2,0.75,"Affirmative, patrolling designated area.",[0,1,0,1]] Spawn ShowGUIMessage
+	Goto "Update"
+
+#CommandSetPlayerPatrol
+
+	[CMDREQUESTCOMMANDTOPLAYER,PLAYERMISSIONPATROL + _teamSlot,_position Select 0,_position Select 1] Exec "Client\Client_CommandToServer.sqs"
+	Goto "Update"
+
+#RespawnAITeam
+
+	menuButton = -1
+
+	{_x SetDammage 1} ForEach ([_team,false] Call GetTeamVehicles)
+	{_x SetDammage 1} ForEach Units _team
+	Goto "Update"
+
+#OpenConstruction
+
+	menuButton = -1
+
+	if (!IsNull HQInRange) then {CloseDialog 0;constructionVehicle = HQInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull campInRange) then {CloseDialog 0;constructionVehicle = campInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull repairTruckInRange) then {CloseDialog 0;constructionVehicle = repairTruckInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+
+	Goto "Update"
+
+#OpenHelp
+
+	CloseDialog 0
+	CreateDialog "HelpMenu"
+	Goto "Quit"
+
+#OpenTeamMenu
+
+	CloseDialog 0
+	CreateDialog "TeamMenu"
+	Goto "Quit"
+
+#OpenGearMenu
+
+	menuButton = -1
+	if (IsNull campInRange && !barracksInRange) then {Goto "Update"};
+
+	CloseDialog 0
+	CreateDialog "GearMenu"
+	Goto "Quit"
+
+#Vote
+
+	;If no vote in progress then request one.
+	_voteTime = Call Compile Format["%1CommanderVoteTime",sideJoinedText]
+	if (_voteTime <= 0) then {Goto "RequestVote"};
+
+	CloseDialog 0
+	CreateDialog "CommanderVoteMenu"
+	Goto "Quit"
+
+#RequestVote
+
+	menuButton = -1
+	_timeToWait = time + 3
+
+	[CMDREQUESTCOMMANDERVOTE] Exec "Client\Client_CommandToServer.sqs"
+
+	@ (Call Compile Format["%1CommanderVoteTime > 0",sideJoinedText] || time >= _timeToWait || !dialog ||!Alive player)
+
+	if (!Alive player || !Dialog) then {Goto "Quit"};
+	if (time > _timeToWait) then {Goto "Update"};
+
+	CloseDialog 0
+	CreateDialog "CommanderVoteMenu"
+	Goto "Quit"
+
+#Quit
+
+	OnMapSingleClick ""
+	DeleteMarkerLocal _missionMarker
+	{DeleteMarkerLocal _x} ForEach _fastTravelMarkers
+	for [{_count = Count Waypoints player},{_count >= 0},{_count = _count - 1}] do {DeleteMarkerLocal Format["PlayerWPMarker%1",_count]};
+	showMessagesOnScreen = menuCheckBox
+	Exit
+
+;12/11/7 MM - Created file.

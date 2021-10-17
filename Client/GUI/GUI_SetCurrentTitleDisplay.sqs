@@ -1,0 +1,7 @@
+;Last modified 10/24/7
+;Gets current display device for loaded mission title resource & assigns it.
+;Meant to be used with titleRsc.
+
+currentTitleDisplay = _this Select 0
+
+;10/24/7 MM - Created file.

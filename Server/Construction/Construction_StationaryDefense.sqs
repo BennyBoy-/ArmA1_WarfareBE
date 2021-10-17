@@ -1,0 +1,33 @@
+;Last modified 4/15/8
+;*****************************************************************************************
+;Description: Creates a stationary defense.
+;*****************************************************************************************
+
+_type = _this Select 0
+_side = _this Select 1
+_position = _this Select 2
+_direction = _this Select 3
+_commanderAI = _this Select 4
+
+_structure = Call Compile Format ["%1DefenseNames Select _type",Str _side]
+_modifiedDistance = Call Compile Format ["%1DefenseDistances Select _type",Str _side]
+_modifiedDirection = Call Compile Format ["%1DefenseDirections Select _type",Str _side]
+
+if (_commanderAI) then {_direction = _direction + _modifiedDirection};
+_defense = _structure CreateVehicle _position
+_defense SetDir _direction
+_list = ["WarfareBWestHesco10xTall","WarfareBEastHesco10xTall","WarfareBWestHesco10x","WarfareBEastHesco10x"];
+
+if (_structure in _list) then {maxWall = maxWall + [_defense];Call Compile Format ["if (%1Base Distance _defense < 7) then {deleteVehicle _defense}",_side];Goto "SkipCorrection";_defense setPos _position;};
+
+[_defense,_position] Call CorrectObjectPosition
+
+#SkipCorrection
+
+if (_structure in _list) then {_obj = nearestObject[_defense,"WarfareBCamp"];if (_obj distance _defense < 30) then {deleteVehicle _defense};}
+[_defense,_side] Call InitDefense
+
+if (_commanderAI) then {Call Compile Format ["last%1Defense = _defense",Str _side]};
+
+;*****************************************************************************************
+;5/24/7 MM - Created file.

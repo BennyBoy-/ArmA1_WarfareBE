@@ -1,0 +1,51 @@
+;Last modified 4/25/8
+;*****************************************************************************************
+;Description: Vote for commander.
+;*****************************************************************************************
+
+_side = _this Select 0
+_previousCommander = _this Select 1
+
+Call Compile Format["%1CommanderVoteTime = VOTETIME",Str _side]
+Call Compile Format["PublicVariable ""%1CommanderVoteTime""",Str _side]
+
+#WaitForVotes
+~1
+
+	Call Compile Format["%1CommanderVoteTime = %1CommanderVoteTime - 1",Str _side]
+	Call Compile Format["PublicVariable ""%1CommanderVoteTime""",Str _side]
+
+	if (Call Compile Format["%1CommanderVoteTime > 0",Str _side]) then {Goto "WaitForVotes"};
+
+Call Compile Format["%1CommanderVoteTime = 0",Str _side]
+Call Compile Format["PublicVariable ""%1CommanderVoteTime""",Str _side]
+
+_commanderTeam = [_side] Call GetCommanderFromVotes
+
+if (!IsNull _commanderTeam) then {Call Compile Format["%1CommanderTeam = _commanderTeam",Str _side]} else {Call Compile Format["%1CommanderTeam = ObjNull",Str _side]};
+Call Compile Format["PublicVariable ""%1CommanderTeam""",Str _side]
+
+_delay = 0
+if (_side == East) then {_delay = 1};
+
+~_delay
+
+gameStarted = true
+[_side,CMDSTARTGAME,_commanderTeam] Exec "Server\Server_CommandToSide.sqs"
+
+;Until player commander's can purchase AI supply & salvage trucks use this.
+if (!_previousCommander) then {[_side] Execvm "Server\AI\Commander\Commander_Update.sqf"};
+
+Call Compile Format["%1CommanderTeam = _commanderTeam;PublicVariable ""%1CommanderTeam""",Str _side]
+
+if (!IsNull _commanderTeam) then {Exit};
+
+;AI commander only routines.
+_startingLocation = Call Compile Format["%1StartingLocation",Str _side]
+_baseLayouts = Call Compile Format["%1Layouts",Str _startingLocation]
+_layout = _baseLayouts Select (Random (Count _baseLayouts - 1))
+
+[_layout,_side] Exec "Server\AI\Commander\Commander_UpdateBase.sqs"
+
+;*****************************************************************************************
+;7/16/7 MM - Created file.

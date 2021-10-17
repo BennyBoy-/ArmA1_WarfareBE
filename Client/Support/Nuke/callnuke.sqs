@@ -1,0 +1,28 @@
+;Nuke call by Benny
+	
+	_bpos = getmarkerpos "NukeMarker"
+	_base = "HeliHEmpty" createVehicle _bpos
+	
+	"playerICBMMarker" SetMarkerPosLocal [0,0,0]
+
+	[playerSide, "HQ"] sideChat "ICBM with Tactical Nuclear Warhead attachement launched!"
+
+	[west,CMDSIDEMESSAGE,MSGSTRATEGICLAUNCH] Exec "Server\Server_CommandToSide.sqs"
+	~5
+	[east,CMDSIDEMESSAGE,MSGSTRATEGICLAUNCH] Exec "Server\Server_CommandToSide.sqs"
+	~5
+	[west,CMDSIDEMESSAGE,MSGSTRATEGICLAUNCH] Exec "Server\Server_CommandToSide.sqs"
+	~5
+	[east,CMDSIDEMESSAGE,MSGSTRATEGICLAUNCH] Exec "Server\Server_CommandToSide.sqs"
+	~5
+	[west,CMDSIDEMESSAGE,MSGSTRATEGICLAUNCH] Exec "Server\Server_CommandToSide.sqs"
+	~5
+	[east,CMDSIDEMESSAGE,MSGSTRATEGICLAUNCH] Exec "Server\Server_CommandToSide.sqs"
+	
+	~NUKEFIREDELAY
+	
+	deleteMarkerLocal "NukeMarker";
+	
+	[CMDREQUESTNUKE,_base] Exec "Client\Client_CommandToServer.sqs"
+	
+	Exit

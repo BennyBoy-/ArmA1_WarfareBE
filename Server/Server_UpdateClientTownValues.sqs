@@ -1,0 +1,48 @@
+;Last modified 10/26/7
+;*****************************************************************************************
+;Description: Monitors town values for changes & then transmits them to the clients.
+;*****************************************************************************************
+
+Goto "Init"
+
+#UpdateValues
+
+	_count = 0
+
+	#UpdateValue
+	~_delay
+
+		_name = Str (locations Select _count)
+		Call Compile Format["_value = %1SupplyValue",_name]
+
+		;If the value has changed then send to clients.
+		if (_value != (_lastValue Select _count)) then {Call Compile Format["PublicVariable ""%1SupplyValue""",_name]};
+
+		_lastValue Set[_count,_value]
+
+		_count = _count + 1
+		if (_count < _total) then {Goto "UpdateValue"};
+
+	Goto "UpdateValues"
+
+#Init
+
+	@ (gameInitialized)
+
+	~5
+
+	_total = Count locations
+
+	;5 second total update time.
+	_delay = 5 / _total
+	_value = 0
+	_side = Resistance
+
+	;Copy town supply values to track future changes.
+	_lastValue = []
+	{Call Compile Format["_lastValue = _lastValue + [%1SupplyValue]",Str _x]} ForEach locations
+
+	Goto "UpdateValues"
+
+;*****************************************************************************************
+;2/9/7 MM - Created file.

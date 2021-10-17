@@ -1,0 +1,50 @@
+;Last modified 4/23/8
+;*****************************************************************************************
+;Description: Manages an salvage vehicle.
+;*****************************************************************************************
+_side = _this Select 0
+_vehicle = _this Select 1
+
+Goto "Init"
+
+#Update
+~5
+
+	if (GetDammage _vehicle >= 1) then {Exit};
+	if (IsNull Driver _vehicle) then {Goto "Update"};
+	if (Side Driver _vehicle != _side) then {Goto "Update"};
+
+	_objects = NearestObjects[_vehicle,["Air","Car","Motorcycle","Tank"],SALVAGERRANGE]
+	_salvage = _objects Call GetDestroyedUnits
+
+	if (Count _salvage < 1) then {Goto "Update"};
+
+	EastKnownSalvage = EastKnownSalvage - [_salvage Select 0]
+	WestKnownSalvage = WestKnownSalvage - [_salvage Select 0]
+
+	_index = unitBountyNames Find TypeOf (_salvage Select 0)
+	DeleteVehicle (_salvage Select 0)
+
+	_value = CIVILIANVEHICLEVALUE
+	if (_index != -1) then {_value = unitBounties Select _index};
+
+	if (!(IsPlayer Leader Driver _vehicle)) then {_value = _value / 2};
+
+	_value = _value * SALVAGERATIO
+	_value = _value - (_value % 1)
+	[_side,_value] Call AddFundsToSide
+
+	[_side,CMDVEHICLESALVAGED,_index,Driver _vehicle,_value] Exec "Server\Server_CommandToSide.sqs"
+	Goto "Update"
+
+#SalvageKnownVehicles
+
+	Goto "Update"
+
+#Init
+
+	_sideText = Str _side
+	Goto "Update"
+
+;*****************************************************************************************
+;8/25/7 MM - Created file.

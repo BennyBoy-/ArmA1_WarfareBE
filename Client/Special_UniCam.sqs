@@ -1,0 +1,78 @@
+;Units Camera Script by Benny 31/08/08.
+;Check Description.ext for the dialog.
+	
+#InitUnitList
+	
+	_teamNames = []
+	_teamSlots = []
+	;Init of the players name.
+	_teamWest = [name WestSlot1,name WestSlot2,name WestSlot3,name WestSlot4,name WestSlot5,name WestSlot6,name WestSlot7,name WestSlot8,name WestSlot9,name WestSlot10,name WestSlot11,name WestSlot12,name WestSlot13,name WestSlot14,name WestSlot15,name WestSlot16]
+	_teamEast = [name EastSlot1,name EastSlot2,name EastSlot3,name EastSlot4,name EastSlot5,name EastSlot6,name EastSlot7,name EastSlot8,name EastSlot9,name EastSlot10,name EastSlot11,name EastSlot12,name EastSlot13,name EastSlot14,name EastSlot15,name EastSlot16]
+
+	;Init of the player slot.
+	_teamWestSlots = [WestSlot1,WestSlot2,WestSlot3,WestSlot4,WestSlot5,WestSlot6,WestSlot7,WestSlot8,WestSlot9,WestSlot10,WestSlot11,WestSlot12,WestSlot13,WestSlot14,WestSlot15,WestSlot16]
+	_teamEastSlots = [EastSlot1,EastSlot2,EastSlot3,EastSlot4,EastSlot5,EastSlot6,EastSlot7,EastSlot8,EastSlot9,EastSlot10,EastSlot11,EastSlot12,EastSlot13,EastSlot14,EastSlot15,EastSlot16]
+	
+	if (side player == WEST) then {_teamNames = _teamWest} else {_teamNames = _teamEast};
+	if (side player == WEST) then {_teamSlots = _teamWestSlots} else {_teamSlots = _teamEastSlots};
+
+	;Listbox get filled in function of player side.
+	{lbAdd[230001,_x]} ForEach _teamNames
+	
+#InitUnitCam
+
+	;Default tracked unit will be the XSlot1.
+	lbSetCurSel [230001, 0]
+	_Tracked = lbCurSel 230001
+	_TrackedUnit = _teamSlots select 0
+	_count = 0
+	
+	titleCut ["","black in", 2];
+	_camera = "camera" camCreate (position (_teamSlots select 0))
+	_camera cameraEffect ["internal","back"]
+	_camera camSetFOV 1
+	showCinemaBorder false
+
+#Update
+
+	~0.01
+	if ((!dialog)or(!(Alive player))) then {Goto "Quit"};
+	if (ToggleCam) then {Goto "UpdateCamFPS"};
+	? vehicle _TrackedUnit != _TrackedUnit : Goto "UpdateCamVehicle"
+	
+	#UpdateCam
+		
+		_angle = (getDir _TrackedUnit)
+		_camera setPos [(getPos _TrackedUnit select 0)+sin(_angle)*-2,(getPos _TrackedUnit select 1)+cos(_angle)*-2,(getPos _TrackedUnit select 2)+1.7]
+		_camera setDir (direction _TrackedUnit)
+		Goto "UpdateTrackedUnit"
+	
+	#UpdateCamVehicle
+		
+		_angle = (getDir vehicle _TrackedUnit)
+		_camera setPos [(getPos vehicle _TrackedUnit select 0)+sin(_angle)*-10,(getPos vehicle _TrackedUnit select 1)+cos(_angle)*-10,(getPos vehicle _TrackedUnit select 2)+3]
+		_camera setDir (direction vehicle _TrackedUnit)
+		Goto "UpdateTrackedUnit"
+		
+	#UpdateCamFPS
+		
+		? vehicle player != player : Goto "UpdateCamVehicle"
+		_angle = (getDir _TrackedUnit)
+		_camera setPos [(getPos _TrackedUnit select 0)+sin(_angle)*0.5,(getPos _TrackedUnit select 1)+cos(_angle)*0.5,(getPos _TrackedUnit select 2)+1.6]
+		_camera setDir (direction _TrackedUnit)
+		Goto "UpdateTrackedUnit"
+	
+	#UpdateTrackedUnit
+			
+		_Tracked = lbCurSel 230001
+		{if (_count == _Tracked) then {_TrackedUnit = _teamSlots select _count};_count = _count + 1;} ForEach _teamSlots
+		_count = 0	
+		Goto "Update"
+	
+#Quit
+	
+	closedialog 0
+	titleCut ["","black in", 2];
+	_camera cameraEffect["terminate","back"]
+	camDestroy _camera
+	Exit

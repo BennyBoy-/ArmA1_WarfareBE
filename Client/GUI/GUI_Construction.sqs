@@ -1,0 +1,479 @@
+;Last modified 6/4/8
+
+_display = _this Select 0
+Goto "InitMenu"
+
+#Update
+~0.01
+
+	;If unit dies or is no longer on his/her side (team killing).
+	if (!(Alive player) || Side player != sideJoined || menuExit) then {CloseDialog 0;Goto "Quit"};
+	if (!dialog) then {Goto "Quit"};
+
+	_base = Call Compile Format["%1Base",sideJoinedText]
+	if (_commander && GetDammage _base >= 1) then {Goto "Quit"};
+
+	CtrlSetText [_fundsIDC,Format[Localize "STRWFFUNDSFORMATTED",Call GetPlayerFunds]]
+	if (_suppliesIDC != -1) then {CtrlSetText [_suppliesIDC,Format[Localize "STRWFSUPPLIESFORMATTED",Call Compile Format["%1Supplies",sideJoinedText]]]};
+
+	if (mouseButtonDown == 0) then {_leftDown = true};
+	if (mouseButtonDown == 1) then {_rightDown = true};
+
+	if (mouseButtonDown == 1 && _rightTime == -1) then {_rightTime = time};
+
+	;Check to cancel building placement.
+	if (mouseButtonUp == 1 && _rightTime != -1 && time - _rightTime <= 0.3 && !IsNull _placementStructure) then {DeleteVehicle _placementStructure;_placementStructure = ObjNull;_lastBuy = -1;menuBuy = -1};
+
+	if (mouseButtonUp == 0) then {_leftDown = false};
+	if (mouseButtonUp == 1 && _rotating) then {_rotating = false;SetMousePosition [_rotatePosition Select 1,_rotatePosition Select 2];Goto "Update"};
+	if (mouseButtonUp == 1) then {_rightDown = false;_rightTime = -1};
+
+	if (mouseButtonUp == 0 && !IsNull _placementStructure) then {Goto "BuyStructure"};
+
+	if (mouseButtonWheel < 0) then {_z = _z - 20 * _speed};
+	if (mouseButtonWheel > 0) then {_z = _z + 20 * _speed};
+
+	if (_z < 10) then {_z = 10};
+	if (_z > 60) then {_z = 60};
+
+	mouseButtonWheel = 0;
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+
+	_scrollDistance = CONSTRUCTIONSCROLLINCREMENT / 60 * _z * _speed
+
+	_mx = _x + _scrollX + (((mousepos select 1)-0.5) + ((mousepos select 1)-0.5)*0.3)* _z * .3 * 5;
+	_my = _y + _scrollY - ((mousepos select 2)-0.5) * _z * .3 * 5;
+	_mousePosition = [_mx,_my,(_height + 5)*0]
+
+	_changingDirection = false
+
+	;Keep track of defense dir so next item starts has same dir (useful for walls).
+	if (!IsNull _placementStructure && _isDefense) then {_defenseDirection = GetDir _placementStructure};
+
+	if (!_rotating && _rightTime != -1 && time - _rightTime > 0.2 && !IsNull _placementStructure) then {_rotating = true;_rotatePosition = mousePos};
+
+	if (_rightTime != -1 && time - _rightTime > 0.2 && !IsNull _placementStructure) then {_angle = [position _placementStructure,_mousePosition] Call GetDirTo;_placementStructure SetDir _angle;_changingDirection = true;Goto "UpdateScrolling"} else {_rotating = false};
+	if (!IsNull _placementStructure) then {_placementStructure SetPos _mousePosition};
+
+	#UpdateScrolling
+
+	_lastX = _scrollX
+	_lastY = _scrollY
+
+	if (_xStarted == 0 && (mouseX > 0.45 || mouseX < -0.45)) then {_xStarted = time};
+	if (_yStarted == 0 && (mouseY > 0.5 || mouseY < -0.32)) then {_yStarted = time};
+
+	if (_xStarted != 0 && mouseX <= 0.45 && mouseX >= -0.45) then {_xStarted = 0};
+	if (_yStarted != 0 && mouseY <= 0.5 && mouseY >= -0.32) then {_yStarted = 0};
+
+	if (!mouseFocus) then {_xStarted = 0;_yStarted = 0;Goto "UpdateScrollChanges"};
+	if (_xStarted == 0 && _yStarted == 0) then {Goto "UpdateScrollChanges"};
+
+	if (mouseX > 0.38 && time - _xStarted >= CONSTRUCTIONSCROLLDELAY) then {_scrollX = _scrollX + _scrollDistance};
+	if (mouseX < -0.38 && time - _xStarted >= CONSTRUCTIONSCROLLDELAY) then {_scrollX = _scrollX - _scrollDistance};
+	if (mouseY < -0.28 && time - _yStarted >= CONSTRUCTIONSCROLLDELAY) then {_scrollY = _scrollY + _scrollDistance};
+	if (mouseY > 0.42 && time - _yStarted >= CONSTRUCTIONSCROLLDELAY) then {_scrollY = _scrollY - _scrollDistance};
+
+#UpdateScrollChanges
+
+	if (menuKey == """Right""" || menuKey == """6 [num]""") then {_scrollX = _scrollX + _scrollDistance};
+	if (menuKey == """Left""" || menuKey == """4 [num]""") then {_scrollX = _scrollX - _scrollDistance};
+	if (menuKey == """Up""" || menuKey == """8 [num]""") then {_scrollY = _scrollY + _scrollDistance};
+	if (menuKey == """Down""" || menuKey == """2 [num]""") then {_scrollY = _scrollY - _scrollDistance};
+
+	if (menuKey == """7 [num]""") then {_scrollX = _scrollX - _scrollDistance;_scrollY = _scrollY + _scrollDistance};
+	if (menuKey == """9 [num]""") then {_scrollX = _scrollX + _scrollDistance;_scrollY = _scrollY + _scrollDistance};
+	if (menuKey == """3 [num]""") then {_scrollX = _scrollX + _scrollDistance;_scrollY = _scrollY - _scrollDistance};
+	if (menuKey == """1 [num]""") then {_scrollX = _scrollX - _scrollDistance;_scrollY = _scrollY - _scrollDistance};
+
+	if (menuKey == """=""") then {_z = _z - 5 * _speed};
+	if (menuKey == """+ [num]""") then {_z = _z - 5 * _speed};
+
+	if (menuKey == """-""") then {_z = _z + 5 * _speed};
+	if (menuKey == """- [num]""") then {_z = _z + 5 * _speed};
+
+	if (menuKey == """Delete""") then {Goto "Undo"};
+	
+		if (_z < 10) then {_z = 10};
+	if (_z > 60) then {_z = 60};
+
+	_sign = 1
+	if (_scrollX < 0) then {_sign = -1};
+	if (abs(_scrollX) > abs(_maxScroll)) then {_scrollX = _maxScroll * _sign};
+
+	_sign = 1
+	if (_scrollY < 0) then {_sign = -1};
+	if (abs(_scrollY) > abs(_maxScroll)) then {_scrollY = _maxScroll * _sign};
+
+	if (_lastX != _scrollX || _lastY != _scrollY) then {Goto "Scroll"};
+	if (_lastZ != _z) then {_lastZ = _z;Goto "Scroll"};
+
+	_lastZ = _z
+
+#UpdateActions
+
+	if (menuBuy != _lastBuy) then {Goto "SelectStructure"};
+	if (menuHelp) then {Goto "MenuHelp"};
+	if (IsNull _placementStructure || _changingDirection) then {Goto "Update"};
+
+;Set structure green or red depending on if the location is available.
+#UpdateStructure
+
+	_slope = [[_mousePosition Select 0,_mousePosition Select 1,0],8] Call GetTerrainSlope
+	_obstacles = []
+	_badLocation = false
+
+	if ((menuBuy < _HALFMAXSTRUCTURES && _commander) && _slope > 0.8) then {_badLocation = true;Goto "ChangeStructure"};
+	if (menuBuy < _HALFMAXSTRUCTURES && _commander) then {_obstacles = NearestObjects [_mousePosition,["Building","WarfareBCrate"],17]};
+
+	_obstacles = _obstacles - [_placementStructure]
+	if (Count _obstacles > 0) then {_badLocation = true;Goto "ChangeStructure"};
+
+	;Allow a greater slope for defensive structures.
+	if ((menuBuy >= _HALFMAXSTRUCTURES || !_commander) && _slope > 1.6) then {_badLocation = true};
+
+#ChangeStructure
+
+	if (_badLocation && ((TypeOf _placementStructure) In _namesRed)) then {Goto "Update"};
+	if (!_badLocation && ((TypeOf _placementStructure) In _names)) then {Goto "Update"};
+
+	_name = _names Select _index
+	if (_badLocation) then {_name = _namesRed Select _index};
+
+	_direction = GetDir _placementStructure
+	DeleteVehicle _placementStructure
+
+	_placementStructure = _name CreateVehicleLocal _mousePosition
+	_placementStructure SetDir _direction
+	RemoveAllWeapons _placementStructure 
+
+	Goto "Update"
+
+;Creates the factory menu.
+#InitMenu
+
+	_defenseDirection = 0
+
+	_isDefense = false
+
+	_vehicle = constructionVehicle
+	_messageBar = _display DisplayCtrl IDCMENUSTATUSLABEL
+
+	_HQType = Call Compile Format["%1HEADQUARTERSTYPE",sideJoinedText]
+
+	ShowCinemaBorder false
+
+	_type = TypeOf _vehicle 
+	_position = GetPos player
+	_x = _position Select 0
+	_y = _position Select 1
+
+	mouseButtonWheel = 0
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+	mouseFocus = false
+	mousepos = [0,0,0]
+	_rightTime = -1
+
+	_rotatePosition = [0,0]
+	_rotating = false
+	menuKey = ""
+	menuhelp = false
+
+	_leftDown = false
+	_rightDown = false
+
+	;Delay before scrolling starts.
+	_xStarted = 0
+	_yStarted = 0
+
+	_scrollX = 0
+	_scrollY = 0
+	_scrollDistance = CONSTRUCTIONSCROLLINCREMENT / 2
+	_maxScroll = CONSTRUCTIONSCROLLDISTANCE
+	_speed = .2
+
+	_height = 3
+
+	;Menu buttons.
+	menuExit = false
+	menuBuy = -1
+	_lastBuy = -1
+
+	_placementStructure = ObjNull
+
+	_z = 30
+	_camera = "camera" CamCreate [_x,_y,_z]
+	_camera CamSetDir 0
+
+	_camera CamSetFOV 1
+	_camera cameraEffect["Internal","TOP"]
+
+	_camera camSetTarget [_x,_y + 0.1,1]
+	_camera CamSetPos [_x,_y,30]
+	_camera CamCommit 0
+	@ (CamCommitted _camera)
+
+	CtrlShow [IDCMENUINFO,false]
+	CtrlShow [IDCMENULIST2,false]
+	CtrlShow [IDCMENUBUTTON,false]
+	CtrlShow [IDCMENUBUTTON1,false]
+
+	CtrlEnable [IDCMENULIST2,false]
+
+	_commander = false
+	_commanderTeam = Call Compile Format["%1CommanderTeam",sideJoinedText]
+
+	_costMod = 1.0
+
+	;Cost is cheaper when constructing at a camp.
+	if (_type == "WarfareBCamp") then {_commander = false;_costMod = 0.5;Goto "InitStructures"};
+	if (_type == WREPAIRTRUCK || _type == EREPAIRTRUCK) then {_commander = false;Goto "InitStructures"};
+
+	;Check for commander status.
+	if (IsNull _commanderTeam) then {Goto "InitStructures"};
+	if (_commanderTeam != Group player) then {Goto "InitStructures"};
+
+	_commander = true
+	_scrollDistance = CONSTRUCTIONSCROLLINCREMENT
+	_z = 50
+	_lastZ = _z
+
+	_camera CamSetPos [_x,_y,_z]
+	_camera CamCommit 0
+	@ (CamCommitted _camera)
+
+#InitStructures
+
+	_structures = []
+	_structureCosts = []
+	_structureImages = []
+	_structureCosts = []
+	_structureHeights = []
+	_structureDescriptions = []
+
+	if (!_commander) then {Goto "InitDefenses"};
+	
+	_structures = Call Compile Format["%1StructureGreenNames",sideJoinedText]
+	_structuresRed = Call Compile Format["%1StructureRedNames",sideJoinedText]
+	_structureCosts = Call Compile Format["%1StructureCosts",sideJoinedText]
+	_structureImages = Call Compile Format["%1StructureImages",sideJoinedText]
+	_structureHeights = Call Compile Format["%1StructureHeights",sideJoinedText]
+	_structureCosts = Call Compile Format["%1StructureCosts",sideJoinedText]
+	_structureDescriptions = Call Compile Format["%1StructureDescriptions",sideJoinedText]
+
+	_deployed = Call Compile Format["%1MHQDeployed",sideJoinedText]
+	if (_commander && _deployed) then {Goto "InitDefenses"};
+
+	_structures = [Call Compile Format["%1StructureGreenNames select _HQType",sideJoinedText]]
+	_structuresRed = [Call Compile Format["%1StructureRedNames select _HQType",sideJoinedText]]
+	_structureCosts = [Call Compile Format["%1StructureCosts select _HQType",sideJoinedText]]
+	_structureImages = [Call Compile Format["%1StructureImages select _HQType",sideJoinedText]]
+	_structureHeights = [Call Compile Format["%1StructureHeights select _HQType",sideJoinedText]]
+	_structureCosts = [Call Compile Format["%1StructureCosts select _HQType",sideJoinedText]]
+	_structureDescriptions = [Call Compile Format["%1StructureDescriptions select _HQType",sideJoinedText]]
+
+#InitDefenses
+
+	_totalStructures = Count _structures
+
+	_defensesNames = Call Compile Format["%1DefenseNames",sideJoinedText]
+	_defenses = Call Compile Format["%1DefenseGreenNames",sideJoinedText]
+	_defensesRed = Call Compile Format["%1DefenseRedNames",sideJoinedText]
+	_defenseCosts = Call Compile Format["%1DefenseCosts",sideJoinedText]
+	_defenseImages = Call Compile Format["%1DefenseImages",sideJoinedText]
+	_defenseHeights = Call Compile Format["%1DefenseHeights",sideJoinedText]
+	_defenseDescriptions = Call Compile Format["%1DefenseDescriptions",sideJoinedText]
+	_totalDefenses = Count _defenses
+
+	_MAXSTRUCTURES = 14
+	_HALFMAXSTRUCTURES = _MAXSTRUCTURES / 2
+	_IDC = IDCCONSTRUCTIONBUTTON
+	_IDC1 = IDCCONSTRUCTIONIMAGE
+	_IDC2 = IDCCONSTRUCTIONLABEL
+
+	_fundsIDC = IDCMENULIST
+	_suppliesIDC = -1
+
+	CtrlShow [IDCMENULIST1,false]
+	if (_commander) then {_suppliesIDC = IDCMENULIST;_fundsIDC = IDCMENULIST1;CtrlShow [IDCMENULIST1,true]};
+
+	for [{_count = 0},{_count < _MAXSTRUCTURES},{_count = _count + 1}] do {CtrlShow [_IDC + _count,false];CtrlShow [_IDC1 + _count,false];CtrlShow [_IDC2 + _count,false]}
+
+	;Enable buttons for available construction.
+	for [{_count = 0},{_count < _HALFMAXSTRUCTURES},{_count = _count + 1}] do {if (_count < _totalStructures) then {CtrlShow [_IDC + _count,true];CtrlShow [_IDC1 + _count,true];CtrlShow [_IDC2 + _count,true];CtrlSetText [_IDC1 + _count,_structureImages Select _count];CtrlSetText [_IDC2 + _count,Format["%1: %2",Localize "STRWFS",_structureCosts Select _count]];(_display DisplayCtrl (_IDC1 + _count)) CtrlSetTooltip (_structureDescriptions Select _count)};}
+
+	if (_commander && _deployed) then {(_display DisplayCtrl (_IDC1 + _HQType)) CtrlSetTooltip "Pack HQ (relocate base)."};
+
+	if (_commander) then {_IDC = _IDC + _HALFMAXSTRUCTURES;_IDC1 = _IDC1 + _HALFMAXSTRUCTURES;_IDC2 = _IDC2 + _HALFMAXSTRUCTURES};
+	for [{_count = 0},{_count < _HALFMAXSTRUCTURES},{_count = _count + 1}] do {if (_count < _totalDefenses) then {CtrlShow [_IDC + _count,true];CtrlShow [_IDC1 + _count,true];CtrlShow [_IDC2 + _count,true];CtrlSetText [_IDC1 + _count,_defenseImages Select _count];CtrlSetText [_IDC2 + _count,Format[Localize "STRWFCOSTFORMATTED",(_defenseCosts Select _count) * _costMod]];(_display DisplayCtrl (_IDC1 + _count)) CtrlSetTooltip (_defenseDescriptions Select _count)};}
+
+
+	Goto "Update"
+
+#SelectStructure
+
+	_lastBuy = menuBuy
+
+	if (!IsNull _placementStructure) then {DeleteVehicle _placementStructure;_placementStructure = ObjNull};
+
+	_names = _defenses
+	_namesRed = _defensesRed
+	_descriptions = _defenseDescriptions
+	_heights = _defenseHeights
+	_costs = _defenseCosts
+	_funds = Call GetPlayerFunds
+	_isDefense = true
+
+	_index = menuBuy
+
+	_deployed = Call Compile Format["%1MHQDeployed",sideJoinedText]
+	if (_commander && !_deployed && _index < _HALFMAXSTRUCTURES) then {_index = _HQType};
+
+	if (_commander && _index < _HALFMAXSTRUCTURES) then {_names = _structures;_namesRed = _structuresRed;_heights = _structureHeights;_costs = _structureCosts;_descriptions = _structureDescriptions;_funds = Call Compile Format["%1Supplies",sideJoinedText];_isDefense = false};
+	if (_index >= _HALFMAXSTRUCTURES) then {_index = _index - _HALFMAXSTRUCTURES};
+	if ((_costs Select _index) * _costMod  > _funds) then {Goto "Update"};
+
+	if (_commander && !_deployed && menuBuy < _HALFMAXSTRUCTURES) then {Goto "DeployMHQ"};
+	if (_commander && _deployed && _index == _HQType && !_isDefense) then {Goto "DeployMHQ"};
+
+	_placementStructure = (_names Select _index) CreateVehicleLocal _mousePosition
+	RemoveAllWeapons _placementStructure 
+
+	_height = _heights Select _index
+
+	if (_isDefense) then {_placementStructure SetDir _defenseDirection};
+	Goto "Update"
+
+#BuyStructure
+
+	mouseButtonUp = -1
+
+	_index = menuBuy
+	_slope = [[_mousePosition Select 0,_mousePosition Select 1,0],8] Call GetTerrainSlope
+	_obstacles = []
+
+	if ((_index < _HALFMAXSTRUCTURES && _commander) && _slope > 0.8) then {[_messageBar,1.5,0.75,Localize "STRWFPLACEONFLATTERSURFACE",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"}
+	if (_index < _HALFMAXSTRUCTURES && _commander) then {_obstacles = NearestObjects [_mousePosition,["Building","WarfareBCrate"],17]};
+
+	_obstacles = _obstacles - [_placementStructure]
+	if (Count _obstacles > 0) then {[_messageBar,1.5,0.75,Localize "STRWFCANNOTPLACEONBUILDING",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	;Allow a greater slope for defensive structures.
+	if ((_index >= _HALFMAXSTRUCTURES || !_commander) && _slope > 1.6) then {[_messageBar,1.5,0.75,Localize "STRWFPLACEONFLATTERSURFACE",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"}
+	CtrlShow [IDCMENUINFO,false]
+	CtrlSetText [IDCMENUTITLE,Localize "STRWFCONSTRUCTION"]
+
+	if (menuBuy == -1) then {goto "Update"};
+
+	_command = CMDREQUESTBUILDDEFENSE
+	_costs = _defenseCosts
+	_funds = Call GetPlayerFunds
+
+	if (_commander && _index < _HALFMAXSTRUCTURES) then {_command = CMDREQUESTBUILDSTRUCTURE;_costs = _structureCosts;_funds = Call Compile Format["%1Supplies",sideJoinedText]};
+	if (_index >= _HALFMAXSTRUCTURES) then {_index = _index - _HALFMAXSTRUCTURES}
+
+	_cost = (_costs Select _index) * _costMod
+	if (_cost > _funds) then {Goto "Update"} 
+	
+	{if isNull(_x) then {maxWall = maxWall - [_x];}} forEach maxWall;
+	if (((typeOf _placementStructure == "WarfareBHesco10xGreen") or (typeOf _placementStructure == "WarfareBHesco10xTallGreen")) && (Count maxWall > WALLSLIMIT)) then {[playerSide, "HQ"] sideChat "Walls limit reached.";Goto "Update";}
+	
+	if (_command == CMDREQUESTBUILDSTRUCTURE) then {Call Compile Format["%1Supplies = %1Supplies - _cost;PublicVariable ""%1Supplies""",sideJoinedText]} else {-_cost Call ChangePlayerFunds};
+
+	_x1 = GetPos _placementStructure Select 0
+	_y1 = GetPos _placementStructure Select 1
+	
+	[_command,_index * 1000 + GetDir _placementStructure,_x1,_y1] Exec "Client\Client_CommandToServer.sqs"
+
+	menuBuy = -1
+	_lastBuy = -1
+	DeleteVehicle _placementStructure
+	_placementStructure = ObjNull
+
+	Goto "Update"
+	
+#Undo
+
+	menuKey = "";
+
+	_nearestbuilding = nearestObject [_mousePosition, "House"];
+	_nearesttype = typeOf _nearestbuilding;
+	if ((_defensesNames) find _nearesttype > -1) then {deleteVehicle _nearestbuilding};
+	
+	Goto "Update"
+
+#DeployMHQ
+
+	;If packing the HQ, make sure there are enough supplies to deploy it later.
+	if (Call Compile Format["_deployed && %1Supplies < (_costs Select _HQType) * 2",sideJoinedText]) then {DeleteVehicle _placementStructure;_placementStructure = ObjNull;_lastBuy = -1;menuBuy = -1;[_messageBar,1.5,0.75,"Not enough supplies to re-deploy!",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	;Make sure MHQ is not too close to a town.
+	if (Call Compile Format["!_deployed && %1MHQ Distance ([%1MHQ] Call GetClosestLocation) < MINBASEFROMTOWNRANGE",sideJoinedText]) then {DeleteVehicle _placementStructure;_placementStructure = ObjNull;_lastBuy = -1;menuBuy = -1;[_messageBar,1.5,0.75,"Too close to a town depot!",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	Call Compile Format["%1Supplies = %1Supplies - (_costs Select _HQType);PublicVariable ""%1Supplies""",sideJoinedText]
+	[CMDREQUESTBUILDSTRUCTURE,_HQType * 1000,0,0] Exec "Client\Client_CommandToServer.sqs"
+	CloseDialog 0
+	Goto "Quit"
+
+#Scroll
+
+;	_camera CamSetDir 0
+	_camera CamSetTarget [_x + _scrollX,_y + _scrollY + 2,1]
+	_camera CamSetPos[_x + _scrollX,_y + _scrollY,_z]
+
+	_camera CamCommit 0
+;	~CONSTRUCTIONSCROLLDELAY
+;	_camera CamCommit CONSTRUCTIONSCROLLDELAY
+;	@ (CamCommitted _camera)
+
+	Goto "Update"
+
+#MenuHelp
+
+	CtrlShow [IDCMENULIST2,true]
+	CtrlShow [IDCMENUBUTTON,true]
+	CtrlShow [IDCMENUBUTTON1,true]
+
+	lbAdd[IDCMENULIST2,"Construction Controls"]
+	lbAdd[IDCMENULIST2,""]
+	lbAdd[IDCMENULIST2,"Rotate Object - Drag Right Mouse"]
+	lbAdd[IDCMENULIST2,"Zoom - Mouse Wheel or +/-"]
+	lbAdd[IDCMENULIST2,"Scroll Screen - Mouse to edge, arrow keys, numpad"]
+	lbAdd[IDCMENULIST2,"Cancel Build - Right Mouse"]
+	lbAdd[IDCMENULIST2,""]
+	lbAdd[IDCMENULIST2,"Base Buildings"]
+	lbAdd[IDCMENULIST2,""]
+	lbAdd[IDCMENULIST2,"Only the Commander can make these."]
+	lbAdd[IDCMENULIST2,"They are purchased with supplies."]
+	lbAdd[IDCMENULIST2,""]
+	lbAdd[IDCMENULIST2,"Defenses"]
+	lbAdd[IDCMENULIST2,""]
+	lbAdd[IDCMENULIST2,"Player and Commander can make these."]
+	lbAdd[IDCMENULIST2,"They are purchased with funds."]
+	lbAdd[IDCMENULIST2,""]
+
+	@ (menuExit || !dialog || !Alive player)
+
+	menuHelp = false
+
+	CtrlShow [IDCMENULIST2,false]
+	CtrlShow [IDCMENUBUTTON,false]
+	CtrlShow [IDCMENUBUTTON1,false]
+
+	if (menuExit) then {menuExit = false;Goto "Update"};
+
+	CloseDialog 0
+	Goto "Quit"
+
+#Quit
+
+	ShowCinemaBorder true
+
+	if (!IsNull _placementStructure) then {DeleteVehicle _placementStructure};
+
+	_camera CameraEffect["TERMINATE","BACK"]
+	CamDestroy _camera
+
+;6/8/7 MM - Created file.

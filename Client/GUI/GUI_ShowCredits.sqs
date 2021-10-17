@@ -1,0 +1,69 @@
+;Last modified 3/2/8
+;*****************************************************************************************
+;Description: Show credits and help screen.
+;*****************************************************************************************
+
+_display = _this Select 0
+
+_C = _display DisplayCtrl (IDCMenuTitle)
+_onquer = _display DisplayCtrl (IDCMenuTitle + 1)
+_T = _display DisplayCtrl (IDCMenuTitle + 2)
+_he = _display DisplayCtrl (IDCMenuTitle + 3)
+_I = _display DisplayCtrl (IDCMenuTitle + 4)
+_sland = _display DisplayCtrl (IDCMenuTitle + 5)
+
+_credits = _display DisplayCtrl (IDCMenuTitle + 6)
+_credits1 = _display DisplayCtrl (IDCMenuTitle + 7)
+
+_C CtrlSetScale 0
+_T CtrlSetScale 0
+_I CtrlSetScale 0
+
+_onquer CtrlSetFade 1
+_he CtrlSetFade 1
+_sland CtrlSetFade 1
+
+_credits CtrlSetFade 1
+_credits1 CtrlSetFade 1
+
+_C CtrlCommit 0
+_T CtrlCommit 0
+_I CtrlCommit 0
+
+_onquer CtrlCommit 0
+_he CtrlCommit 0
+_sland CtrlCommit 0
+
+_credits CtrlCommit 0
+_credits1 CtrlCommit 0
+
+_C CtrlSetScale 1
+_T CtrlSetScale 1
+_I CtrlSetScale 1
+
+_onquer CtrlSetFade 0
+_he CtrlSetFade 0
+_sland CtrlSetFade 0
+
+_credits CtrlSetFade 0
+_credits1 CtrlSetFade 0
+
+_C CtrlCommit 0.7
+_T CtrlCommit 0.7
+_I CtrlCommit 0.7
+
+_onquer CtrlCommit 1
+_he CtrlCommit 1
+_sland CtrlCommit 1
+
+_credits CtrlCommit 1
+_credits1 CtrlCommit 1
+
+@ (!dialog)
+
+if (time > VOTETIME + 10) then {Exit};
+
+TitleText[Format[Localize "STRWFHELP0",ActionKeysNames["TeamSwitch",1]],"PLAIN"]
+
+;*****************************************************************************************
+;1/6/8 MM - Created file.

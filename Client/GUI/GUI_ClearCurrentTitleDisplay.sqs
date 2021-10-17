@@ -1,0 +1,7 @@
+;Last modified 10/24/7
+;Clears current display device when mission title resource unloads.
+;Meant to be used with titleRsc.
+
+currentTitleDisplay = displayNull
+
+;10/24/7 MM - Created file.

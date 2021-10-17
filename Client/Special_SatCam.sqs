@@ -1,0 +1,190 @@
+;Satellite Camera Script by Benny 28/08/08 (Based of warfare one).
+
+_display = _this Select 0
+Goto "InitMenu"
+
+#Update
+~0.01
+	if (!dialog) then {Goto "Quit"};
+
+	if (mouseButtonWheel < 0) then {_z = _z - 20 * _speed};
+	if (mouseButtonWheel > 0) then {_z = _z + 20 * _speed};
+
+	if (_z < 10) then {_z = 10};
+	if (_z > 300) then {_z = 300};
+
+	mouseButtonWheel = 0;
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+
+	_scrollDistance = CONSTRUCTIONSCROLLINCREMENT / 60 * _z * _speed
+
+	_mx = _x + _scrollX + (((mousepos select 1)-0.5) + ((mousepos select 1)-0.5)*0.3)* _z * .3 * 5;
+	_my = _y + _scrollY - ((mousepos select 2)-0.5) * _z * .3 * 5;
+	_mousePosition = [_mx,_my,(_height + 5)*0]
+
+	_changingDirection = false
+
+	;Keep track of defense dir so next item starts has same dir (useful for walls).
+	if (!IsNull _placementStructure && _isDefense) then {_defenseDirection = GetDir _placementStructure};
+
+	if (!_rotating && _rightTime != -1 && time - _rightTime > 0.2 && !IsNull _placementStructure) then {_rotating = true;_rotatePosition = mousePos};
+
+	if (_rightTime != -1 && time - _rightTime > 0.2 && !IsNull _placementStructure) then {_angle = [position _placementStructure,_mousePosition] Call GetDirTo;_placementStructure SetDir _angle;_changingDirection = true;Goto "UpdateScrolling"} else {_rotating = false};
+	if (!IsNull _placementStructure) then {_placementStructure SetPos _mousePosition};
+
+	#UpdateScrolling
+
+	_lastX = _scrollX
+	_lastY = _scrollY
+
+	if (_xStarted == 0 && (mouseX > 0.45 || mouseX < -0.45)) then {_xStarted = time};
+	if (_yStarted == 0 && (mouseY > 0.5 || mouseY < -0.32)) then {_yStarted = time};
+
+	if (_xStarted != 0 && mouseX <= 0.45 && mouseX >= -0.45) then {_xStarted = 0};
+	if (_yStarted != 0 && mouseY <= 0.5 && mouseY >= -0.32) then {_yStarted = 0};
+
+	if (!mouseFocus) then {_xStarted = 0;_yStarted = 0;Goto "UpdateScrollChanges"};
+	if (_xStarted == 0 && _yStarted == 0) then {Goto "UpdateScrollChanges"};
+
+	if (mouseX > 0.38 && time - _xStarted >= CONSTRUCTIONSCROLLDELAY) then {_scrollX = _scrollX + _scrollDistance};
+	if (mouseX < -0.38 && time - _xStarted >= CONSTRUCTIONSCROLLDELAY) then {_scrollX = _scrollX - _scrollDistance};
+	if (mouseY < -0.28 && time - _yStarted >= CONSTRUCTIONSCROLLDELAY) then {_scrollY = _scrollY + _scrollDistance};
+	if (mouseY > 0.42 && time - _yStarted >= CONSTRUCTIONSCROLLDELAY) then {_scrollY = _scrollY - _scrollDistance};
+
+#UpdateScrollChanges
+
+	if (menuKey == """Right""" || menuKey == """6 [num]""") then {_scrollX = _scrollX + _scrollDistance};
+	if (menuKey == """Left""" || menuKey == """4 [num]""") then {_scrollX = _scrollX - _scrollDistance};
+	if (menuKey == """Up""" || menuKey == """8 [num]""") then {_scrollY = _scrollY + _scrollDistance};
+	if (menuKey == """Down""" || menuKey == """2 [num]""") then {_scrollY = _scrollY - _scrollDistance};
+
+	if (menuKey == """7 [num]""") then {_scrollX = _scrollX - _scrollDistance;_scrollY = _scrollY + _scrollDistance};
+	if (menuKey == """9 [num]""") then {_scrollX = _scrollX + _scrollDistance;_scrollY = _scrollY + _scrollDistance};
+	if (menuKey == """3 [num]""") then {_scrollX = _scrollX + _scrollDistance;_scrollY = _scrollY - _scrollDistance};
+	if (menuKey == """1 [num]""") then {_scrollX = _scrollX - _scrollDistance;_scrollY = _scrollY - _scrollDistance};
+
+	if (menuKey == """=""") then {_z = _z - 5 * _speed};
+	if (menuKey == """+ [num]""") then {_z = _z - 5 * _speed};
+
+	if (menuKey == """-""") then {_z = _z + 5 * _speed};
+	if (menuKey == """- [num]""") then {_z = _z + 5 * _speed};
+
+	if (_lastX != _scrollX || _lastY != _scrollY) then {Goto "Scroll"};
+	if (_lastZ != _z) then {_lastZ = _z;Goto "Scroll"};
+
+	_lastZ = _z
+
+#UpdateActions
+
+	if (menuBuy != _lastBuy) then {Goto "SelectStructure"};
+	if (menuHelp) then {Goto "MenuHelp"};
+	if (IsNull _placementStructure || _changingDirection) then {Goto "Update"};
+
+;Creates the factory menu.
+#InitMenu
+
+	_defenseDirection = 0
+
+	_isDefense = false
+
+	_vehicle = constructionVehicle
+	_messageBar = _display DisplayCtrl IDCMENUSTATUSLABEL
+
+	_HQType = Call Compile Format["%1HEADQUARTERSTYPE",sideJoinedText]
+
+	ShowCinemaBorder false
+
+	_type = TypeOf _vehicle 
+	_position = GetPos player
+	_x = _position Select 0
+	_y = _position Select 1
+
+	mouseButtonWheel = 0
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+	mouseFocus = false
+	mousepos = [0,0,0]
+	_rightTime = -1
+
+	_rotatePosition = [0,0]
+	_rotating = false
+	menuKey = ""
+	menuhelp = false
+
+	_leftDown = false
+	_rightDown = false
+
+	;Delay before scrolling starts.
+	_xStarted = 0
+	_yStarted = 0
+
+	_scrollX = 0
+	_scrollY = 0
+	_scrollDistance = CONSTRUCTIONSCROLLINCREMENT / 2
+	_maxScroll = CONSTRUCTIONSCROLLDISTANCE
+	_speed = .2
+
+	_height = 3
+
+	;Menu buttons.
+	menuExit = false
+	menuBuy = -1
+	_lastBuy = -1
+
+	_placementStructure = ObjNull
+	
+	_z = 30
+	_camera = "camera" CamCreate [_x,_y,_z]
+	_camera CamSetDir 0
+
+	_camera CamSetFOV 1
+	_camera cameraEffect["Internal","TOP"]
+	titleCut ["","black in", 2];
+
+	_camera camSetTarget [_x,_y + 0.1,1]
+	_camera CamSetPos [_x,_y,30]
+	_camera CamCommit 0
+	@ (CamCommitted _camera)
+
+	CtrlShow [IDCMENUINFO,false]
+	CtrlShow [IDCMENULIST2,false]
+	CtrlShow [IDCMENUBUTTON,false]
+	CtrlShow [IDCMENUBUTTON1,false]
+
+	CtrlEnable [IDCMENULIST2,false]
+
+	_scrollDistance = CONSTRUCTIONSCROLLINCREMENT
+	_z = 50
+	_lastZ = _z
+
+	_camera CamSetPos [_x,_y,_z]
+	_camera CamCommit 0
+	@ (CamCommitted _camera)
+
+#Scroll
+
+;	_camera CamSetDir 0
+	_camera CamSetTarget [_x + _scrollX,_y + _scrollY + 2,1]
+	_camera CamSetPos[_x + _scrollX,_y + _scrollY,_z]
+
+	_camera CamCommit 0
+;	~CONSTRUCTIONSCROLLDELAY
+;	_camera CamCommit CONSTRUCTIONSCROLLDELAY
+;	@ (CamCommitted _camera)
+
+	Goto "Update"
+
+#Quit
+
+	ShowCinemaBorder true
+
+	if (!IsNull _placementStructure) then {DeleteVehicle _placementStructure};
+
+	titleCut ["","black in", 2];
+
+	_camera CameraEffect["TERMINATE","BACK"]
+	CamDestroy _camera
+	Exit
+
+;6/8/7 MM - Created file.

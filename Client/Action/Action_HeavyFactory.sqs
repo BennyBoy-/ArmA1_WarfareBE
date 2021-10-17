@@ -1,0 +1,8 @@
+;Last modified 3/28/7
+;*****************************************************************************************
+
+if (sideJoined == East) then {[EASTHEAVYTYPE,NearestObject[GetPos player,eastStructureNames Select EASTHEAVYTYPE]] Exec "Client\GUI\GUI_Factory.sqs"};
+if (sideJoined == West) then {[WESTHEAVYTYPE,NearestObject[GetPos player,westStructureNames Select WESTHEAVYTYPE]] Exec "Client\GUI\GUI_Factory.sqs"};
+
+;*****************************************************************************************
+;3/28/7 MM - Created file.

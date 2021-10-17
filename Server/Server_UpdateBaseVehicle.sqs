@@ -1,0 +1,33 @@
+;Last modified 11/12/7
+;*****************************************************************************************
+;Description: Maintain a base's vehicle pool.
+;*****************************************************************************************
+
+_vehicle = _this Select 0
+_side = _this Select 1
+_type = TypeOf _vehicle
+
+#Update
+~15
+
+	if (IsNull _vehicle) then {Goto "RespawnVehicle"};
+	if (GetDammage _vehicle >= 1) then {Goto "RespawnVehicle"};
+	if (!CanMove _vehicle) then {Goto "CleanUpVehicle"};
+
+	Goto "Update"
+
+#CleanUpVehicle
+
+	[_vehicle] ExecVM "Common\Common_DelayedVehicleDestroy.sqf"
+
+#RespawnVehicle
+
+	_base = Call Compile Format["%1Base",Str _side]
+	_vehicle = _type CreateVehicle GetPos _base
+	[_vehicle,GetPos _base,15,30,true] Call PlaceNear
+	[_vehicle,_side] Call InitUnit
+
+	Goto "Update"
+
+;*****************************************************************************************
+;11/12/7 MM - Created file.

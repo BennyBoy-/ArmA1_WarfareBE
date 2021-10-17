@@ -1,0 +1,31 @@
+;Last modified 3/9/7
+;*****************************************************************************************
+;Description: Keep action menu available if client enters a vehicle.
+;*****************************************************************************************
+
+Goto "Init"
+
+#Update
+~0.5
+
+	if (Vehicle player != _lastVehicle) then {Goto "UpdateActions"};
+
+	Goto "Update"
+
+#UpdateActions
+
+	_vehicle = Vehicle player
+
+	if (_vehicle != player) then {_optionsID = _vehicle AddAction [Localize "STRWFOPTIONS", "Client\Action\Action_OpenOptionsMenu.sqs",false,0,false,false,"TeamSwitch"]} else {_lastVehicle RemoveAction _optionsID};
+
+	_lastVehicle = _vehicle
+	Goto "Update"
+
+#Init
+
+	_optionsID = -1
+	_lastVehicle = player
+	Goto "Update"
+
+;*****************************************************************************************
+;11/30/7 MM - Created file.

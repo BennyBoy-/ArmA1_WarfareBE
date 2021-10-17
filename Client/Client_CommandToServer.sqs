@@ -1,0 +1,38 @@
+;Last modified 3/30/7
+;*****************************************************************************************
+;Description: Send a command to the server.
+;Usage: [COMMAND,options parameters] Exec "Client\Client_CommandToServer.sqs"
+;*****************************************************************************************
+
+;private ["_command","_parameters","_paramMask","_ID"]
+
+_command = _this Select 0
+_parameters = Count _this
+
+;Wait until command is available for use (may be in use by another client right now).
+;Randomize ms pause do reduce chance ot 2 clients checking at the same time.
+#CheckCommandAvailability
+~(((Random 190) + 10) / 1000)
+
+if (Call Compile Format["%1",serverCommandPV Select _command] != 0) then {Goto "CheckCommandAvailability"};
+
+;@ (Call Compile Format["%1 == 0",serverCommandPV Select _command])
+
+;When a command request is sent to the server the player's ID & side are imbedded in the value.
+;When the PV has a non-zero value it is considered "locked" and cannot be used by another client until the server
+;Has received the request, processed it, and cleared it to 0.
+
+_ID = sideID + clientID
+_paramMask = CMD0PARAMETERS
+
+;If additional parameters were passed then transmit them.
+if (_parameters > 1) then {_paramMask = CMD1PARAMETERS;Call Compile Format["%1P1 = _this Select 1;PublicVariable ""%1P1""",serverCommandPV Select _command]};
+if (_parameters > 2) then {_paramMask = CMD2PARAMETERS;Call Compile Format["%1P2 = _this Select 2;PublicVariable ""%1P2""",serverCommandPV Select _command]};
+if (_parameters > 3) then {_paramMask = CMD3PARAMETERS;Call Compile Format["%1P3 = _this Select 3;PublicVariable ""%1P3""",serverCommandPV Select _command]};
+
+;Set PV & transmit it.
+Call Compile Format["%1 = _ID + _paramMask;PublicVariable ""%1""",serverCommandPV Select _command]
+;player sidechat Format["CmdToServer %1 = %2",serverCommandPV Select _command,_ID + _paramMask]
+
+;*****************************************************************************************
+;1/18/7 MM - Created file.

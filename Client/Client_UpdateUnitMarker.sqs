@@ -1,0 +1,50 @@
+;Last modified 4/6/8
+;*****************************************************************************************
+;Description: Locally creates a marker and tracks passed unit on map until it is destroyed.
+;Usage: [unit,side] Exec "Client\Client_UpdateUnitMarker.sqs"
+;*****************************************************************************************
+
+_unit = _this Select 0
+
+_side = sideJoined
+if (Count _this > 1) then {_side = _this Select 1};
+
+Goto "Init"
+
+#Update
+~0.5
+
+	if (IsNull _unit) then {Goto "Quit"};
+	if (GetDammage _unit >= 1) then {_marker SetMarkerTypeLocal "DestroyedVehicle";Goto "Quit"};
+
+	_marker SetMarkerPosLocal GetPos _unit
+
+Goto "Update"
+
+#Init
+
+	if (IsNil "unitMarkers") then {unitMarkers = 0};
+
+	_marker = Format["UnitMarker%1",unitMarkers]
+	unitMarkers = unitMarkers + 1
+
+	CreateMarkerLocal [_marker,GetPos _unit]
+	_marker SetMarkerTypeLocal "Vehicle"
+	_marker SetMarkerColorLocal "ColorGreen"
+	if (_side != sideJoined) then {_marker SetMarkerColorLocal "ColorRed"};
+
+	_type = TypeOf _unit
+
+	if (_type == WREPAIRTRUCK || _type == EREPAIRTRUCK) then {_marker SetMarkerTypeLocal "RepairVehicle"};
+	if (_type == WSALVAGETRUCK || _type == ESALVAGETRUCK) then {_marker SetMarkerTypeLocal "SalvageVehicle"};
+	if (_type == WSUPPLYTRUCK || _type == ESUPPLYTRUCK) then {_marker SetMarkerTypeLocal "SupplyVehicle"};
+
+	Goto "Update"
+
+#Quit
+
+	@ (IsNull _unit)
+	DeleteMarkerLocal _marker
+
+;*****************************************************************************************
+;5/18/7 MM - Created file.

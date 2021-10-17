@@ -1,0 +1,127 @@
+;Last modified 3/2/8
+
+_display = _this Select 0
+
+Goto "InitMenu"
+
+#Update
+~0.1
+
+	;If unit dies or is no longer on his/her side (team killing).
+	if (!(Alive player) || Side player != sideJoined || menuExit) then {CloseDialog 0;Goto "Quit"};
+;	if (!dialog || CtrlText IDCMenuTitle != Localize "STRWFCONSTRUCTION") then {Goto "Quit"};
+	if (!dialog) then {Goto "Quit"};
+
+	if (_selectedTeam == -1) then {CtrlSetText [IDCMENUTITLE,Localize "STRWFNOAITEAMS"];Goto "Update"};
+
+	_position = Call Compile Format["[%1AIMissionX,%1AIMissionY]",_teamName]
+	_missionMarker SetMarkerPosLocal _position
+
+	_teamCommand = Call Compile Format["%1Team%2AIMission",sideJoinedText,_selectedTeam]
+	_teamName = Format["%1Team%2",sideJoinedText,_selectedTeam]
+	_teamType = Call Compile Format["%1AITeamType",_teamName]
+	CtrlSetText [IDCMENUTITLE,Format["%1 %2 (%3)",Localize "STRWFTEAM",_selectedTeam,MISLABELS Select _teamCommand]]
+
+	if (_teamCommand == MISPATROL) then {_missionMarker SetMarkerSizeLocal [AIPATROLRANGE,AIPATROLRANGE];_missionMarker SetMarkerShapeLocal "Ellipse"} else {_missionMarker SetMarkerSizeLocal [1.5,1.5];_missionMarker SetMarkerShapeLocal "Icon"};
+	if (menuCommand In _destinationCommands) then {CtrlSetText [IDCMENUINFO,Localize "STRWFCLICKONMAP"]} else {CtrlSetText [IDCMENUINFO,""]};
+
+	_selectedType = lbValue[IDCMenuList,lbCurSel IDCMenuList] 
+	if (_selectedType == _teamType) then {Goto "UpdateActions"};
+
+	_lastTeamType = _selectedType
+	Call Compile Format["%1AITeamType = _selectedType",_teamName]
+	Call Compile Format["PublicVariable ""%1AITeamType""",_teamName]
+
+#UpdateActions
+
+	if (menuTeam != _lastTeam) then {Goto "SelectTeam"};
+	if (mouseButtonUp == 0) then {Goto "OrderTeamOnMap"};
+	if (menuCommand != -1) then {Goto "OrderTeam"};
+	Goto "Update"
+
+;Creates the command menu.
+#InitMenu
+
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+
+	;Menu buttons.
+	menuExit = false
+	_lastTeam = -1
+	_lastTeamType = -1
+
+	_destinationCommands = [MISMOVETODESTINATION,MISPATROL]
+	_teams = Call Compile Format["%1Teams",sideJoinedText]
+
+	_AITeams = []
+	{if (!IsPlayer Leader _x) then {_AITeams = _AITeams + [_x]};} ForEach _teams
+
+	_selectedTeam = -1
+	if (Count _AITeams > 0) then {_selectedTeam = _teams Find (_AITeams Select 0)};
+	if (_selectedTeam != -1) then {_selectedTeam = _selectedTeam + 1};
+
+	for [{_count = 0},{_count < 16},{_count = _count + 1}] do {CtrlShow [IDCCONSTRUCTIONBUTTON + _count,false]};
+
+	_count = 0
+	{if (_x In _AITeams) then {CtrlShow [IDCCONSTRUCTIONBUTTON + _count,true]};_count = _count + 1} ForEach _teams
+
+	_types = Call Compile Format["%1AITeamTemplateDescriptions",sideJoinedText]
+	_count = 0
+	{if (_x != "") then {_selection = lbAdd[IDCMenuList,_x];lbSetValue [IDCMenuList,_selection,_count]};_count = _count + 1} ForEach _types
+
+	_teamName = Format["%1Team%2",sideJoinedText,_selectedTeam]
+	_teamType = Call Compile Format["%1AITeamType",_teamName]
+	lbSetCurSel [IDCMenuList,_teamType]
+
+	_missionMarker = "TempMissionMarker"
+	CreateMarkerLocal [_missionMarker,[0,0]]
+	_missionMarker SetMarkerTypeLocal "Select"
+	_missionMarker SetMarkerSizeLocal [1.5,1.5]
+	_missionMarker SetMarkerColorLocal "ColorYellow"
+
+	Goto "Update"
+
+#SelectTeam
+
+	_lastTeam = menuTeam
+	_selectedTeam = menuTeam
+
+	_teamName = Format["%1Team%2",sideJoinedText,_selectedTeam]
+	_teamType = Call Compile Format["%1AITeamType",_teamName]
+	lbSetCurSel [IDCMenuList,_teamType]
+	Goto "Update"
+
+#OrderTeam
+
+	if (menuCommand In _destinationCommands) then {Goto "Update"};
+
+	Call Compile Format["%1Team%2AIMission = menuCommand",sideJoinedText,_selectedTeam]
+	Call Compile Format["PublicVariable ""%1Team%2AIMission""",sideJoinedText,_selectedTeam]
+
+	menuCommand = -1
+	Goto "Update"
+
+#OrderTeamOnMap
+
+	mouseButtonUp = -1
+	if (!(menuCommand In _destinationCommands)) then {Goto "Update"};
+
+	_display = FindDisplay IDCDEFAULT
+
+	_map = _display DisplayCtrl IDCMENUIMAGE;
+	_position = _map PosScreenToWorld[mouseX,mouseY]
+	Call Compile Format["%1AIMissionX = _position Select 0;%1AIMissionY = _position Select 1",_teamName]
+	Call Compile Format["PublicVariable ""%1AIMissionX"";PublicVariable ""%1AIMissionY""",_teamName]
+	Call Compile Format["%1AIMission = menuCommand;PublicVariable ""%1AIMission""",_teamName]
+
+	menuCommand = -1
+
+	Goto "Update"
+
+#Quit
+
+	DeleteMarkerLocal _missionMarker
+
+	Exit
+
+;7/1/7 MM - Created file.

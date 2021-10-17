@@ -1,0 +1,8 @@
+;Last modified 8/26/8
+;*****************************************************************************************
+
+if (sideJoined == West) then {constructionVehicle = NearestObject[player,WREPAIRTRUCK];CreateDialog "ConstructionMenu"};
+if (sideJoined == East) then {constructionVehicle = NearestObject[player,EREPAIRTRUCK];CreateDialog "ConstructionMenu"};
+
+;*****************************************************************************************
+;5/11/7 MM - Created file.

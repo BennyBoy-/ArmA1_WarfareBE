@@ -1,0 +1,14 @@
+;Last modified 1/22/8
+;Description: Updates position of current respawn point.
+;*****************************************************************************************
+
+#Update
+~1
+
+	_object = Call Compile Format["%1Base",sideJoinedText]
+	Format["Respawn_%1",sideJoinedText] SetMarkerPosLocal GetPos _object
+
+	goto "Update"
+
+;*****************************************************************************************
+;2/23/7 MM - Created file.

@@ -1,0 +1,63 @@
+;Last modified 1/10/8
+;*****************************************************************************************
+_name = _this Select 0
+
+_eastDisconnected = ObjNull
+_westDisconnected = ObjNull
+
+[] Spawn SendGameStats
+
+_team = ObjNull
+{if (Name Leader _x == _name) then {_team = _x};} ForEach eastTeams
+{if (Name Leader _x == _name) then {_team = _x};} ForEach westTeams
+
+if (IsNull _team) then {Exit};
+
+~7
+
+;If nil then no disconnects have occurred.
+if (IsNil "disconnectCount") then {Exit};
+
+_count = disconnectCount
+
+#FindDisconnectedInformation
+
+	if (Call Compile Format["_name == Disconnected%1Name",_count]) then {Goto "GetDisconnectedInformation"};
+
+	_count = _count - 1
+	if (_Count > 0) then {Goto "FindDisconnectedInformation"};
+
+Exit
+
+#GetDisconnectedInformation
+
+	_funds = Call Compile Format["Disconnected%1Funds",_count]
+	_rank = Call Compile Format["Disconnected%1Rank",_count]
+	_score = Call Compile Format["Disconnected%1Score",_count]
+	_completed = Call Compile Format["Disconnected%1MissionsCompleted",_count]
+	_failed = Call Compile Format["Disconnected%1MissionsFailed",_count]
+
+	;Clear disconnect info so it cannot be used again.
+	Call Compile Format["Disconnected%1Name = """"",_count]
+	Call Compile Format["Disconnected%1Funds = 0",_count]
+	Call Compile Format["Disconnected%1Rank = 0",_count]
+	Call Compile Format["Disconnected%1Score = 0",_count]
+	Call Compile Format["Disconnected%1MissionsCompleted = 0",_count]
+	Call Compile Format["Disconnected%1MissionsFailed = 0",_count]
+
+	_side = Call Compile Format["Disconnected%1Side",_count]
+	if (Side _team != _side) then {Exit};
+
+	_player = Leader _team
+	_player SetPos ([Call Compile Format["GetPos %1Base",Str _side],15,30] Call GetRandomPosition)
+
+	;Restore values before disconnect.
+	_index = Call Compile Format["%1Teams Find _team",Str _side]
+	Call Compile Format["%1Player%2Funds = _funds;PublicVariable ""%1Player%2Funds""",Str _side,_index + 1]
+	Call Compile Format["%1Player%2Rank = _rank;PublicVariable ""%1Player%2Rank""",Str _side,_index + 1]
+	Call Compile Format["%1Player%2MissionsCompleted = _completed;PublicVariable ""%1Player%2MissionsCompleted""",Str _side,_index + 1]
+	Call Compile Format["%1Player%2MissionsFailed = _failed;PublicVariable ""%1Player%2MissionsFailed""",Str _side,_index + 1]
+	[0,0,_player,_score]Call SRVFNCRequestChangeScore
+
+;*****************************************************************************************
+;11/16/7 MM - Created file.

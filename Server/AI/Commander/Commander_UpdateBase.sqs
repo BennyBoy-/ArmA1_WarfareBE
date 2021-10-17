@@ -1,0 +1,267 @@
+;Last modified 4/26/8
+;*****************************************************************************************
+;Description: Commander AI routines to build and maintain a base.
+;ToDo: check if a base was already constructed.
+;For example, is AI takes over for a disconnected player commander.
+;*****************************************************************************************
+
+_layoutType = _this Select 0
+_side = _this Select 1
+
+Goto "Init"
+
+#Update
+~_updateTime
+
+	;If a player has taken command then exit.
+	if (!Call Compile Format["IsNull %1CommanderTeam",_side]) then {Goto "Quit"};
+
+	_base = Call Compile Format["%1Base",Str _side]
+
+	;If the HQ has been destroyed then no more construction.
+	if (IsNull _base) then {Goto "Update"};
+	if (GetDammage  _base >= 1) then {Goto "Update"};
+
+;Cycle through building types & pick randomized slot to place that structure.
+;One random slot is chosen for every building type.  Only one of each building type is constructed.
+;The random slot is pregenerated at script start (_slots array).
+#UpdateStructures
+
+	_funds = Call Compile Format["%1AICommanderFunds",_sideText]
+	_supplies = Call Compile Format["%1Supplies",_sideText]
+
+	_count = 0
+
+	#UpdateStructure
+
+		;_slots contains all the possible building locations from the layout in a random order.
+		_positionSlot = _slots Select _count
+
+		_structure = _structures Select _positionSlot
+		_site = _sites Select _positionSlot
+
+		_x = (_positions Select _positionSlot) Select 0
+		_y = (_positions Select _positionSlot) Select 1
+		_position = [(_center Select 0) + _x,(_center Select 1) + _y,0]
+
+		if (!IsNull _structure) then {Goto "CheckDamage"};
+		if (!_site) then {Goto "CheckToBuild"};
+
+		;If site is set & there is no structure then check now to see if one is built yet.
+		_objects = NearestObjects[_position,_structureTypes,10]
+		if (Count _objects > 0) then {_structure = _objects Select 0;_structures Set[_positionSlot,_structure]} else {Goto "UpdateNextStructure"};
+
+	#CheckDamage
+
+		_sites Set[_positionSlot,false]
+
+		if (GetDammage _structure < 1) then {Goto "UpdateNextStructure"};
+
+		;The HQ cannot be reconstructed.
+		;if (Call Compile Format["_structure == %1Base",Str _side]) then {Goto "UpdateNextStructure"};
+
+		_structures Set[_positionSlot,ObjNull]
+		DeleteVehicle _structure
+		_structure = ObjNull
+
+		#CheckToBuild
+
+			_type = Call Compile Format["%1%2TYPE",_sideText,_types Select _count]
+			_cost = _costs Select _type
+
+			if ((Random 100) > ((_chances Select _type) * _updateRatio)) then {Goto "UpdateNextStructure"};
+			if (_cost > _supplies) then {Goto "UpdateNextStructure"};
+
+			Call Compile Format["%1Supplies = %1Supplies - _cost;PublicVariable ""%1Supplies""",_sideText]
+
+			;If low probability then increase chance of reconstructing building if destroyed.
+			if ((_chances Select _type) < 15) then {_chances Set[_type,15]};
+
+			_sites Set[_positionSlot,true]
+			_script = _scripts Select _type
+			[_type,_side,_position,_directions Select _positionSlot,true] Exec Format["Server\Construction\Construction_%1.sqs",_script]
+
+			;Only construct one structure per update.
+			Goto "UpdateDefenses"
+
+		#UpdateNextStructure
+
+			_count = _count + 1
+			if (_count < _total) then {Goto "UpdateStructure"};
+
+;Cycle through defense position slots & pick randomized type to construct.
+;Instead of picking one random construction slot for each building type it picks a random
+;Defense type for EVERY defense slot.  There can be multiple defenses but only one of each normal building.
+#UpdateDefenses
+
+	_count = 0
+
+	if (_defenseTotal < 1) then {Goto "Update"};
+
+	#UpdateDefense
+
+		_defense = _defenses Select _count
+		_defenseSlot = _defenseSlots Select _count
+
+		_x = (_positions Select _defenseSlot) Select 0
+		_y = (_positions Select _defenseSlot) Select 1
+		_position = [(_center Select 0) + _x,(_center Select 1) + _y,0]
+
+		if (IsNull _defense) then {Goto "CheckDefenseToBuild"};
+
+	#CheckDefenseDamage
+
+		if (GetDammage _defense < 1) then {Goto "UpdateNextDefense"};
+
+		_defenses Set[_count,ObjNull]
+		DeleteVehicle _defense
+		_defense = ObjNull
+
+		#CheckDefenseToBuild
+
+			;Select a random defense type.
+			_type = Call Compile Format["%1%2TYPE",_sideText,_defenseTypes Select (Random (Count _defenseTypes - 1))]
+			_cost = _defenseCosts Select _type
+
+			if ((Random 100) > ((_defenseChances Select _type) * _updateRatio)) then {Goto "UpdateNextDefense"};
+			if (_cost > _funds) then {Goto "UpdateNextDefense"};
+
+			Call Compile Format["%1AICommanderFunds = %1AICommanderFunds - _cost;PublicVariable ""%1AIFunds""",_sideText]
+
+			_script = _defenseScripts Select _type
+			[_type,_side,_position,_directions Select _defenseSlot,true] Exec Format["Server\Construction\Construction_%1.sqs",_script]
+			~1
+			_defenses Set[_count,Call Compile Format ["last%1Defense",Str _side]]
+
+			;Only construct one defense per update.
+			Goto "Update"
+
+		#UpdateNextDefense
+
+			_count = _count + 1
+			if (_count < _defenseTotal) then {Goto "UpdateDefense"};
+
+	Goto "Update"
+
+#Init
+
+	~5
+
+	_sideText = Str _side
+
+	if (IsNil "_layoutType") then {_layoutType = BASELAYOUTNORTHTYPE};
+	if (Call Compile Format["%1AIBase",_sideText]) then {Exit};
+
+	Call Compile Format["%1AIBase = true",_sideText]
+
+	;Used to "return" the last constructed defense type.
+	Call Compile Format["if (IsNil ""last%1Defense"") then {last%1Defense = ObjNull};",Str _side]
+
+	;_updateTime = 60
+	_updateTime = 15
+
+	;Since probability values in structures config represent chance per minute calculate a ratio.
+	_updateRatio = _updateTime / 60
+
+	;AI commander will upgrade MHQ into the HQ.
+
+	_supplies = 0
+	_HQ = Call Compile Format["%1Base",_sideText]
+	_deployed = Call Compile Format["%1MHQDeployed",_sideText]
+	_center = GetPos _hq
+
+	;Types of buildings that can be constructed.
+	_types = Call Compile Format["%1Structures",_sideText]
+	_names = Call Compile Format["%1StructureNames",_sideText]
+	_costs = Call Compile Format["%1StructureCosts",_sideText]
+	_chances = Call Compile Format["%1StructureChances",_sideText]
+	_scripts = Call Compile Format["%1StructureScripts",_sideText]
+	_total = Count _types
+
+	;Types of defenses that can be constructed.
+	_defenseTypes = Call Compile Format["%1Defenses",_sideText]
+	_defenseCosts = Call Compile Format["%1DefenseCosts",_sideText]
+	_defenseChances = Call Compile Format["%1DefenseChances",_sideText]
+	_defenseScripts = Call Compile Format["%1DefenseScripts",_sideText]
+
+	;Type of construction, position & directions for buildings in base.
+	_buildTypes = baseLayoutTypes Select _layoutType
+	_directions = baseLayoutDirections Select _layoutType
+	_positions = baseLayoutPositions Select _layoutType
+	_totalPositions = Count _positions
+
+	_sites = []
+	_structures = []
+	_tempSlots = []
+	_defenses = []
+	_defenseSlots = []
+
+	;Create base slots.
+	_count = 0
+	{if (_x == BASESTRUCTURETYPE && _count < _total) then {_structures = _structures + [ObjNull];_sites = _sites + [false];_tempSlots = _tempSlots + [_count]};_count = _count + 1} ForEach _buildTypes
+
+	;Create defense slots.
+	_count = 0
+	{if (_x == BASEDEFENSETYPE) then {_defenses = _defenses + [ObjNull];_defenseSlots = _defenseSlots + [_count]};_count = _count + 1} ForEach _buildTypes
+
+	_defenseTotal = Count _defenseSlots
+
+	;Randomly sort the order of the buildings slots in the layout.
+	_slots = []
+	while {Count _tempSlots > 0} do {_slot = _tempSlots Select Random (Count _tempSlots - 1);_tempSlots = _tempSlots - [_slot];if (!(_slot In _slots)) then {_slots = _slots + [_slot]};}
+
+	_HQType = Call Compile Format["%1HEADQUARTERSTYPE",_sideText]
+	_supplies = Call Compile Format["%1Supplies",_sideText]
+	_cost = _costs Select _HQType
+
+	if (_supplies < _cost) then {Goto "InitTypes"};
+	if (IsNull _HQ) then {Goto "InitTypes"};
+	if (_deployed || GetDammage _HQ > 1) then {Goto "InitTypes"};
+
+#DeployMHQ
+
+	_positionSlot = _slots Select _HQType
+
+	_x = (_positions Select _positionSlot) Select 0
+	_y = (_positions Select _positionSlot) Select 1
+	_position = [(_center Select 0) + _x,(_center Select 1) + _y,0]
+
+	_sites Set[_positionSlot,true]
+	_script = _scripts Select _HQType
+	[_HQType,_side,_position,_directions Select _positionSlot,true] Exec Format["Server\Construction\Construction_%1.sqs",_script]
+	~5
+	_structures Set[_positionSlot,Call Compile Format["%1Base",_sideText]]
+
+#InitTypes
+
+	_structureTypes = ["WarfareBEastBarracks","WarfareBEastLightFactory","WarfareBEastHeavyFactory","WarfareBEastAircraftFactory","BMP2_MHQ_unfolded"]
+	if (_side == West) then {_structureTypes = ["WarfareBWestBarracks","WarfareBWestLightFactory","WarfareBWestHeavyFactory","WarfareBWestAircraftFactory","M113_MHQ_unfolded"]};
+
+	_objects = NearestObjects[_center,_structureTypes,300]
+	_totalObjects = Count _objects
+
+	;If nothing already built then no further checks are needed.
+	if (_totalObjects < 1) then {Goto "UpdateStructures"};
+
+	_count = 0
+
+	#AssessCurrentBase
+
+		_structure = _objects Select _count
+		_type = _names Find TypeOf _structure
+
+		if (_type != -1 && GetDammage _structure < 1) then {_structures Set[_slots Select _type,_structure]};
+
+	#AssessNextStructure
+
+		_count = _count  + 1
+		if (_count < _totalObjects) then {Goto "AssessCurrentBase"};
+
+		Goto "UpdateStructures"
+
+#Quit
+
+	Call Compile Format["%1AIBase = false",_sideText]
+
+;*****************************************************************************************
+;3/31/7 MM - Created file.

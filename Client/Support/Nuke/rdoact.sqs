@@ -1,0 +1,22 @@
+_obj = _this select 0
+_midle = position _obj;
+_cnt = 0
+
+~18
+
+#loop
+?(_cnt == 300) : goto "loopend"
+
+_rnd = random 100
+
+_array = _midle nearObjects ["Man", (500 + _rnd)]
+{_x setdammage ((getdammage _x) + 0.02)} forEach _array
+
+_cnt = _cnt + 1
+~(0.9 + (random 0.2))
+goto "loop"
+#loopend
+
+deleteVehicle _obj
+
+exit

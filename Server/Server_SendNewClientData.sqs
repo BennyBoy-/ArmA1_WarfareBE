@@ -1,0 +1,67 @@
+;Last modified 3/20/8
+;*****************************************************************************************
+;Description: Sends any in-game data the the client when joining game.
+;*****************************************************************************************
+_side = _this Select 0;
+_client = _this Select 1;
+
+;Since this is mid-game data don't transmit at game start.
+if (time < 30) then {Exit};
+if (Count baseStructuresInUse < 1) then {Goto "SendData"};
+
+;Copy list in case it changes during loop
+_structures = +baseStructuresInUse
+_total = Count _structures
+
+;Lock all structures currently in use.  Since the time remaining is not kept track of just lock them
+;For the max possible time.
+#SendStructureInUse
+~0.05
+
+	_structure = _structures Select _count
+	
+	;Make an educated guess on usage time.  Should be as long as longest possible time.
+	_time = longestBarracksBuildTime
+	if (TypeOf _structure In ["WarfareBEastLightFactory","WarfareBWestLightFactory"]) then {_time = longestLightBuildTime};
+	if (TypeOf _structure In ["WarfareBEastHeavyFactory","WarfareBWestHeavyFactory"]) then {_time = longestHeavyBuildTime};
+	if (TypeOf _structure In ["WarfareBEastAircraftFactory","WarfareBWestAircraftFactory","WarfareBAirport"]) then {_time = longestAircraftBuildTime};
+
+	[_side,_client,CMDJIPSTRUCTUREINUSE,_structure,_time] Exec "Server\Server_CommandToClient.sqs";
+
+	_count = _count + 1
+	if (_count < _total) then {Goto "SendStructureInUse"};
+
+#SendData
+
+_total = Count towns
+publicVariable "upgradeVerify"
+publicVariable "upgradeVerifyEast"
+_count = 0
+
+;Send town & camp data.
+#SendTownData
+~0.05
+
+	_town = towns Select _count
+	Call Compile Format["PublicVariable ""%1SideID"";PublicVariable ""%1SupplyValue""",Str _town]
+
+	_camps = Call Compile Format["%1Camps",Str _town]
+	_totalCamps = Count _camps
+	_count1 = 0
+
+	#SendCampData
+	~0.01
+
+		_camp = _camps Select _count1
+		Call Compile Format["PublicVariable ""%1SideID"";PublicVariable ""%1SupplyValue""",Str _camp]
+
+		_count1 = _count1 + 1
+		if (_count1 < _totalCamps) then {Goto "SendCampData"};
+
+	_count = _count + 1
+	if (_count < _total) then {Goto "SendTownData"};
+
+	[_side,_client,CMDJIPINITTOWNSANDCAMPS] Exec "Server\Server_CommandToClient.sqs";
+
+;*****************************************************************************************
+;5/12/7 MM - Created file.

@@ -1,0 +1,19 @@
+;Last modified 3/2/8
+;Display correct time over game respawn timer until respawn map takes over.
+
+_display = _this Select 0
+_respawnBar = _display DisplayCtrl IDCMENUSTATUSLABEL
+_timeStarted = time
+
+#Update
+~0.1
+
+	_timeLeft = 30 - (time - _timeStarted)
+
+	if (!dialog) then {Exit};
+	if (_timeLeft <= respawnTimerTime || respawnInProgress) then {Exit};
+
+	_respawnBar CtrlSetText Format[Localize "STRWFRESPAWNIN",_timeLeft - (_timeLeft % 1)]
+	Goto "Update"
+
+;1/5/8 MM - Created file.

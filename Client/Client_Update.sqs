@@ -1,0 +1,143 @@
+;Last modified 4/25/8
+;*****************************************************************************************
+;Description: General client-side updates.
+;*****************************************************************************************
+
+Goto "Init"
+
+#Update
+~1
+
+	commanderTeam = Call Compile Format["%1CommanderTeam",sideJoinedText]
+	if (IsNull commanderTeam && !IsNull _lastCommanderTeam) then {Goto "ChangeCommander"};
+	if (!IsNull commanderTeam && IsNull _lastCommanderTeam) then {Goto "ChangeCommander"};
+	if (commanderTeam != _lastCommanderTeam) then {Goto "ChangeCommander"};
+
+	if (time - _timeLastUpdateCheck < 5) then {Goto "Update"};
+
+	_timeLastUpdateCheck = time
+
+	if (time - _timeLastCheck >= 600) then {Goto "CheckTimeAlive"};
+	if (!_baseSpotted && Call Compile Format["!IsNil ""%1BaseSpottedPosition""",Str _opposingSide]) then {Goto "BaseFound"};
+
+;See if any base markers are no longer needed.
+#CheckBaseMarkers
+
+	_destroyed = []
+	_count = 0
+	_totalStructures = Count baseStructures
+
+	if (_totalStructures < 1) then {Goto "Update"};
+
+	#CheckBaseMarker
+
+		_structure = baseStructures Select _count
+
+		if (IsNull _structure) then {Goto "CheckNextBaseMarker"};
+		if (GetDammage _structure < 1) then {Goto "CheckNextBaseMarker"};
+
+		_destroyed = _destroyed + [_structure]
+
+	#CheckNextBaseMarker
+
+		_count =_count + 1
+		if (_count < _totalStructures) then {Goto "CheckBaseMarker"};
+
+	baseStructures = baseStructures - [ObjNull]
+	baseStructures = baseStructures - _destroyed
+
+	;Check if any structures were removed.
+	_structures = Count baseStructures
+	if (_structures == _totalStructures) then {Goto "Update"};
+
+	;Delete old markers.
+	for [{_count = 0},{_count < _totalStructures},{_count = _count + 1}] do {DeleteMarkerLocal Format["BaseMarker%1",_count]}
+
+	if (_structures < 1) then {Goto "Update"};
+
+	;Create new markers.
+	_count = 0
+
+	#CreateMarker
+
+		_marker = Format["BaseMarker%1",_count]
+		_structure = baseStructures Select _count
+
+		CreateMarkerLocal [_marker,GetPos _structure];
+		_marker SetMarkerTypeLocal "Dot";
+		_marker SetMarkerTextLocal ([_structure] Call GetStructureMarkerLabel);
+		_marker SetMarkerColorLocal "ColorBlue";
+
+		if (MarkerText _marker == "") then {_marker SetMarkerTypeLocal "Empty"};
+
+		_count =_count + 1
+		if (_count < _structures) then {Goto "CreateMarker"};
+
+	Goto "Update"
+
+#CheckTimeAlive
+
+	_timeLastCheck = time
+
+	if (time - timeLastDeath >= 600) then {[CMDREQUESTCHANGESCORE,player,Score player + SCORESTAYALIVE] Exec "Client\Client_CommandToServer.sqs"};
+
+	Goto "Update"
+
+#BaseFound
+
+	_baseSpotted = true
+	[Localize "STRWFENEMYBASEFOUND"] Call TitleTextMessage
+	PlaySound Format["BaseSpotted%1",Round(Random 1)]
+
+	_marker = "EnemyBaseMarker"
+
+	CreateMarkerLocal [_marker,Call Compile Format["%1BaseSpottedPosition",Str _opposingSide]]
+	_marker SetMarkerTypeLocal "Flag"
+	_marker SetMarkerTextLocal Localize "STRWFENEMYBASE"
+	_marker SetMarkerColorLocal "ColorRed"
+
+	Goto "Update"
+
+#ChangeCommander
+
+	_lastCommanderTeam = commanderTeam
+	_MHQ = Call Compile Format["%1MHQ",sideJoinedText];
+
+	if (IsNull commanderTeam) then {Goto "RemoveCommander"};
+	if (commanderTeam == Group player) then {Goto "InitCommanderHQ"};
+
+#RemoveCommander
+
+	if (IsNull _MHQ) then {Goto "Update"};
+
+	_MHQ RemoveAction 0
+	_MHQ RemoveAction 1
+	_MHQ RemoveAction 2
+	_MHQ RemoveAction 3
+
+	Goto "Update"
+
+#InitCommanderHQ
+
+	if (IsNull _MHQ) then {Goto "InitCommander"};
+	if (Locked _MHQ) then {_MHQ AddAction [Localize "STRWFUNLOCKMHQ","Client\Action\Action_ToggleMHQLock.sqs"]}	else {_MHQ AddAction [Localize "STRWFLOCKMHQ","Client\Action\Action_ToggleMHQLock.sqs"]};
+
+#InitCommander
+
+	[Localize "STRWFYOUARECOMMANDER"] Call TitleTextMessage
+	Goto "Update"
+
+#Init
+
+	_opposingSide = West
+	if (sideJoined == West) then {_opposingSide = East};
+	
+	_lastCommanderTeam = commanderTeam
+	
+	_baseSpotted = false
+	_timeLastCheck = time
+	_timeLastUpdateCheck = time
+	Goto "Update"
+
+;*****************************************************************************************
+;2/13/7 MM - Created file.

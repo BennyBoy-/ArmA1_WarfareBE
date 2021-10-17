@@ -1,0 +1,115 @@
+;Last modified 3/30/8
+;*****************************************************************************************
+;Description: Main server loop.
+;*****************************************************************************************
+
+Goto "Init"
+
+#Update
+~1
+
+	_time = _time + 1
+	if (_time > 5) then {Goto "CheckForVictory"};
+
+	if (!IsNull EastMHQ) then {"Respawn_east" SetMarkerPosLocal GetPos EastMHQ};
+	if (!IsNull WestMHQ) then {"Respawn_west" SetMarkerPosLocal GetPos WestMHQ};
+
+	Goto "Update"
+
+#CheckForVictory
+
+	_time = 0
+	_eastTowns = 0
+	_westTowns = 0
+
+	{_sideID = Call Compile Format["%1SideID",Str _x];if (_sideID == WESTID) then {_westTowns = _westTowns + 1};if (_sideID == EASTID) then {_eastTowns = _eastTowns + 1}} ForEach towns
+
+	if (!destroyBase && _eastTowns == Count towns) then {Goto "EastWins"};
+	if (!destroyBase && _westTowns == Count towns) then {Goto "WestWins"};
+
+	if (timeGameOver != -1 && time >= timeGameOver) then {_return = "VictoryByPoints";Goto "UpdateTotalPoints"};
+	if (scoreToWin != -1) then {_return = "CheckScore";Goto "UpdateTotalPoints"};
+
+#CheckScore
+
+	if (scoreToWin != -1 && (eastPoints >= scoreToWin || westPoints >= scoreToWin)) then {Goto "VictoryByPoints"};
+	
+	;Clean up. sidenote to original warfare: objnull not working, had to use that...
+	{if (getDammage _x >= 1) then {eastBaseStructures = eastBaseStructures - [_x]}} forEach eastBaseStructures;
+	{if (getDammage _x >= 1) then {westBaseStructures = westBaseStructures - [_x]}} forEach westBaseStructures;
+
+	;victory conditions (updated).
+	if ((Count eastBaseStructures < 1) && (GetDammage EastMHQ >= 1)) then {Goto "WestWins"};
+	if ((Count eastBaseStructures < 1) && (GetDammage EastBase >= 1)) then {Goto "WestWins"};
+	
+	if ((Count westBaseStructures < 1) && (GetDammage WestMHQ >= 1)) then {Goto "EastWins"};
+	if ((Count westBaseStructures < 1) && (GetDammage WestBase >= 1)) then {Goto "EastWins"};
+	
+	;if HQ get killed being deployed then we spawn another MHQ wreck over it in order to be fixable.
+	if (getDammage WestBase < 1) then {_destroyed = false;};
+	if (getDammage EastBase < 1) then {_destroyedEast = false;};
+	if ((getDammage WestBase >= 1) && !(_destroyed)) then {deleteVehicle WestMHQ;_MHQ = "M113_MHQ" createVehicle (position WestBase);_MHQ setDir (getDir WestBase);_MHQ AddEventHandler ["killed", {[WEST] ExecVM "Server\Functions\Server_addKilledMHQFunc.sqf"}];WestMHQ = _MHQ;_MHQ setDammage 1;_destroyed = true;};
+	if ((getDammage EastBase >= 1) && !(_destroyedEast)) then {deleteVehicle EastMHQ;_MHQ = "BMP2_MHQ" createVehicle (position EastBase);_MHQ setDir (getDir EastBase);_MHQ AddEventHandler ["killed", {[EAST] ExecVM "Server\Functions\Server_addKilledMHQFunc.sqf"}];EastMHQ = _MHQ;_MHQ setDammage 1;_destroyedEast = true;};
+
+	Goto "Update"
+
+#UpdateTotalPoints
+
+	_eastPlayers = []
+	_westPlayers = []
+	eastPoints = 0
+	westPoints = 0
+
+	{if (IsPlayer Leader _x) then {_eastPlayers = _eastPlayers + [Leader _x]};} ForEach EastTeams
+	{if (IsPlayer Leader _x) then {_westPlayers = _westPlayers + [Leader _x]};} ForEach WestTeams
+	{eastPoints = eastPoints + Score _x} ForEach _eastPlayers
+	{westPoints = westPoints + Score _x} ForEach _westPlayers
+
+	PublicVariable "eastPoints"
+	PublicVariable "westPoints"
+	Goto _return
+
+#VictoryByPoints
+
+	if (eastPoints > westPoints) then {Goto "EastWins"};
+	if (westPoints > eastPoints) then {Goto "WestWins"};
+
+	;Tie breaker.
+	if (50 < Random 100) then {Goto "EastWins"}
+	Goto "WestWins"
+
+#EastWins
+
+	[CMDENDGAME,EASTID] Exec "Server\Server_CommandToClients.sqs"
+
+	~10
+	"1" ObjStatus "DONE"
+	ForceEnd
+	gameOver = true
+	Exit
+
+#WestWins
+
+	[CMDENDGAME,WESTID] Exec "Server\Server_CommandToClients.sqs"
+
+	~10
+	"1" ObjStatus "DONE"
+	ForceEnd
+	gameOver = true
+	Exit
+
+#Init
+
+	eastpoints = 0
+	westpoints = 0
+	_destroyed = false
+	_destroyedEast = false
+
+	_eastStructures = [eastStructureNames Select EASTHEADQUARTERSTYPE,eastStructureNames Select EASTBARRACKSTYPE,eastStructureNames Select EASTLIGHTTYPE,eastStructureNames Select EASTHEAVYTYPE,eastStructureNames Select EASTAIRCRAFTTYPE]
+	_westStructures = [westStructureNames Select WESTHEADQUARTERSTYPE,westStructureNames Select WESTBARRACKSTYPE,westStructureNames Select WESTLIGHTTYPE,westStructureNames Select WESTHEAVYTYPE,westStructureNames Select WESTAIRCRAFTTYPE]
+	_return = ""
+	_time = 0
+	Goto "Update"
+
+;*****************************************************************************************
+;2/13/7 MM - Created file.

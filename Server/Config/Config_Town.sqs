@@ -1,0 +1,29 @@
+;Last modified 8/29/7
+;*****************************************************************************************
+;Description: Will randomly chose from a list of predefined town configs and init the town
+;with values from the list.
+;[town,townName,nearLocation,[config file list],range = 300,[control sequence]]
+;config file list - One config file will be randomly chosen.
+;Refer to Common\Init\Init_Location.sqf for a description of other parameters.
+;*****************************************************************************************
+
+_location = _this Select 0
+_locationName = _this Select 1
+_nearLocations = _this Select 2
+_configScripts = _this Select 3
+
+_range = 450
+if (Count _this > 4) then {_range = _this Select 4};
+
+;If no scripts were passed then use the default one.
+_total = Count _configScripts
+if (_total < 1) then {[_location,_locationName,_nearLocations,_range] ExecVM "Server\Config\Config_DefaultTown.sqf";Exit};
+
+_script = _configScripts Select (Random (_total - 1))
+_params = [_location,_locationName,_nearLocations]
+if (Count _this > 4) then {_params = _params + [_range]};
+
+_params Exec Format["Server\Config\Config_%1.sqf",_script]
+
+;*****************************************************************************************
+;2/22/7 MM - Created file.

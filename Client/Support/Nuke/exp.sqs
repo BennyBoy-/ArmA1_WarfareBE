@@ -1,0 +1,16 @@
+_pos = position (_this select 0);
+_fallposx = _pos select 0
+_fallposy = _pos select 1
+
+[_fallposx,_fallposy] exec "Client\Support\Nuke\nuke_light.sqs"
+[_fallposx,_fallposy] exec "Client\Support\Nuke\nuke_glare.sqs"
+
+[_fallposx,_fallposy] exec "Client\Support\Nuke\nuke_hat.sqs"
+
+[_fallposx,_fallposy] exec "Client\Support\Nuke\nuke_blast1.sqs"
+~0.1
+[_fallposx,_fallposy] exec "Client\Support\Nuke\nuke_blast2.sqs"
+~0.2
+[_fallposx,_fallposy] exec "Client\Support\Nuke\nuke_blast3.sqs"
+
+exit

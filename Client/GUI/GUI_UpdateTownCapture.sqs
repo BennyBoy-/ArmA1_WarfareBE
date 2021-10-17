@@ -1,0 +1,104 @@
+;Last modified 4/8/8
+;*****************************************************************************************
+;Description: Update progress bar on town capture.
+;*****************************************************************************************
+
+_location = _this Select 0
+_initialSV = _this Select 1
+_timeUnchanged = 0
+_delay = 4.5
+
+if (townCaptureProgressBarActive) then {Exit};
+
+townCaptureProgressBarActive = true
+
+Goto "Init"
+
+#Update
+
+	;If script needs to be stopped.
+	if (!townCaptureProgressBarActive) then {Goto "Done"};
+
+	_sideID = Call Compile Format["%1SideID",Str _location]
+	_SV = Call Compile Format["%1SupplyValue",Str _location]
+
+	if (_SV <= 0) then {Goto "Done"};
+	if (_sideID != _startingSideID) then {Goto "Done"};
+	if (player Distance _location > _range) then {Goto "Done"};
+
+	;Check if progress bar needs to be created.
+	if (!IsNull currentCutDisplay) then {Goto "UpdateProgress"};
+
+	CutRsc["TownCaptureProgress","PLAIN",0]
+
+	;Wait for scripting to detect current display.
+	@(!IsNull currentCutDisplay)
+
+	_textControl = currentCutDisplay DisplayCtrl IDCGENERICTEXT + 1
+	_textControl CtrlSetText _text
+	_backgroundControl = currentCutDisplay DisplayCtrl IDCGENERICTEXT
+
+	if (_startingSideID == sideID) then {_backgroundControl CtrlSetBackgroundColor [0,0.9,0,1]} else {_backgroundControl CtrlSetBackgroundColor [0.9,0,0,1]};
+
+#UpdateProgress
+
+	_control = currentCutDisplay DisplayCtrl IDCGENERICTEXT
+	_backgroundControl = currentCutDisplay DisplayCtrl IDCGENERICLABEL
+	_position = CtrlPosition _control
+
+	_position Set[2,_maxWidth * _sv / _maxSV]
+	_control CtrlSetPosition _position
+	_control CtrlCommit _delay
+
+	@ (CtrlCommitted _control)
+
+	if (_SV == _lastSV) then {_timeUnchanged = _timeUnchanged + 5} else {_timeUnchanged = 0};
+	if (_timeUnchanged > 20) then {Goto "Done"};
+
+	_lastSV = _SV
+
+	Goto "Update"
+
+#Init
+
+	_locationName = Call Compile Format["%1Name",Str _location]
+	_range = Call Compile Format["%1Range * TOWNCAPTUREASSISTRANGEMODIFIER",Str _location]
+	_maxSV = Call Compile Format["%1MaxSupplyValue",Str _location]
+	_lastSV = Call Compile Format["%1SupplyValue",Str _location]
+	_startingSideID = Call Compile Format["%1SideID",Str _location]
+
+	_text = Format[Localize "STRWFCAPTURINGTOWN",_locationName]
+	if (_startingSideID == sideID) then {_text = Format[Localize "STRWFENEMYCAPTURINGTOWN",_locationName]};
+
+	if (!IsNull currentCutDisplay) then {Goto "SetProgress"};
+
+	CutRsc["TownCaptureProgress","PLAIN",0]
+	@(!IsNull currentCutDisplay)
+
+#SetProgress
+
+	_textControl = currentCutDisplay DisplayCtrl IDCGENERICTEXT + 1
+	_textControl CtrlSetText _text
+	_backgroundControl = currentCutDisplay DisplayCtrl IDCGENERICTEXT
+
+	if (_startingSideID == sideID) then {_backgroundControl CtrlSetBackgroundColor [0,0.9,0,1]} else {_backgroundControl CtrlSetBackgroundColor [0.9,0,0,1]};
+
+	_control = currentCutDisplay DisplayCtrl IDCGENERICTEXT
+	_backgroundControl = currentCutDisplay DisplayCtrl IDCGENERICLABEL
+	_maxWidth = (CtrlPosition _backgroundControl Select 2) - 0.02
+	_position = CtrlPosition _control
+	_position Set[2,_maxWidth * _initialSV / _maxSV]
+	_control CtrlSetPosition _position
+	_control CtrlCommit 0
+
+	@ (CtrlCommitted _control)
+
+	Goto "Update"
+
+#Done
+
+	cutText["","PLAIN"]
+	townCaptureProgressBarActive = false
+
+;*****************************************************************************************
+;10/24/7 MM - Created file.

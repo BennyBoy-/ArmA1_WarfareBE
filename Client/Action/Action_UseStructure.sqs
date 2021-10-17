@@ -1,0 +1,42 @@
+;Last modified 3/20/8
+;*****************************************************************************************
+
+if (dialog) then {Exit};
+
+#UseBaseStructure
+
+_names = Call Compile Format["%1StructureNames",sideJoinedText]
+_structures = Call Compile Format["[_names Select %1BARRACKSTYPE,_names Select %1LIGHTTYPE,_names Select %1HEAVYTYPE,_names Select %1AIRCRAFTTYPE]",sideJoinedText]
+
+_objects = NearestObjects[Vehicle player,_structures,15]
+
+if (Count _objects < 1) then {Goto "UseCamp"};
+
+_working = []
+{if (GetDammage _x < 1) then {_working = _working + [_x]};} ForEach _objects
+if (Count _working < 1) then {Goto "UseCamp"};
+
+_building = _working Select 0
+_type = _names Find TypeOf _building
+
+if (_type != -1) then {[_type,_building] Exec "Client\GUI\GUI_Factory.sqs"};
+
+#UseCamp
+
+	_camps = GetPos Vehicle player NearObjects["WarfareBCamp",10]
+	if (Count _camps < 1) then {Goto "UseAirport"};
+
+	_camp = _camps Select 0
+	if (Call Compile Format["%1SideID == sideID",Str _camp]) then {[] Exec "Client\GUI\GUI_Loadouts.sqs"};
+
+#UseAirport
+
+	_airports = GetPos Vehicle player NearObjects["WarfareBAirport",30]
+	if (Count _airports < 1) then {Exit};
+
+	_type = Call Compile Format["%1AIRPORTTYPE",sideJoinedText]
+	_airport = _airports Select 0
+	if (Call Compile Format["%1Side == sideJoined",Str _airport]) then {[_type,_airport] Exec "Client\GUI\GUI_Factory.sqs"};
+
+;*****************************************************************************************
+;12/15/7 MM - Created file.

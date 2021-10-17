@@ -1,0 +1,27 @@
+;Last modified 3/18/8
+;*****************************************************************************************
+
+_MHQ = Call Compile Format["%1MHQ",sideJoinedText]
+
+if (IsNull _MHQ) then {Exit};
+
+;if (IsNil "constructionMHQID") then {constructionMHQID = 0;_MHQ RemoveAction 0;_MHQ RemoveAction 1};
+if (IsNil "toggleLockMHQID") then {toggleLockMHQID = 0};
+
+;_MHQ RemoveAction constructionMHQID
+_MHQ RemoveAction toggleLockMHQID
+
+;constructionMHQID = _MHQ AddAction [Localize "STRWFCONSTRUCTION","Client\GUI\GUI_Construction.sqs"];
+
+;Determine if MHQ needs to be locked or unlocked and add proper action back to MHQ.
+_lock = true
+_label = Localize "STRWFUNLOCKMHQ"
+if (Locked _MHQ) then {_lock = false;_label = Localize "STRWFLOCKMHQ"};
+
+toggleLockMHQID = _MHQ AddAction [_label,"Client\Action\Action_ToggleMHQLock.sqs"]
+
+;Request vehicle be unlocked for all clients.
+[CMDREQUESTVEHICLELOCK,_MHQ,_lock] Exec "Client\Client_CommandToServer.sqs"
+
+;*****************************************************************************************
+;12/16/7 MM - Created file.

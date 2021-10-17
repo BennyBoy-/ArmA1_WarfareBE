@@ -1,0 +1,8 @@
+;Last modified 6/13/7
+;*****************************************************************************************
+
+if (sideJoined == East) then {[EASTAIRCRAFTTYPE,NearestObject[GetPos player,eastStructureNames Select EASTAIRCRAFTTYPE]] Exec "Client\GUI\GUI_Factory.sqs"};
+if (sideJoined == West) then {[WESTAIRCRAFTTYPE,NearestObject[GetPos player,westStructureNames Select WESTAIRCRAFTTYPE]] Exec "Client\GUI\GUI_Factory.sqs"};
+
+;*****************************************************************************************
+;6/13/7 MM - Created file.

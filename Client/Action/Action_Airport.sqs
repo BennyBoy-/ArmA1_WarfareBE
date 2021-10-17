@@ -1,0 +1,8 @@
+;Last modified 3/20/8
+;*****************************************************************************************
+
+_type = Call Compile Format["%1AIRPORTTYPE",sideJoinedText]
+[_type,NearestObject[GetPos player,"WarfareBAirport"]] Exec "Client\GUI\GUI_Factory.sqs"
+
+;*****************************************************************************************
+;2/5/7 MM - Created file.

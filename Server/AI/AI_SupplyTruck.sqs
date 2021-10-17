@@ -1,0 +1,140 @@
+;Last modified 3/20/8
+;*****************************************************************************************
+;Description: This manages an AI supply truck.
+;[Side,Supply Vehicle] Exec "Server\AI\AI_SupplyTruck.sqs"
+;*****************************************************************************************
+
+_side = _this Select 0
+_vehicle = _this Select 1
+_sideID = _side Call GetSideID
+
+Goto "Init"
+
+#Update
+~10
+
+	_cclist = [];
+	{if (TypeOf _x == _typecc && GetDammage _x < 1) then {_cclist = _cclist + [_x]};} ForEach baseStructures;
+
+	if (Count _cclist > 0) then {_sorted = [_vehicle,_cclist] Call SortByDistance;_loc = (_sorted Select 0);};
+	
+	_base = Call Compile Format["%1Base",Str _side];
+	if (Count _cclist > 0) then {if (_vehicle Distance _base > _vehicle Distance _loc) then {_base = _loc};};
+
+	if (IsNull _vehicle) then {Goto "Quit"};
+	if (IsNull Driver _vehicle) then {Goto "Quit"};
+	if (!Alive Driver _vehicle) then {Goto "Quit"};
+	if (!CanMove _vehicle || GetDammage _vehicle >= 1) then {Goto "Quit"};
+	if (IsNull _destination) then {Goto "GetDestination"};
+
+	if (_destination == _base) then {Goto "CheckDistance"};
+	if (TypeOf _destination In ["WarfareBEastHeadquarters","WarfareBWestHeadquarters"]) then {Goto "CheckDistance"};
+
+	_destinationSideID = Call Compile Format["%1SideID",Str _destination]
+	if (_destinationSideID != _sideID) then {Goto "GetDestination"};
+
+#CheckDistance
+
+	;If two locations are close then don't bother with truck movement.
+
+	if (_vehicle Distance _destination > 100) then {Goto "Update"};
+	if (_source == _destination || _destination == _base) then {Goto "GetDestination"};
+
+#DeliverSupplies
+
+	~10
+	if (IsNull Driver _vehicle) then {Goto "Quit"};
+	if (!Alive Driver _vehicle) then {Goto "Quit"};
+	if (GetDammage _vehicle >= 1) then {Goto "Quit"};
+
+	;Generate revenue from supplies being delivered from source location to a town.
+	if (!(_destination In towns)) then {Goto "UpgradeSupplyValue"};
+
+	_destinationSideID = Call Compile Format["%1SideID",Str _destination]
+	if (_destinationSideID != _sideID) then {Goto "GetDestination"};
+
+	_funds = _destinationSupply * FUNDSPERSUPPLYPOINT
+	[_side,_funds] Call AddFundsToSide
+	[_side,CMDSIDELOCATIONMESSAGE,MSGSUPPLIESDELIVERED,_destination,_funds] Exec "Server\Server_CommandToSide.sqs";
+
+;Upgrade town's supply value if possible.
+#UpgradeSupplyValue
+
+	;If source location has more supply then increase destination by up to SUPPLYINCREASE.
+	_increase = _supply - _destinationSupply
+	if (_increase > SUPPLYINCREASE) then {_increase = SUPPLYINCREASE};
+
+	;If previous town is maxed out then still allow possible upgrades to adjacent town.
+	if (_supply == _maxSupply) then {_increase = SUPPLYINCREASE};
+
+	;Base always increases a location.
+	if (_source == _base) then {_increase = SUPPLYINCREASE};
+
+	;If source supply is higher than desination then attempt to increase destination.
+	if (_increase > 0) then {Call Compile Format["%1SupplyValue = %1SupplyValue + _increase",Str _destination]};
+
+	;Make sure supply does not exceed limits & transmit value to clients.
+	Call Compile Format["if (%1SupplyValue > _maxDestinationSupply) then {%1SupplyValue = _maxDestinationSupply};",Str _destination]
+	Call Compile Format["PublicVariable ""%1SupplyValue""",Str _destination]
+
+;Get a location to drive supply truck to.
+#GetDestination
+
+	_source = ObjNull
+	_destination = ObjNull
+
+	_closestLocation = [_vehicle,_side] Call GetClosestFriendlyLocation
+	if (IsNull _closestLocation) then {Goto "Update"};
+
+	_baseDistance = _vehicle Distance _base
+	_locationDistance = _vehicle Distance _closestLocation
+
+	;Determine if nearest CP/town is closer or the base.
+	_source = _base
+	if (_baseDistance > _locationDistance) then {_source = _closestLocation};
+
+	;If not near the source location then move closer.
+	if (_vehicle Distance _source > 100) then {_destination = _source; [group driver _vehicle,"move",GetPos _source,"staggard column"] Spawn SetAIwaypoint;Goto "Update"};
+
+	_destinations = []
+	_destination = _closestLocation
+	if (_source != _base) then {_destinations = [_source,_side] Call GetFriendlyNearLocations};
+	if (_source != _base && _baseDistance < 1500) then {_destinations = _destinations + [_base]};
+	if (Count _destinations > 0) then {_destination = _destinations Select Random (Count _destinations - 1)};
+
+	_distance = _source Distance _destination
+
+	[group driver _vehicle,"move",GetPos _destination,"staggard column"] Spawn SetAIwaypoint
+
+	_supply = SUPPLYINCREASE
+	_maxSupply = SUPPLYINCREASE
+	if (_source != _base) then {Call Compile Format["_supply = %1SupplyValue;_maxSupply = %1MaxSupplyValue",Str _source];};
+	if (_destination == _base) then {Goto "Update"};
+
+	_destinationSupply = Call Compile Format["%1SupplyValue",Str _destination]
+	_maxDestinationSupply = Call Compile Format["%1MaxSupplyValue",Str _destination]
+	Goto "Update"
+
+#Init
+
+	Call Compile Format["%1AISupplyTrucks = %1AISupplyTrucks + [_vehicle]",Str _side]
+	Call Compile Format["total%1AISupplyTrucks = Count %1AISupplyTrucks;PublicVariable ""%1AISupplyTrucks""",Str _side]
+	_typecc = Call Compile Format["%1StructureNames Select %1COMMANDCENTERTYPE",_side];
+	_team = Group Driver _vehicle
+	_destination = ObjNull
+	_loc = ObjNull;
+
+	Goto "Update"
+
+#Quit
+
+	if (IsNull _vehicle) then {Goto "CleanUp"};
+	Call Compile Format["%1AISupplyTrucks = %1AISupplyTrucks - [_vehicle]",Str _side]
+	Call Compile Format["total%1AISupplyTrucks = Count %1AISupplyTrucks;PublicVariable ""%1AISupplyTrucks""",Str _side]
+
+	#CleanUp
+
+		DeleteGroup _team
+
+;*****************************************************************************************
+;5/5/7 MM - Created file.

@@ -1,0 +1,81 @@
+;Support Menu by Benny.
+
+_display = _this Select 0
+
+Goto "InitMenu"
+
+#Update
+
+	~0.5
+	
+	if (!(Alive player) || Side player != sideJoined) then {CloseDialog 0;Goto "Quit"};
+	if (!dialog) then {Goto "Quit"};
+	
+	if (SupportIndex == 1) then {ArtyCurrentRound = lbCurSel 6051;SupportIndex = -1;};
+	if (mouseButtonUp == 0) then {Goto "ClickOnMap"};
+
+	Goto "Update"
+	
+#ClickOnMap
+
+	mouseButtonUp = -1
+
+	if (Special == 1) then {Goto "Nuke"};
+	
+#InitMenu
+	
+	Special = -1;
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+	showMessagesOnScreen = true
+	
+	_IDCs = [6052]
+	{CtrlShow[_x,false]} ForEach _IDCs
+	
+	;if the player is not the commander, then we have to hide those elements.
+	_commanderTeam = Call Compile Format ["%1CommanderTeam",sideJoinedText];
+	if !(isNull _commanderTeam) then {if (Group player == _commanderTeam) then {_IDCs = [6052];{CtrlShow[_x,true]} ForEach _IDCs;};};
+	
+	_checkArr = upgradeVerifyEast;
+	if (side player == west) then {_checkArr = upgradeVerify};
+	
+	if (_checkArr select 4) then {{lbAdd[6051, _x]} forEach ArtilleryRoundLabel;} else {lbAdd[6051, ArtilleryRoundLabel select 0]}
+	
+	lbSetCurSel[6051,ArtyCurrentRound]
+	
+	(_display DisplayCtrl 6051) CtrlSetTooltip "Change the kind of artillery ammunition."
+	(_display DisplayCtrl 6052) CtrlSetTooltip "Call a Tactical Nuclear Strike ($80000.)."
+	
+	Goto "Update"
+	
+#Nuke
+
+	Special = -1;
+	
+	_funds = Call GetPlayerFunds;
+	if (_funds < 80000) then {[playerSide, "HQ"] sideChat "$80000. is needed in order to call an ICBM Strike.";Goto "Update";};
+	
+	if (IsNil "ICBMTime") then {ICBMTime = time - 1000};
+	if (time - ICBMTime < NUKEDELAY) then {[playerSide, "HQ"] sideChat "ICBM Launch is currently unavailable.";Goto "Update"};
+	ICBMTime = time
+	
+	(-80000) Call ChangePlayerFunds
+	
+	_map = _display DisplayCtrl 6053;
+	_position = _map PosScreenToWorld[mouseX,mouseY]
+
+	createMarkerLocal ["NukeMarker",[-2000,-2000,0]];
+	"NukeMarker" setMarkerTypeLocal "Vehicle";
+	"NukeMarker" setMarkerSizeLocal [1, 1];
+	"NukeMarker" setMarkerColorLocal "ColorRed";
+	"NukeMarker" SetMarkerPosLocal _position
+	"NukeMarker" SetMarkerTextLocal "ICBM"
+	
+	[] Exec "Client\Support\Nuke\callnuke.sqs"
+
+	Goto "Update"
+	
+#Quit
+	
+	closedialog 0
+	Exit

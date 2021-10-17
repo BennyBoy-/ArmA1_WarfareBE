@@ -1,0 +1,423 @@
+;Last modified 5/30/8
+
+_display = _this Select 0
+
+_display Call InitInfoBar
+
+Goto "InitMenu"
+
+#Update
+~0.1
+
+#SkipUpdateDelay
+
+	if (menuExit) then {CloseDialog 0;Goto "Quit"};
+	if (!Alive player || !Dialog) then {Goto "Quit"};
+
+	;If unit dies or is no longer on his/her side (team killing).
+	if (Side player != sideJoined) then {CloseDialog 0;Goto "Quit"};
+
+	SliderSetRange[IDCMENUSLIDER,0,_funds]
+
+	_funds = Call GetPlayerFunds
+	_transferAmount = Floor (SliderPosition IDCMENUSLIDER)
+	
+	if (_transferAmount > _funds) then {_transferAmount = _funds;SliderSetPosition[IDCMENUSLIDER,_funds]};
+
+	CtrlSetText[IDCGENERICLABEL,Format[Localize "STRWFTRANSFERAMOUNTTO",_transferAmount]]
+
+	_display Call DisplayInfoBar
+
+	_unitType = -1
+	if (lbCurSel IDCGENERICLIST != -1) then {_unitType = lbValue[IDCGENERICLIST,lbCurSel IDCGENERICLIST]};
+	if (_unitType != -1) then {CtrlSetText[IDCGENERICBUTTON + 10,_images Select _unitType]};
+
+	lbClear (IDCGENERICLIST + 2)
+
+	_icons = [IDCGENERICBUTTON,IDCGENERICBUTTON+1,IDCGENERICBUTTON+2,IDCGENERICBUTTON+3,IDCGENERICBUTTON+4]
+	{(_display DisplayCtrl _x) CtrlSetTextColor [0.82,1.0,0.82,1]} ForEach _icons
+
+	if (!menuTeam) then {Goto "CountQueue"};
+
+	_units = ((Units Group player) Call GetLiveUnits)
+	_units = _units - [player]
+
+	lbClear (IDCGENERICLIST + 2)
+	{lbAdd[IDCGENERICLIST + 2,_x]} ForEach ([_units,true,true,true] Call GetTeamStatus)
+	Goto "UpdateFactories"
+
+	if (menuFactoryType == -1) then {Goto "CountQueue"};
+
+	_factoryIcon = _display DisplayCtrl (IDCGENERICBUTTON + menuFactoryType)
+	_factoryIcon CtrlSetTextColor [1,1,1,1]
+
+#CountQueue
+
+	_count = 0
+	_total = Count buildQueue
+	if (_total < 1) then {Goto "UpdateFactories"};
+
+#UpdateQueue
+
+	_queueType = buildQueue Select _count
+	_queueFactoryType = buildQueueFactoryType Select _count
+	_empty = buildQueueEmpty Select _count
+
+	_emptyText = ""
+	if (_empty) then {_emptyText = "Empty "};
+
+	_factoryName = "Depot"
+	if (Call Compile Format["_queueFactoryType == %1AIRPORTTYPE",sideJoinedText]) then {_factoryName = "WingedAircraft"};
+	if (Call Compile Format["_queueFactoryType != %1AIRPORTTYPE && _queueFactoryType != %1DEPOTTYPE",sideJoinedText]) then {_factoryName = Call Compile Format["%1Structures Select _queueFactoryType",sideJoinedText]};
+
+	lbAdd[IDCGENERICLIST + 2,_emptyText + Call Compile Format["%1%2Descriptions Select _queueType",sideJoinedText,_factoryName]]
+
+	_count = _count + 1
+	if (_count < _total) then {Goto "UpdateQueue"};
+
+#UpdateFactories
+
+	_factories = false
+	_available = [barracksInRange,lightFactoryInRange,heavyFactoryInRange,aircraftFactoryInRange,airportInRange,depotInRange]
+
+	_count = 0
+	{if (_x) then {CtrlShow [IDCGENERICBUTTON + _count,true];_factories = true} else {CtrlShow [IDCGENERICBUTTON + _count,false]};_count = _count + 1} ForEach _available
+
+	if (!_factories) then {lbClear IDCGENERICLIST;lbAdd[IDCGENERICLIST,Localize "STRWFNOFACTORIES"];Goto "UpdateActions"};
+
+	;If no factory selected & then select lowest factory.
+	_count = 0
+	if (menuFactoryType == -1) then {{if (_x && menuFactoryType == -1) then {menuFactoryType = _count};_count = _count + 1} ForEach _available};
+	if (menuFactoryType != _lastFactoryType) then {Goto "InitFactorySelections"};
+
+#UpdateActions
+
+	if (menuButton == 1) then {Goto "OpenHelp"};
+	if (menuButton == 2 || menuListClicked) then {Goto "Buy"};
+	if (menuButton == 3) then {Goto "BuyEmpty"};
+	if (menuButton == 4) then {Goto "TransferFunds"};
+
+	if (menuButton == 5) then {Goto "DisbandUnit"};
+	if (menuButton == 6) then {Goto "UnflipVehicles"};
+
+	if (menuButton == 11) then {Goto "Vote"};
+	if (menuButton == 53) then {Goto "OpenMissionMap"};
+	if (menuButton == 54) then {Goto "OpenGearMenu"};
+	if (menuButton == 55) then {Goto "OpenConstruction"};
+
+	Goto "Update"
+
+;Creates the command menu.
+#InitMenu
+
+	if (fastTravelInProgress) then {CloseDialog 0;Exit};
+
+	;--- Karel, 01/22/2008
+	(_display displayCtrl 220100) ctrlSetFade 1;
+	(_display displayCtrl 220100) ctrlCommit 0;
+	(_display displayCtrl 220100) ctrlSetBackgroundColor [0.82,1,0.82,0.25];
+	(_display displayCtrl 220100) ctrlSetFade 0;
+	(_display displayCtrl 220100) ctrlCommit 1;
+
+	_fundsSlider = _display DisplayCtrl IDCMENUSLIDER
+
+	CtrlShow [IDCERRORMESSAGE,false]
+	_messageBar = _display DisplayCtrl IDCERRORMESSAGE
+
+	_showMessages = showMessagesOnScreen
+	showMessagesOnScreen = false
+
+	mouseButtonDown = -1
+	mouseButtonUp = -1
+	menuButton = -1
+	menuFactoryType = -1
+	menuListClicked = false
+
+	menuTeam = false
+
+	_lastFactoryType = menuFactoryType
+
+	;Menu buttons.
+	menuExit = false
+	menuAddEmpty = false
+	menuAddToPlayer = false
+
+	_team = Group player
+
+	;Init transfer funds UI.
+	_funds = Call GetPlayerFunds
+	SliderSetRange[IDCMENUSLIDER,0,_funds]
+	SliderSetPosition[IDCMENUSLIDER,0]
+	SliderSetSpeed[IDCMENUSLIDER,200,100]
+
+	CtrlSetText[IDCGENERICBUTTON + 10,""]
+
+	_teams = Call Compile Format["%1Teams",sideJoinedText]
+
+	_count = 0
+	_index = 0
+	_label = ""
+
+	lbClear (IDCGENERICLIST + 1)
+	{if (IsPlayer Leader _x) then {_label = Format["%1 [%2]",Name Leader _x,_count + 1]} else {_label = Format["%1 [%2]",Localize "STRWFAI",_count + 1]};_index = lbAdd[IDCGENERICLIST + 1,_label];lbSetValue [IDCGENERICLIST + 1,_index,_count];_count = _count + 1} ForEach _teams
+	lbSetCurSel[IDCGENERICLIST + 1,0]
+
+	;Yes/no prompt.
+	CtrlShow [IDCGENERICLABEL + 25,false]
+	CtrlShow [IDCGENERICBUTTON + 25,false]
+	CtrlShow [IDCGENERICBUTTON + 26,false]
+	CtrlEnable [IDCGENERICBUTTON + 25,false]
+	CtrlEnable [IDCGENERICBUTTON + 26,false]
+
+	_names = Call Compile Format["%1StructureNames",sideJoinedText]
+	_structures = Call Compile Format["[_names Select %1BARRACKSTYPE,_names Select %1LIGHTTYPE,_names Select %1HEAVYTYPE,_names Select %1AIRCRAFTTYPE,""WarfareBAirport"",""WarfareBDepot""]",sideJoinedText]
+	_structureTypes = Call Compile Format["[%1BARRACKSTYPE,%1LIGHTTYPE,%1HEAVYTYPE,%1AIRCRAFTTYPE,%1AIRPORTTYPE,%1DEPOTTYPE]",sideJoinedText]
+
+	CtrlShow [IDCGENERICBUTTON,false]
+	CtrlShow [IDCGENERICBUTTON + 1,false]
+	CtrlShow [IDCGENERICBUTTON + 2,false]
+	CtrlShow [IDCGENERICBUTTON + 3,false]
+	CtrlShow [IDCGENERICBUTTON + 4,false]
+	CtrlShow [IDCGENERICBUTTON + 5,false]
+
+	CtrlShow [IDCGENERICBUTTON + 13,false]
+	CtrlShow [IDCGENERICBUTTON + 15,false]
+	CtrlShow [IDCGENERICBUTTON + 16,false]
+	
+	_checkUpgrades = [];
+	if (side player == west) then {_checkUpgrades = upgradeVerify} else {_checkUpgrades = upgradeVerifyEast}
+	
+	Goto "SkipUpdateDelay"
+
+#InitFactorySelections
+
+	_objects = NearestObjects[Vehicle player,_structures,REMOTEBASERANGE] Call GetUndestroyedUnits;
+	_types = []
+	{_types = _types + [TypeOf _x]} ForEach _objects
+
+	_lastFactoryType = menuFactoryType
+	_factory = _objects Select (_types Find (_structures Select menuFactoryType))
+	_type = _structureTypes Select menuFactoryType
+	
+	_factoryName = "WingedAircraft"
+	if (menuFactoryType < 4) then {_factoryName = Call Compile Format["%1Structures Select _type",sideJoinedText]};
+	if (menuFactoryType == 5) then {_factoryName = "Depot"};
+
+	_units = Call Compile Format["%1%2Units",sideJoinedText,_factoryName]
+	_descriptions = Call Compile Format["%1%2Descriptions",sideJoinedText,_factoryName]
+	_costs = Call Compile Format["%1%2Costs",sideJoinedText,_factoryName]
+	_mannedCosts = Call Compile Format["%1%2MannedCosts",sideJoinedText,_factoryName]
+	_images = Call Compile Format["%1%2Images",sideJoinedText,_factoryName]
+	_upgrades = Call Compile Format["%1%2Upgrades",sideJoinedText,_factoryName]
+
+	;If a barracks disable "Buy Empty" button.
+	if (menuFactoryType == 0 || menuFactoryType == 5) then {CtrlShow [IDCGENERICBUTTON + 12,false]} else {CtrlShow [IDCGENERICBUTTON + 12,true]};
+
+#AddListSelectioms
+
+	lbClear IDCGENERICLIST
+
+	_count = 0
+	_total = Count _units
+	_check = false
+
+	;Add an entry onto the unit selection combo-boxes.
+	#AddListSelection
+
+		_cost = _costs Select _count
+		_mannedCost = 0
+		if (!IsNil "_mannedCosts") then {_mannedCost = _mannedCosts Select _count}
+		_description = _descriptions Select _count
+		_upgrade = _upgrades Select _count
+
+		_spacer = ""
+		_space = " "
+
+		if (_cost < 100) then {_spacer = _space};
+		if (_cost < 1000) then {_spacer = _spacer + _space};
+		if (_cost < 1000 && _mannedCost >= 1000) then {_spacer = _spacer + " "};
+
+		if ((menuFactoryType >= 2 && menuFactoryType <= 5) && _cost < 10000) then {_spacer = _spacer + _space};
+
+		_layout = "$%1-$%2 %3%4";_layout1 = "$%1 %2%3"
+		if (Localize "STRWFCURRENCYPOSITION" == "Back") then {_layout = "%1$-%2$ %3%4";_layout1 = "%1$ %2%3"};
+
+		;Add the text that is displayed in the entry.
+		_text = Format[_layout,_cost,_mannedCost,_spacer,_description]
+		if (menuFactoryType == 0 || menuFactoryType == 5) then {_text = Format[_layout1,_cost,_spacer,_description]};
+
+		;Barracks.
+		if ((_factoryName == "BARRACKS") && (_checkUpgrades select 7)) then {_selection = lbAdd[IDCGENERICLIST,_text];lbSetValue [IDCGENERICLIST,_selection,_count];_check = true};
+		;Light factory.
+		if ((_factoryName == "LIGHT") && (_checkUpgrades select 6)) then {_selection = lbAdd[IDCGENERICLIST,_text];lbSetValue [IDCGENERICLIST,_selection,_count];_check = true};
+		;Heavy factory.
+		if ((_factoryName == "HEAVY") && (_checkUpgrades select 5)) then {_selection = lbAdd[IDCGENERICLIST,_text];lbSetValue [IDCGENERICLIST,_selection,_count];_check = true};
+		;Aircraft factory.
+		if ((_factoryName == "AIRCRAFT") && (_checkUpgrades select 3)) then {_selection = lbAdd[IDCGENERICLIST,_text];lbSetValue [IDCGENERICLIST,_selection,_count];_check = true};
+		;Airport.
+		if ((_factoryName == "WINGEDAIRCRAFT") && (_checkUpgrades select 2)) then {_selection = lbAdd[IDCGENERICLIST,_text];lbSetValue [IDCGENERICLIST,_selection,_count];_check = true};
+		
+		;default
+		if (!(_upgrade) && !(_check)) then {_selection = lbAdd[IDCGENERICLIST,_text];lbSetValue [IDCGENERICLIST,_selection,_count];}
+		
+		_count = _count  + 1
+		if (_count < _total) then {Goto "AddListSelection"};
+
+	Goto "Update"
+
+;Add a unit to the player's team.
+#Buy
+
+	menuButton = -1
+	menuListClicked = false
+
+	;If factory is in use or nothing is selected then do nothing.
+	if (_unitType < 0) then {Goto "Update"};
+
+	_cost = _costs Select _unitType
+	if (_cost > _funds) then {[_messageBar,1.5,0.75,Localize "STRWFNOTENOUGHFUNDS",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	if (menuFactoryType == 5 && _unitType > 2) then {Goto "BuyEmpty"};
+	if (menuFactoryType == 5) then {Goto "DepotBuy"};
+
+	_oneMan = Call Compile Format["(_unitType In %1OneMan%2Vehicles)",sideJoinedText,_factoryName]
+	_totalUnits = Count (Units _team Call GetLiveUnits)
+
+	;Vehicles have 2 units instead of one, so increase by 1.
+	if (_type != EASTBARRACKSTYPE && _type != WESTBARRACKSTYPE && !_oneMan) then {_totalUnits = _totalUnits + 1};
+
+	if (_totalUnits + 1 > MAXPLAYERTEAMSIZE) then {[_messageBar,1.5,0.75,Localize "STRWFCANTREINFORCE",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+	if (!(_factory In baseStructuresInUse) && !(_factory In JIPBaseStructuresInUse)) then {[_messageBar,1.5,0.75,"Buying unit.",[0,1,0,1]] Spawn ShowGUIMessage} else {[_messageBar,1.5,0.75,"Factory is use. Adding unit to queue.",[0,1,0,1]] Spawn ShowGUIMessage};
+
+	[_type,_unitType,_factory,false] Call QueueUnit
+
+	~0.1
+	goto "Update"
+
+;Buy an empty vehicle.
+#BuyEmpty
+
+	menuButton = -1
+
+	;If factory is in use or nothing is selected then do nothing.
+	if (_unitType < 0) then {Goto "Update"};
+
+	_cost = _costs Select _unitType
+	if (_cost > _funds) then {[_messageBar,1.5,0.75,Localize "STRWFNOTENOUGHFUNDS",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	if (menuFactoryType == 5 && _unitType < 3) then {Goto "DepotBuy"};
+
+	if (!(_factory In baseStructuresInUse) && !(_factory In JIPBaseStructuresInUse)) then {[_messageBar,1.5,0.75,"Buying unit.",[0,1,0,1]] Spawn ShowGUIMessage} else {[_messageBar,1.5,0.75,"Factory is use. Adding unit to queue.",[0,1,0,1]] Spawn ShowGUIMessage};
+
+	[_type,_unitType,_factory,true] Call QueueUnit
+
+	~0.1
+	goto "Update"
+
+#DepotBuy
+
+	_vehicles = [_team,false,_factory,BASERANGE / 2,true] Call GetTeamVehicles
+	if (Count _vehicles < 1) then {[_messageBar,1.5,0.75,"No occupied vehicles in range!",[1,0,0,1]] Spawn ShowGUIMessage;Goto "Update"};
+
+	-_cost Call ChangePlayerFunds
+
+	if (_unitType == 0) then {{_x SetDammage 0} ForEach _vehicles};
+	if (_unitType == 1) then {{_x Call RearmVehicle} ForEach _vehicles};
+	if (_unitType == 2) then {{_x SetFuel 1} ForEach _vehicles};
+
+	~0.1
+	goto "Update"
+
+#TransferFunds
+
+	menuButton = -1
+	_transferTeam = lbCurSel (IDCGENERICLIST + 1)
+
+	if (IsPlayer Leader (_teams Select _transferTeam)) then {[_transferAmount,sideJoined,_transferTeam + 1] Call ChangeClientFunds} else {[_transferAmount,sideJoined,_transferTeam + 1] Call ChangeAIFunds};
+
+	-_transferAmount Call ChangePlayerFunds
+
+	Goto "Update"
+
+#DisbandUnit
+
+	menuButton = -1
+	_selected = lbCurSel (IDCGENERICLIST + 2)
+	if (_selected == -1) then {Goto "Update"};
+
+	(_units Select _selected) SetDammage 1
+
+	Goto "Update"
+
+#UnflipVehicles
+
+	menuButton = -1
+	{_x SetPos GetPos _x} ForEach ([Group Player,false] Call GetTeamVehicles)
+	_array = nearestObjects [(position player), ["Car","Motorcycle","Tank","Ship","Air"], 30]
+	{_x SetPos GetPos _x} ForEach _array
+
+	Goto "Update"
+
+#OpenConstruction
+
+	menuButton = -1
+
+	if (!IsNull HQInRange) then {CloseDialog 0;constructionVehicle = HQInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull campInRange) then {CloseDialog 0;constructionVehicle = campInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull repairTruckInRange) then {CloseDialog 0;constructionVehicle = repairTruckInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+
+	Goto "Update"
+
+#OpenHelp
+
+	CloseDialog 0
+	CreateDialog "HelpMenu"
+	Goto "Quit"
+
+#OpenMissionMap
+
+	CloseDialog 0
+	CreateDialog "MissionMap"
+	Goto "Quit"
+
+#OpenGearMenu
+
+	menuButton = -1
+	if (IsNull campInRange && !barracksInRange) then {Goto "Update"};
+
+	CloseDialog 0
+	CreateDialog "GearMenu"
+	Goto "Quit"
+
+#Vote
+
+	;If no vote in progress then request one.
+	_voteTime = Call Compile Format["%1CommanderVoteTime",sideJoinedText]
+	if (_voteTime <= 0) then {Goto "RequestVote"};
+
+	CloseDialog 0
+	CreateDialog "CommanderVoteMenu"
+	Goto "Quit"
+
+#RequestVote
+
+	menuButton = -1
+	_timeToWait = time + 3
+
+	[CMDREQUESTCOMMANDERVOTE] Exec "Client\Client_CommandToServer.sqs"
+
+	@ (Call Compile Format["%1CommanderVoteTime > 0",sideJoinedText] || time >= _timeToWait || !dialog ||!Alive player)
+
+	if (!Alive player || !Dialog) then {Goto "Quit"};
+	if (time > _timeToWait) then {Goto "Update"};
+
+	CloseDialog 0
+	CreateDialog "CommanderVoteMenu"
+	Goto "Quit"
+
+#Quit
+
+	showMessagesOnScreen = _showMessages
+	Exit
+
+;12/11/7 MM - Created file.

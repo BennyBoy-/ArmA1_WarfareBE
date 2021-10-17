@@ -1,0 +1,139 @@
+;Last modified 5/9/8
+;*****************************************************************************************
+;Description: Update location's status.
+;*****************************************************************************************
+_location = _this Select 0
+
+Goto "Init"
+
+#Update
+~5
+
+	_sideID = Call Compile Format["%1SideID",_name]
+	_objects = NearestObjects[_location,[eastSoldierBaseClass,westSoldierBaseClass,resistanceSoldierBaseClass,"Car","Motorcycle","Tank"],TOWNCAPTURERANGE]
+
+	_timer = _timer + 5
+	_AssaultTeamStatus = Call Compile Format ["%1TeamNameAlive",_name];
+	if ((_timer > 260)&&(!_AssaultTeamStatus)&&(_sideID == RESISTANCEID)) then {Goto "StartAssault"};
+	Goto "Continue"
+	
+	#StartAssault
+
+		_timer = 0
+		[_assaultType,_loc,_name] ExecVM "Server\AI\AI_Assault.sqf";
+		
+	#Continue
+	
+	if (Count _objects < 1) then {Goto "Update"};
+
+	_livingUnits = [_objects Call GetLiveUnits,200] Call GetUnitsBelowHeight
+
+	_west = West CountSide _livingUnits
+	_east = East CountSide _livingUnits
+	_resistance = Resistance CountSide _livingUnits
+
+	if (_sideID == RESISTANCEID && _resistance > 0) then {_force = _resistance;Goto "TownProtected"};
+	if (_sideID == EASTID && _east > 0) then {_force = _east;Goto "TownProtected"};
+	if (_sideID == WESTID && _west > 0) then {_force = _west;Goto "TownProtected"};
+
+	;If opposing sides both occupy the location then it cannot be taken by either so do not check further.
+	if (_east > 0 && _west > 0) then {Goto "Update"};
+	if (_west > 0 && _resistance > 0) then {Goto "Update"};
+	if (_resistance > 0 && _east > 0) then {Goto "Update"};
+
+#TownOccupied
+
+	_rate = TOWNCAPTURERATE
+	if (_east > 0) then {_rate = TOWNCAPTURERATE * ([_location,East] Call GetTotalCampsOnSide) / (_location Call GetTotalCamps) * MAXCAMPCAPTURERATE};
+	if (_west > 0) then {_rate = TOWNCAPTURERATE * ([_location,West] Call GetTotalCampsOnSide) / (_location Call GetTotalCamps) * MAXCAMPCAPTURERATE};
+	if (_rate <= 1) then {_rate = 1.0};
+
+	if (_sideID == EASTID && (_west > 0 || _resistance > 0) && time - _timeAttacked > 60) then {_timeAttacked = time;[East,CMDSIDEMESSAGE,MSGTOWNUNDERATTACK,_location] Exec "Server\Server_CommandToSide.sqs"};
+	if (_sideID == WESTID && (_east > 0 || _resistance > 0) && time - _timeAttacked > 60) then {_timeAttacked = time;[West,CMDSIDEMESSAGE,MSGTOWNUNDERATTACK,_location] Exec "Server\Server_CommandToSide.sqs"};
+
+	;Reduce supply value of town.  Once it reaches zero town is captured.  The more units the faster it is reduced.
+	_value = 0
+	Call Compile Format["%1SupplyValue = %1SupplyValue - (_resistance + _east + _west) * _rate",_name]
+	Call Compile Format["_value = %1SupplyValue",_name]
+
+	if (_value < 1) then {Goto "TownCaptured"};
+
+	Goto "Update"
+
+;Restart supply value up to a max of starting value if friendly forces are in area.
+#TownProtected
+
+	_value = 0
+	Call Compile Format["_value = %1SupplyValue",_name]
+
+	if (_value >= _startingSupplyValue) then {Goto "Update"};
+
+	Call Compile Format["%1SupplyValue = %1SupplyValue + _force * TOWNCAPTURERATE",_name]
+	if (Call Compile Format["%1SupplyValue",_name] > _startingSupplyValue) then {Call Compile Format["%1SupplyValue = _startingSupplyValue",_name]};
+	Goto "Update"
+
+#TownCaptured
+
+	Call Compile Format["%1SupplyValue = _startingSupplyValue",_name]
+
+	if (_west > 0) then {Goto "WestCapture"};
+	if (_east > 0) then {Goto "EastCapture"};
+
+#ResistanceCapture
+
+	if (_sideID == WESTID) then {[CMDTOWNCAPTURED,_location,RESISTANCEID,WESTID] Exec "Server\Server_CommandToClients.sqs"};
+	if (_sideID == EASTID) then {[CMDTOWNCAPTURED,_location,RESISTANCEID,EASTID] Exec "Server\Server_CommandToClients.sqs"};
+	Call Compile Format["%1SideID = RESISTANCEID;_sideID = RESISTANCEID;PublicVariable ""%1SideID""",_name]
+
+	Goto "Update"
+
+;Notify clients of capture & update town side.
+#EastCapture
+
+	;Delete resistance defenses.
+	_defenseObjects = GetPos _location NearObjects["WarfareBResistanceMGNest_M240",_range]
+	{DeleteVehicle _x} ForEach _defenseObjects
+
+	if (_sideID == WESTID) then {[CMDTOWNCAPTUREDPUBLIC,_location,EASTID] Exec "Server\Server_CommandToClients.sqs"};
+	if (_sideID == RESISTANCEID) then {[CMDTOWNCAPTURED,_location,EASTID,EASTID] Exec "Server\Server_CommandToClients.sqs"};
+	~0.5
+
+	[_location,East,_sideID Call GetSideFromID] Call SetCampsToSide
+	Call Compile Format["%1SideID = EASTID;_sideID = EASTID;PublicVariable ""%1SideID""",_name]
+	Goto "Update"
+
+#WestCapture
+
+	;Delete resistance defenses.
+	_defenseObjects = GetPos _location NearObjects["WarfareBResistanceMGNest_M240",_range * 0.8]
+	{DeleteVehicle _x} ForEach _defenseObjects
+
+	if (_sideID == EASTID) then {[CMDTOWNCAPTUREDPUBLIC,_location,WESTID] Exec "Server\Server_CommandToClients.sqs"};
+	if (_sideID == RESISTANCEID) then {[CMDTOWNCAPTURED,_location,WESTID,WESTID] Exec "Server\Server_CommandToClients.sqs"};
+	~0.5
+	[_location,West,_sideID Call GetSideFromID] Call SetCampsToSide
+	Call Compile Format["%1SideID = WESTID;_sideID = WESTID;PublicVariable ""%1SideID""",_name]
+	Goto "Update"
+
+#Init
+
+	_name = Str _location
+	Call Compile Format ["%1TeamNameAlive = false",_name];
+	_force = 0
+	_timer = 0
+	_assaultType = "none"
+	_loc = Call Compile Format ["getMarkerPos ""%1CenterMarker""",_location];
+
+	_timeAttacked = time - 60
+
+	_startingSupplyValue = Call Compile Format["%1StartingSupplyValue",_name]
+	switch (_startingSupplyValue) do {case 10:{_assaultType = "light"}; case 20:{_assaultType = "medium"}; case 30: {_assaultType = "heavy"};};
+	_range = Call Compile Format["%1Range",_name]
+
+	;Stagger execution cycle of each location.
+	~((Random 200) / 100)
+
+	Goto "Update"
+
+;*****************************************************************************************
+;2/5/7 MM - Created file.

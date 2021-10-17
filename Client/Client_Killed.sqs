@@ -1,0 +1,106 @@
+;Last modified 4/25/8
+;*****************************************************************************************
+player RemoveAction 0
+player RemoveAction 1
+player RemoveAction 2
+player RemoveAction 3
+
+deathLocation = GetPos player
+timeLastDeath = time
+CloseDialog 0
+
+_camera = "camera" CamCreate deathLocation
+_camera CamSetDir 0
+_camera CamSetFOV 1
+_camera cameraEffect["Internal","TOP"]
+
+_camera camSetTarget deathLocation
+_camera CamSetPos [deathLocation Select 0,(deathLocation Select 1) + 2,5]
+_camera CamCommit 0
+
+@ (CamCommitted _camera)
+
+_camera CamSetPos [deathLocation Select 0,(deathLocation Select 1) + 2,30]
+_camera CamCommit 15
+
+;Find town nearest to player death (in respawn range) & check for any friendly camps to respawn at.
+_camps = []
+
+respawnLocation = Call Compile Format["GetPos %1Base",sideJoinedText]
+
+if (Call Compile Format["%1MHQDeployed",sideJoinedText]) then {Goto "GetTown"};
+if (IsNull commanderTeam) then {Goto "GetNearestBarracks"};
+_mobileSpawn = ""
+if (side player == WEST) then {_mobileSpawn = "M113Ambul"} else {_mobileSpawn = "BMP2Ambul"} 
+
+;If player is the commander then default respawn is by MHQ.
+if (commanderTeam == Group player) then {Goto "GetTown"};
+
+#GetNearestBarracks
+
+;If the MHQ is not deployed then try to find the nearest barracks.
+_type = Call Compile Format["%1StructureNames Select %1BARRACKSTYPE",sideJoinedText];
+
+_list = []
+{if (TypeOf _x == _type && GetDammage _x < 1) then {_list = _list + [_x]};} ForEach baseStructures;
+
+if (Count _list > 0) then {_sorted = [player,_list] Call SortByDistance;respawnLocation = GetPos (_sorted Select 0)};
+
+#GetTown
+
+_town = [player] Call GetClosestLocation
+
+if (IsNull _town) then {Goto "WaitForRespawn"};
+if (player Distance _town > RESPAWNRANGE) then {Goto "WaitForRespawn"};
+
+_camps = [_town,sideJoined] Call GetFriendlyCamps
+
+#WaitForRespawn
+
+@ (Alive player)
+
+player SetPos GetMarkerPos Format["%1TempRespawnMarker",sideJoinedText]
+
+respawnTimerTime = 0
+if (Count _camps > 0) then {respawnTimerTime = 10};
+
+CreateDialog "RespawnTimer"
+
+_mobileSpawnArray = [];
+_mobileSpawnList = [];
+_mobileSpawnArray = nearestObjects [deathLocation, ["Tank"], 700];
+{_type = typeOf _x;if((_type == format ["%1",_mobileSpawn]) && (getDammage _x < 1)) then {_mobileSpawnList = _mobileSpawnList + [_x]};} forEach _mobileSpawnArray;
+
+~4
+
+_min = 15
+_max = 40
+
+;Add the cc respawn system.
+_list = [SideJoined] Call GetFactories;
+_cclist = Call GetCommandCenters;
+_cclist = _cclist + _list
+
+
+;Give the player some respawn options if there are any friendly camps.
+if ((Count _camps > 0)or(Count _cclist > 0)or(Count _mobileSpawnList > 1)) then {CloseDialog 0;respawnInProgress = true;CreateDialog "RespawnMap";_min = 5;_max = 10};
+
+~30
+
+CloseDialog 0
+if ((Count _camps > 0)or(Count _cclist > 0)or(Count _mobileSpawnList > 1)) then {respawnInProgress = false} else {respawnInProgress = true};
+
+[player,[respawnLocation,_min,_max] Call GetRandomPosition] Call PlaceSafe
+[] Call PlayerRespawn
+
+TrappedVehi = objNull
+if !(isNull (Bomb)) then {deleteVehicle Bomb};
+
+_camera CameraEffect["TERMINATE","BACK"]
+CamDestroy _camera
+~1
+respawnInProgress = false
+
+if (TypeOf player == Call Compile Format ["""Soldier%1Sniper""",sideJoinedShortText]) then {player addAction ["Select Target", "Client\Support\Spotter\binotarget.sqf",[],0,FALSE, TRUE,""]};
+;*****************************************************************************************
+;2/22/7 MM - Created file.

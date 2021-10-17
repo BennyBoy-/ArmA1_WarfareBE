@@ -1,0 +1,219 @@
+;Last modified 3/2/8
+
+_type = _this Select 0
+_factory = _this Select 1
+
+if (!IsNull starterTeamJoined) then {Hint Localize "STRWFNEEDADVANCEDTEAM";Exit};
+if (Side player != sideJoined) then {Exit};
+
+Goto "InitMenu"
+
+#Update
+~0.5
+
+	;If unit dies or is no longer on his/her side (team killing).
+	if (!(Alive player) || Side player != sideJoined) then {CloseDialog 0;Exit};
+	if (!dialog || CtrlText IDCMenuTitle != _menuName) then {Exit};
+
+	;Set building in use text.
+	CtrlSetText [IDCMenuStatusLabel,""]
+
+	if (_factory In baseStructuresInUse) then {CtrlSetText [IDCMenuStatusLabel,Format["(%1)",Localize "STRWFBUILDINGINUSE"]]};
+
+	;Show funds.
+	lbClear IDCMenuInfo
+	lbAdd[IDCMenuInfo,Format[Localize "STRWFFUNDSFORMATTED",Call GetPlayerFunds]]
+
+	_unitType = -1
+
+	;Show image if something is selected.
+	if (lbCurSel IDCMenuList < 0) then {Goto "UpdateActions"};
+
+	lbClear IDCMenuImage
+	_selection = lbadd [IDCMenuImage,""]
+	_unitType = lbValue[IDCMenuList,lbCurSel IDCMenuList]
+	lbSetPicture [IDCMenuImage,_selection,_images Select _unitType]
+
+#UpdateActions
+
+	if (menuAddEmpty) then {Goto "AddEmpty"};
+	if (menuAddToPlayer) then {Goto "AddToPlayer"};
+	if (menuAddToTeam) then {Goto "AddToTeam"};
+;	if (menuAddAISupplyTruck) then {Goto "AddAddAISupplyTruck"};
+
+;	if (player == WestCommander || player == EastCommander) then {Goto "UpdateCommander"};
+
+	goto "Update"
+
+#UpdateCommander
+
+	;Get selected team from menu.
+;	[_side,IDCMenuTeamList,false,false] Exec "GUI\GetGUISelectedTeam.sqs"
+;	[_side,IDCMenuInfo] Exec "GUI\SetGUITeamSize.sqs"
+	goto "Update"
+
+;Creates the factory menu.
+#InitMenu
+
+	if (Call Compile Format["_type != %1AIRPORTTYPE",sideJoinedText]) then {Goto "InitFactory"};
+
+	_name = "WingedAircraft"
+	_menuName = Localize "STRWFAIRPORT";
+	Goto "InitStats"
+
+#InitFactory
+
+	_menuName = ""
+	_name = Call Compile Format["%1Structures Select _type",sideJoinedText]
+
+#InitStats
+
+	_units = []
+	_descriptions = []
+	_costs = []
+	_mannedCosts = []
+	_images = []
+	Call Compile Format["_units = %1%2Units",sideJoinedText,_name]
+	Call Compile Format["_descriptions = %1%2Descriptions",sideJoinedText,_name]
+	Call Compile Format["_costs = %1%2Costs",sideJoinedText,_name]
+	Call Compile Format["_mannedCosts = %1%2MannedCosts",sideJoinedText,_name]
+	Call Compile Format["_images = %1%2Images",sideJoinedText,_name]
+
+	if (_menuName == "") then {Call Compile Format["_menuName = %1StructureDescriptions Select _type",sideJoinedText]};
+
+	;Menu buttons.
+	menuAddEmpty = false
+	menuAddToPlayer = false
+	menuAddToTeam = false
+	menuAddAISupplyTruck = false
+
+	_skin = GUISkin 
+	if (DayTime > 19 || DayTime < 6) then {_skin = "Light"};
+
+	_dialogName = Format["FactoryMenu%1",_skin]
+
+	;If unit is a commander then create the commander factory menu.
+	;? (player == WestCommander) || (player == EastCommander):_dialogName = Format ["CommanderFactoryMenu%1",GUISkin];_menuName = Format["%1 (%2)",_menuName,Localize "STRWFCOMMANDER"]
+	;? (_type == repairDepotType) && ((player == WestCommander) || (player == EastCommander)):_dialogName = Format ["CommanderRepairMenu%1",GUISkin]
+
+	_menu = CreateDialog _dialogName
+	CtrlSetText [IDCMenuTitle,_menuName]
+	CtrlSetText [IDCMenuButton,Localize "STRWFADDEMPTY"]
+	CtrlSetText [IDCMenuButton1,Localize "STRWFADDMANNED"]
+
+	;A barracks has different buttons.
+	if (_type == WESTBARRACKSTYPE || _type == EASTBARRACKSTYPE) then {CtrlSetText [IDCMenuButton,Localize "STRWFLOADOUTS"];CtrlSetText [IDCMenuButton1,Localize "STRWFADD"]};
+
+#AddListSelectioms
+
+	lbClear IDCMenuInfo
+	lbClear IDCMenuList
+
+	lbAdd[IDCMenuInfo,""]
+
+	_count = 0
+	_total = Count _units
+
+	;Add an entry onto the unit selection combo-boxes.
+	#AddListSelection
+
+		_cost = _costs Select _count
+		_mannedCost = 0
+		if (!IsNil "_mannedCosts") then {_mannedCost = _mannedCosts Select _count}
+		_description = _descriptions Select _count
+
+		_spacer = ""
+		_space = " "
+;		if (_type != WESTBARRACKSTYPE && _type != EASTBARRACKSTYPE) then {_space = "  "};
+
+		if (_cost < 100) then {_spacer = _space};
+		if (_cost < 1000) then {_spacer = _spacer + _space};
+		if (_cost < 1000 && _mannedCost >= 1000) then {_spacer = _spacer + " "};
+
+		if ((_type == WESTHEAVYFACTORYTYPE || _type == EASTHEAVYFACTORYTYPE) && _cost < 10000) then {_spacer = _spacer + _space};
+		if ((_type == WESTAIRCRAFTFACTORYTYPE || _type == EASTAIRCRAFTFACTORYTYPE) && _cost < 10000) then {_spacer = _spacer + _space};
+		if ((_type == WESTAIRPORTTYPE || _type == EASTAIRPORTTYPE) && _cost < 10000) then {_spacer = _spacer + _space};
+
+		_layout = "$%1-$%2 %3%4";_layout1 = "$%1 %2%3"
+		if (Localize "STRWFCURRENCYPOSITION" == "Back") then {_layout = "%1$-%2$ %3%4";_layout1 = "%1$ %2%3"};
+
+		;Add the text that is displayed in the entry.
+		_text = Format[_layout,_cost,_mannedCost,_spacer,_description]
+		if (_type == WESTBARRACKSTYPE || _type == EASTBARRACKSTYPE) then {_text = Format[_layout1,_cost,_spacer,_description]};
+
+		_selection = lbAdd[IDCMenuList,_text]
+		lbSetValue [IDCMenuList,_selection,_count]
+
+		_count = _count  + 1
+		if (_count < _total) then {Goto "AddListSelection"};
+
+;		if (player == WestCommander || player == EastCommander) then {Goto "InitCommanderMenu"};
+
+		Goto "Update"
+
+#InitCommanderMenu
+
+	;Add team selections to menu.
+	;[_side,IDCMenuTeamList,false,false] Exec "GUI\SetGUITeamSelections.sqs"
+
+	goto "Update"
+
+;Add an empty unit.
+#AddEmpty
+
+	;For the Barracks the Add Empty button is acutally the Loadouts Menu button.
+	if (_type == WESTBARRACKSTYPE || _type == EASTBARRACKSTYPE) then {CloseDialog 0;[] Exec "Client\GUI\GUI_Loadouts.sqs";Exit};
+
+	menuAddEmpty = false
+
+	;If factory is in use or nothing is selected then do nothing.
+	if (_unitType < 0) then {Goto "Update"};
+
+	[_type,_unitType,_factory,true] Execvm "Client\Client_BuyUnit.sqf"
+
+	;Prevents multiple build orders before buildingInUse takes effect.
+	~1.5
+	goto "Update"
+
+#AddAISupplyTruck
+
+	menuAddAISupplyTruck = false
+
+	;If factory is in use or nothing is selected then do nothing.
+	if (_unitType < 0) then {Goto "Update"};
+
+	[_type,_unitType,_factory] Exec "Client\Client_BuyAISupplyTruck.sqs"
+
+	;Prevents multiple build orders before buildingInUse takes effect.
+	~1.5
+	goto "Update"
+
+;Add a unit to the player's team.
+#AddToPlayer
+
+	menuAddToPlayer = false
+
+	;If factory is in use or nothing is selected then do nothing.
+	if (_unitType < 0) then {Goto "Update"};
+
+	[_type,_unitType,_factory,false] Execvm "Client\Client_BuyUnit.sqf"
+
+	;Prevents multiple build orders before buildingInUse takes effect.
+	~1.5
+	goto "Update"
+
+;Add a unit to the selected AI team.
+#AddToTeam
+
+	menuAddToTeam = false
+
+	;If factory is in use or nothing is selected then do nothing.
+	if (_inUse || _unitType < 0) then {Goto "Update"};
+
+	[_type,_unitType,_factory,false,_selectedTeam] Execvm "Client\Client_BuyUnit.sqf"
+
+	;Prevents multiple build orders before buildingInUse takes effect.
+	~1.5
+	goto "Update"
+
+;3/27/7 MM - Created file.

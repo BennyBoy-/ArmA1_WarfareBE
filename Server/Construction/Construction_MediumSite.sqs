@@ -1,0 +1,69 @@
+;Last modified 4/1/8
+;*****************************************************************************************
+;Description: Creates a small construction site.
+;*****************************************************************************************
+
+_type = _this Select 0
+_side = _this Select 1
+_position = _this Select 2
+_direction = _this Select 3
+
+_commanderAI = false
+if (Count _this > 4) then {_commanderAI = _this Select 4};
+
+_time = 0
+_structure = ""
+_modifiedDistance = 0
+;_modifiedDirection = 0
+Call Compile Format ["_time = %1StructureTimes Select _type",Str _side]
+Call Compile Format ["_structure = %1StructureNames Select _type",Str _side]
+Call Compile Format ["_modifiedDistance = %1StructureDistances Select _type",Str _side]
+_modifiedDirection = Call Compile Format ["%1StructureDirections Select _type",Str _side]
+
+_site = Format["WarfareB%1ContructionSite",Str _side] CreateVehicle _position
+_site SetDir _direction
+_site SetPos ([_position,6,_direction + 180] Call GetPositionFrom)
+
+_barrier = "RoadBarrier_long" CreateVehicle ([_position,8,_direction + 180] Call GetPositionFrom)
+_barrier SetDir (_direction + 180)
+
+_barrels = "Barrels" CreateVehicle ([_position,3,_direction + 135] Call GetPositionFrom)
+_pallets = "Paleta2" CreateVehicle ([_position,3,_direction + 285] Call GetPositionFrom)
+_cone1 = "RoadCone" CreateVehicle ([_position,7,_direction + 45] Call GetPositionFrom)
+_cone2 = "RoadCone" CreateVehicle ([_position,7,_direction + 135] Call GetPositionFrom)
+_cone3 = "RoadCone" CreateVehicle ([_position,7,_direction + 215] Call GetPositionFrom)
+_cone4 = "RoadCone" CreateVehicle ([_position,7,_direction + 285] Call GetPositionFrom)
+
+_props = [_barrier,_barrels,_pallets,_cone1,_cone2,_cone3,_cone4]
+
+~_time
+
+;Delete props.
+{if (!IsNull _x) then {DeleteVehicle _x};} ForEach _props
+
+if (IsNull _site) then {Exit};
+if (GetDammage _site >= 1) then {Exit};
+
+DeleteVehicle _site
+
+;If commander is constructing then modify rotation.
+_commanderTeam = Call Compile Format["%1CommanderTeam",Str _side]
+if (_commanderAI) then {_direction = _direction + _modifiedDirection};
+
+_site = _structure CreateVehicle _position
+_site SetDir _direction
+_site SetPos _position
+[_site,_position] Call CorrectObjectPosition
+
+if (_commanderAI) then {[_site,_position,15] Call PlaceSafe};
+
+_site SetVehicleInit Format["[this,%1,%2] ExecVM ""Client\Init\Init_BaseStructure.sqf""",_type,_direction]
+ProcessInitCommands
+
+_site AddEventHandler ["hit",{_this Call StructureDamaged}];
+_site AddEventHandler ["killed",{_this Call StructureDestroyed}];
+
+Call Compile Format["%1BaseStructures = %1BaseStructures + [_site]",Str _side]
+
+;*****************************************************************************************
+;3/26/7 MM - Created file.

@@ -1,0 +1,48 @@
+;Last modified 3/31/8
+;*****************************************************************************************
+;Description: Updates each town's marker.
+;*****************************************************************************************
+
+~10
+_total = Count locations
+_delay = 5 / _total
+_lastSV = []
+
+{Call Compile Format["_lastSV = _lastSV + [%1SupplyValue]",Str _x]} ForEach locations
+
+#UpdateMarkers
+
+	_count = 0
+	_SV = 0
+	_range = 0
+	_locationName = ""
+	_sideID = RESISTANCEID
+	_units = Units Group player
+
+	#UpdateMarker
+	~_delay
+
+		_location = locations Select _count
+		Call Compile Format["_locationName = %1Name;_SV = %1SupplyValue;_sideID = %1SideID;_range = %1Range * TOWNCAPTUREASSISTRANGEMODIFIER",Str _location]
+
+		;If location belongs to side then show it's value.  If location does not but team unit is near it then show value.
+		_visible = false
+		if (_sideID == sideID) then {_visible = true} else {{if (_x Distance _location < _range) then {_visible = true};} ForEach _units};
+
+		_marker = Format["%1CenterMarker",Str _location]
+		_text = ""
+
+		if (_location In controlPoints) then {_text = _locationName};
+		if (_visible) then {_marker SetMarkerTextLocal Format["%1 %2: %3",_text,Localize "STRWFSV",_SV]} else {_marker SetMarkerTextLocal ""};
+		if (player Distance _location < _range && _SV < (_lastSV Select _count)) then {[_location,_lastSV Select _count] Exec "Client\GUI\GUI_UpdateTownCapture.sqs"};
+
+		#UpdateNextMarkers
+
+		_lastSV Set[_count,_SV]
+		_count = _count + 1
+		if (_count < _total) then {Goto "UpdateMarker"};
+
+	Goto "UpdateMarkers"
+
+;*****************************************************************************************
+;2/9/7 MM - Created file.

@@ -1,0 +1,20 @@
+_pos = position (_this select 0);
+_fallposx = _pos select 0
+_fallposy = _pos select 1
+
+~4
+
+_array = nearestObjects [[_fallposx,_fallposy,0], ["Man","Car","Motorcycle","Tank","Ship","Air","StaticWeapon"], 1000]
+{_x setDammage 1} forEach _array
+
+_array = nearestObjects [[_fallposx,_fallposy,0], ["House","Strategic","NonStrategic"], 500];
+{_type = typeOf _x;if((_type == "M113_MHQ_unfolded") or (_type == "WarfareBWestBarracks") or (_type == "WarfareBWestLightFactory") or (_type == "WarfareBWestHeadquarters") or (_type == "WarfareBWestHeavyFactory") or (_type == "WarfareBWestAircraftFactory") or (_type == "BMP2_MHQ_unfolded") or (_type == "WarfareBEastBarracks") or (_type == "WarfareBEastLightFactory") or (_type == "WarfareBEastHeadquarters") or (_type == "WarfareBEastHeavyFactory") or (_type == "WarfareBEastAircraftFactory")) then {_GBU = "Bo_GBU12_LGB" createVehicle (position _x);_GBU = "Bo_GBU12_LGB" createVehicle (position _x)};} forEach _array;
+
+_array = [_fallposx,_fallposy,0] nearObjects ["Static", 500]
+{_type = typeOf _x;if ((_type != "WarfareBDepot")&&(_type != "WarfareBCamp")) then {_GBU = "Bo_GBU12_LGB" createVehicle (position _x);_GBU = "Bo_GBU12_LGB" createVehicle (position _x)}} forEach _array
+
+for [{_x=1},{_x<=100},{_x=_x+1}] do {HE = "Bo_GBU12_LGB" createVehicle [_fallposx-300+random 600,_fallposy-300+random 600,0]};
+
+[(_this select 0)] exec "Client\Support\Nuke\rdoact.sqs";
+
+exit

@@ -1,0 +1,227 @@
+;Last modified 6/4/8
+
+_display = _this Select 0
+
+_display Call InitInfoBar
+
+Goto "InitMenu"
+
+#Update
+~0.1
+
+#SkipUpdateDelay
+
+	;If unit dies or is no longer on his/her side (team killing).
+	if (!(Alive player) || Side player != sideJoined || menuExit) then {CloseDialog 0;Goto "Quit"};
+	if (!dialog) then {Goto "Quit"};
+
+	_display Call DisplayInfoBar
+	
+	;current upgrade index.
+	_currentUpgrade = lbCurSel 665001
+	
+	;auto-refresh do not touch!.
+	_price = (upgradePrice select _currentUpgrade)
+	_supply = (upgradeSupply select _currentUpgrade)
+	_time = (upgradeTime select _currentUpgrade)
+	ctrlSetText [665002, Format["Needed Money : $%1.",_price]]
+	ctrlSetText [665003, Format["Needed Supply : %1.",_supply]]
+	ctrlSetText [665004, Format["Needed Time   : %1 Seconds",_time]]
+	ctrlSetText [665006, Format[Localize "STRWFSUPPLIESFORMATTED",Call Compile Format["%1Supplies",sideJoinedText]]]
+
+#UpdateActions
+
+	if ((STIndex == 1) && (sideJoined == WEST)) then {CurentSel = lbCurSel 1988;PublicVariable "CurentSel";PublicVariable "CurentSelArray";STIndex = -1;};
+	if ((STIndex == 1) && (sideJoined == EAST)) then {CurentSelEast = lbCurSel 1988;PublicVariable "CurentSelEast";PublicVariable "CurentSelEastArray";STIndex = -1;};
+
+	if (menuButton == 11) then {Goto "Vote"};
+	if (menuButton == 52) then {Goto "OpenTeamMenu"};
+	if (menuButton == 53) then {Goto "OpenMissionMap"};
+	if (menuButton == 54) then {Goto "OpenGearMenu"};
+	if (menuButton == 55) then {Goto "OpenConstruction"};
+	
+	if (upgradeButton == 10) then {Goto "Upgrade"}
+	if (upgradeButton == 11) then {Goto "SatCam"}
+	if (upgradeButton == 12) then {Goto "UnitCam"}
+	if (upgradeButton == 13) then {Goto "RespawnST"}
+	
+	if (upgradeButton == 20) then {Goto "Repair"}
+
+	Goto "Update"
+
+#InitMenu
+
+	;Menu buttons.
+	menuExit = false
+	menubutton = -1
+	
+	_showMessages = showMessagesOnScreen
+	showMessagesOnScreen = false
+
+	;upgrades init.
+	{lbAdd[665001,_x]} ForEach upgradeLabel
+	lbSetCurSel [665001, 0]
+	_red = [1,0.24,0,0.85]
+	_green = [0,1,0.24,0.85]
+	_orange = [1,0.97,0,0.85]
+	
+	_checkArr = []
+	
+	;color is red by default, orange during upgrade, green upgraded.
+	for [{_count=0},{_count<(Count upgradeLabel)},{_count=_count+1}] do {lbSetColor [665001,_count,_red]}
+	if (inUse) then {lbSetColor [665001,UpgradeIPG,_orange];ctrlSetText [665005,Format ["Upgrade In Progress : %1",(upgradeLabel select UpgradeIPG)]];} else {lbSetColor [665001,UpgradeIPG,_green]}
+	
+	if (side player == WEST) then {for [{_count=0},{_count<(Count upgradeLabel)},{_count=_count+1}] do {if (upgradeVerify select _count) then {lbSetColor [665001,_count,_green]}};} else {for [{_count=0},{_count<(Count upgradeLabel)},{_count=_count+1}] do {if (upgradeVerifyEast select _count) then {lbSetColor [665001,_count,_green]}}}
+	
+	_IDCs = [665007,665010,1988,1989]
+	{CtrlShow[_x,false]} ForEach _IDCs
+	lbClear 1988;
+	_sortedTemp = [];
+	
+	;if the player is not the commander, then we have to hide those elements.
+	_commanderTeam = Call Compile Format ["%1CommanderTeam",sideJoinedText];
+	if !(isNull _commanderTeam) then {if (Group player == _commanderTeam) then {_IDCs = [665007,665010,1988,1989];{CtrlShow[_x,true]} ForEach _IDCs;};};
+	if (side player == west) then {_checkArr = upgradeVerify;lbSetCurSel[1988,CurentSel];} else {_checkArr = upgradeVerifyEast;lbSetCurSel[1988,CurentSelEast];};
+	
+	;trucks spawn combobox init.
+	_label = "MHQ";
+	_index = 0;
+	_index = lbAdd[1988,_label];
+	_sortedobj = ObjNull;
+
+	_cclist = Call GetCommandCenters;
+	{_sorted = [_x,towns] Call SortByDistance;_sortedobj = (_sorted Select 0);_sortedTemp = _sortedTemp + [_x];_label = Format ["%1 Command Center",_sortedobj];_index = lbAdd[1988,_label];lbSetValue [1988,_index,0];} forEach _cclist;
+	
+	if (sideJoined == WEST) then {CurentSelArray = [WestBase] + _sortedTemp;lbSetCurSel [1988, CurentSel];};
+	if (sideJoined == EAST) then {CurentSelEastArray = [EastBase] + _sortedTemp;lbSetCurSel [1988, CurentSelEast];};
+	
+	STIndex = -1;
+	
+	Goto "Update"
+	
+#OpenConstruction
+
+	menuButton = -1
+
+	if (!IsNull HQInRange) then {CloseDialog 0;constructionVehicle = HQInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull campInRange) then {CloseDialog 0;constructionVehicle = campInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull repairTruckInRange) then {CloseDialog 0;constructionVehicle = repairTruckInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+
+	Goto "Update"
+
+#OpenMissionMap
+
+	CloseDialog 0
+	CreateDialog "MissionMap"
+	Goto "Quit"
+
+#OpenTeamMenu
+
+	CloseDialog 0
+	CreateDialog "TeamMenu"
+	Goto "Quit"
+
+#OpenGearMenu
+
+	menuButton = -1
+	if (IsNull campInRange && !barracksInRange) then {Goto "Update"};
+
+	CloseDialog 0
+	CreateDialog "GearMenu"
+	Goto "Quit"
+
+#Vote
+
+	;If no vote in progress then request one.
+	_voteTime = Call Compile Format["%1CommanderVoteTime",sideJoinedText]
+	if (_voteTime <= 0) then {Goto "RequestVote"};
+
+	CloseDialog 0
+	CreateDialog "CommanderVoteMenu"
+	Goto "Quit"
+
+#RequestVote
+
+	menuButton = -1
+	_timeToWait = time + 3
+
+	[CMDREQUESTCOMMANDERVOTE] Exec "Client\Client_CommandToServer.sqs"
+
+	@ (Call Compile Format["%1CommanderVoteTime > 0",sideJoinedText] || time >= _timeToWait || !dialog ||!Alive player)
+
+	if (!Alive player || !Dialog) then {Goto "Quit"};
+	if (time > _timeToWait) then {Goto "Update"};
+
+	CloseDialog 0
+	CreateDialog "CommanderVoteMenu"
+	Goto "Quit"
+	
+#Upgrade
+
+	upgradeButton = -1
+	
+	if (_checkArr select _currentUpgrade) then {[playerSide, "HQ"] sideChat "Cannot upgrade, this upgrade is already done.";Goto "Update";};
+	if (inUse) then {[playerSide, "HQ"] sideChat "Cannot upgrade, there is already an upgrade in progress.";Goto "Update";};
+	
+	UpgradeIPG = lbCurSel 665001
+	_funds = Call GetPlayerFunds
+	
+	if (_funds < (upgradePrice select UpgradeIPG)) then {[playerSide, "HQ"] sideChat "Cannot upgrade, insufficient funds.";Goto "Update";}
+	if (Call Compile Format["%1Supplies < (upgradeSupply select UpgradeIPG)",sideJoinedText]) then {[playerSide, "HQ"] sideChat "Cannot upgrade, insufficient supply.";Goto "Update";};
+	
+	Call Compile Format["%1Supplies = %1Supplies - (upgradeSupply select UpgradeIPG);PublicVariable ""%1Supplies""",sideJoinedText]
+	(-(upgradePrice select UpgradeIPG)) Call ChangePlayerFunds
+	lbSetColor [665001,UpgradeIPG,_orange]
+	
+	[_time,UpgradeIPG,(side player)] ExecVM "Client\Functions\Client_WaitForUpgrade.sqf"
+	
+	Goto "Update"
+	
+#SatCam
+
+	upgradeButton = -1
+	
+	if !(_checkArr select 0) then {[playerSide, "HQ"] sideChat "Satellite Camera is not upgraded.";Goto "Update"}
+	
+	CloseDialog 0
+	CreateDialog "CommandCenter"
+
+	Goto "Quit"
+
+#UnitCam
+
+	upgradeButton = -1
+
+	if !(_checkArr select 1) then {[playerSide, "HQ"] sideChat "Unit Camera is not upgraded.";Goto "Update"}
+	
+	CloseDialog 0
+	CreateDialog "UnitCam"
+	
+	Goto "Quit"
+	
+#Repair
+
+	upgradeButton = -1
+	
+	player sidechat "im helping repairing"
+	
+	Goto "Quit"
+	
+#RespawnST
+
+	upgradeButton = -1;
+
+	;Blowing up all the (AI) Supply Trucks.
+	_AITrucks = Call Compile Format["%1AISupplyTrucks",sideJoinedText];
+	{_x setDamage 1} forEach _AITrucks
+	_salvagers = Call Compile Format["%1AISalvagers",sideJoinedText];
+	{_x setDamage 1} forEach _salvagers
+	
+	Goto "Update"
+
+#Quit
+
+	showMessagesOnScreen = _showMessages
+	Exit
+
+;3/2/8 MM - Created file.

@@ -1,0 +1,39 @@
+;Last modified 3/6/8
+;*****************************************************************************************
+;Description: Check if base has been spotted.
+;*****************************************************************************************
+_side = _this Select 0
+
+_opposingSide = East
+if (_side == East) then {_opposingSide = West};
+
+#Update
+~30
+
+	;No base recon before the HQ is deployed.
+	_MHQ = Call Compile Format["%1MHQ",Str _side]
+	if (!IsNull _MHQ) then {Goto "Update"};
+
+	;If base has already been spotted then quit.
+	if (Call Compile Format["!IsNil ""%1BaseSpottedPosition""",Str _side]) then {Exit};
+
+	_base = Call Compile Format["%1Base",Str _side]
+	if (IsNull _base) then {Goto "Update"};
+
+	_objects = NearestObjects[_base,["Man","Car","Motorcycle","Tank","Air"],DEFAULTVIEWDISTANCE]
+	if (Count _objects < 1) then {Goto "Update"};
+
+	_livingUnits = _objects Call GetLiveUnits
+
+	_amount = _opposingSide CountSide _livingUnits
+	if (_amount < 1) then {Goto "Update"};
+
+	_spotted = false
+	{if (Side _x == _opposingSide && (_x KnowsAbout _base >= 1.5 || (IsPlayer _x && _x Distance _base < 300))) then {_spotted = true};} ForEach _livingUnits
+
+	if (!_spotted) then {Goto "Update"};
+
+	Call Compile Format["%1BaseSpottedPosition = GetPos _base;PublicVariable ""%1BaseSpottedPosition""",Str _side]
+
+;*****************************************************************************************
+;2/5/7 MM - Created file.

@@ -1,0 +1,18 @@
+;Last modified 2/23/7
+;*****************************************************************************************
+;Description: A placeholder is a unit required to keep a team from becoming invalid.
+;Always keep the placeholder alive!
+;*****************************************************************************************
+_corpse = (_this Select 0) Select 0
+_name = _this Select 1
+_teamName = _this Select 2
+
+_team = GrpNull
+Call Compile Format["_team = %1",_teamName]
+
+_placeHolder = _team CreateUnit[_name,GetPos _corpse,[],0,"FORM"]
+Call Compile Format["_placeHolder AddEventHandler [""killed"",{[_this,""%1"",""%2""] Exec ""Server\Server_PlaceHolderKilled.sqs""}]",_name,_team]
+DeleteVehicle _corpse
+
+;*****************************************************************************************
+;2/22/7 MM - Created file.

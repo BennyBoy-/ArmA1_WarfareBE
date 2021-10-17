@@ -1,0 +1,5274 @@
+//Last modified 5/31/8
+
+respawn = 3;
+respawndelay = 1;
+onLoadMission = "Warfare v1.1 Benny Edition 1.023 N&S";
+
+#define NIGHT				1
+#define NOGRASS				2
+#define FASTTIME			4
+#define NOARTILLERY			8
+#define NOFASTTRAVEL		16
+#define CLASSIC				32
+
+#define CAPTUREALLTOWNS		1
+#define MIN30				2
+#define MIN60				3
+#define MIN90				4
+#define SCORE100			5
+#define SCORE200			6
+#define SCORE500			7
+#define SCORE1000			8
+
+titleParam1 = $STRWFPARAM1LABEL;
+valuesParam1[] = {0,NIGHT,/*NOGRASS,*/FASTTIME,NOARTILLERY,/*NIGHT+NOGRASS,*/NIGHT+FASTTIME,/*NOGRASS+FASTTIME,NIGHT+NOGRASS+FASTTIME,*/NIGHT+NOARTILLERY,/*NOGRASS+NOARTILLERY,NIGHT+NOGRASS+NOARTILLERY,*/FASTTIME+NOARTILLERY,NIGHT+FASTTIME+NOARTILLERY/*,NOGRASS+FASTTIME+NOARTILLERY,NIGHT+NOGRASS+FASTTIME+NOARTILLERY*/};
+textsParam1[] = {$STRWFNONE,$STRWFPARAM1A,/*$STRWFPARAM1B,*/$STRWFPARAM1C,$STRWFPARAM1D,/*$STRWFPARAM1E,*/$STRWFPARAM1F,/*$STRWFPARAM1G,$STRWFPARAM1H,*/$STRWFPARAM1I,/*$STRWFPARAM1J,$STRWFPARAM1K,*/$STRWFPARAM1L,$STRWFPARAM1M/*,$STRWFPARAM1N,$STRWFPARAM1O*/};
+defValueParam1 = 0;
+
+titleParam2 = $STRWFPARAM2LABEL;
+valuesParam2[] = {CAPTUREALLTOWNS,MIN30,MIN60,MIN90,SCORE100,SCORE200,SCORE500,SCORE1000};
+textsParam2[] = {"Capture All Towns",$STRWFPARAM2B,$STRWFPARAM2C,$STRWFPARAM2D,$STRWFPARAM2E,$STRWFPARAM2F,$STRWFPARAM2G,$STRWFPARAM2H};
+defValueParam2 = CAPTUREALLTOWNS;
+
+//Gui related
+#define DEFAULTFONT						"Bitstream"
+
+#define GUIUNDEFINED					-1
+#define GUILEFT							0
+#define GUIRIGHT						1
+#define GUICENTER						2
+#define GUITILEBAR						32
+#define GUIFRAME						64
+#define GUIDEFAULTTILEBAR				GUITILEBAR + GUICENTER
+#define GUIIMAGE						48
+#define GUIIMAGEASPECTRATIO				48 + 0x800
+#define GUISTYLEHUD						128
+
+#define GUITEXT							0
+#define GUIBUTTON						1
+#define GUIEDITABLETEXT					2
+#define GUISLIDER						3
+#define GUICOMBO						4
+#define GUILIST							5
+#define GUICHECKBOX						7
+#define GUICLICKABLETEXT				11
+#define GUIMENU							14
+#define GUIMAP							101
+
+#define IDCDEFAULT						5000
+
+#define IDCUNDEFINED									-1
+#define IDCMENUINFO										500
+#define IDCMENUTEAMLIST									501
+#define IDCMENULIST										502
+#define IDCMENULIST1									503
+#define IDCMENULIST2									504
+#define IDCMENUTITLE									510
+#define IDCMENUSTATUSLABEL								511
+#define IDCMENUBUTTON									512
+#define IDCMENUBUTTON1									513
+#define IDCMENUBUTTON2									514
+#define IDCMENUIMAGE									515
+#define IDCMENUSLIDER									516
+#define IDCMENUCHECKBOX									517
+#define IDCMENUSLIDER									518
+
+#define IDCCOMMANDMENUTEAMSELECT						100
+#define IDCCOMMANDMENUSETMANUALWAYPOINTCOLUMN			101
+#define IDCCOMMANDMENUSETMANUALWAYPOINTROW				102
+#define IDCCOMMANDMENUSETPRECISEMANUALWAYPOINTCOLUMN1	103
+#define IDCCOMMANDMENUSETPRECISEMANUALWAYPOINTCOLUMN2	104
+#define IDCCOMMANDMENUSETPRECISEMANUALWAYPOINTROW1		105
+#define IDCCOMMANDMENUSETPRECISEMANUALWAYPOINTROW2		106
+#define IDCCOMMANDMENUSETWPTOCURRENT					107
+#define IDCCOMMANDMENUMOVETOWP							108
+#define IDCCOMMANDMENUTAKETOWNS							109
+#define IDCCOMMANDMENUDEFENDTOWNS						110
+#define IDCCOMMANDMENUSEARCH							111
+#define IDCCOMMANDMENUCOMMAND							112
+#define IDCCOMMANDMENUDISEMBARK							113
+#define IDCCOMMANDMENUEMBARKTRANSPORT					114
+#define IDCCOMMANDMENUDISEMBARKTRANSPORT				115
+#define IDCCOMMANDMENUFIREMISSION						116
+
+#define IDCCONSTRUCTIONBUTTON							600
+#define IDCCONSTRUCTIONIMAGE							700
+#define IDCCONSTRUCTIONLABEL							800
+
+#define IDCGENERICBUTTON								3400
+#define IDCGENERICIMAGE									3500
+#define IDCGENERICLABEL									3600
+#define IDCGENERICLIST									3700
+#define IDCGENERICTEXT									3800
+#define IDCGENERICCHECKBOX								3900
+
+#define IDCERRORMESSAGE									3990
+
+#define IDCCONTROLMENUINFO								131
+#define IDCCONTROLMENUUPGRADELIST						132
+#define IDCCONTROLMENUTEAMLIST							133
+#define IDCCONTROLMENUUNITLIST							134
+#define IDCCONTROLMENULIGHTLIST							135
+#define IDCCONTROLMENUHEAVYLIST							146
+#define IDCCONTROLMENUAIRLIST							147
+
+#define IDCTEAM											1000
+#define IDCTEAMSIZE										1100
+#define IDCTEAMRESOURCES								1200
+#define IDCTEAMINDEPENDENT								1300
+#define IDCTEAMROLE										1400
+#define IDCTEAMGIVEAMOUNT								1500
+
+#define IDCTEAMLABEL									2000
+#define IDCCOMMANDERRESOURCES							2001
+
+#define IDCVOTEOPTION									3000
+#define IDCVOTETOGGLE									3100
+#define IDCVOTEON										3200
+#define IDCVOTEOFF										3300
+
+#define IDCTEAMLABEL									2000
+#define IDCCOMMANDERRESOURCES							2001
+
+#define IDCWESTRESOURCES								4000
+#define IDCWESTTOWNSHELD								4001
+#define IDCWESTPOINTS									4002
+#define IDCWESTINCOME									4003
+
+#define IDCEASTRESOURCES								4005
+#define IDCEASTTOWNSHELD								4006
+#define IDCEASTPOINTS									4007
+#define IDCEASTINCOME									4008
+
+#define IDCWEST											6000
+#define IDCEAST											7000
+
+#define IDCLOADOUTFUNDS			200
+#define IDCLOADOUTSPACE			201
+#define IDCLOADOUTTRADEIN		202
+#define IDCLOADOUTCOST			203
+#define IDCLOADOUTREFUND		204
+#define IDCLOADOUTTEMPLATELIST	205
+#define IDCLOADOUTPRIMARY		206
+#define IDCLOADOUTPRIMARYAMMO	207
+#define IDCLOADOUTPRIMARYLIST	208
+#define IDCLOADOUTSECONDARY		209
+#define IDCLOADOUTSECONDARYAMMO	210
+#define IDCLOADOUTSECONDARYLIST	211
+#define IDCLOADOUTSIDEARM		212
+#define IDCLOADOUTSIDEARMLIST	213
+#define IDCLOADOUTMISC			214
+#define IDCLOADOUTMISCAMMO		215
+#define IDCLOADOUTMISCLIST		216
+#define IDCLOADOUTBUY			217
+
+//Karel
+#define color1	{0.247,0.314,0.177,1}
+#define color1RGB 0.247,0.314,0.177
+#define color2	{0.82,1.00,0.82,1}
+#define color2RGB 0.82,1.0,0.82
+
+class Header
+{
+	gameType = CTI;
+	minPlayers = 1;
+	maxPlayers = 40;
+};
+
+class GUIText
+{
+	type = GUITEXT;
+	idc = IDCUNDEFINED;
+	style = GUILEFT;
+	colorText[] = {0.75,0.75,0.75,1};
+	colorBackground[] = {0,0,0,0};
+	font = DEFAULTFONT;
+	sizeEx = 0.025;
+
+	w = 0.275;
+	h = 0.04;
+
+	text = "";
+};
+
+class GUILargeText:GUIText
+{
+	font = DEFAULTFONT;
+	sizeEx = 0.029;
+
+	w = 0.275;
+	h = 0.1;
+};
+
+class GUIButton
+{
+	type = GUIBUTTON;
+	idc = IDCUNDEFINED;
+	style = GUICENTER;
+	borderSize = 0;
+	colorText[] = {0.75,0.75,0.75,1};
+	colorDisabled[] = {0.35,0.35,0.35,0};
+	colorBackground[] = {0.35,0.35,0.35,1};
+	colorBackgroundActive[] = {0.5,0.5,0.5,1};
+	colorBackgroundDisabled[] = {0.35,0.35,0.35,0};
+	colorFocused[] = {0.35,0.35,0.35,1};
+	colorShadow[] = {0.1,0.1,0.1,1};
+	colorBorder[] = {0,0,0,0};
+	font = DEFAULTFONT;
+	sizeEx = 0.029;
+	offsetX = 0.005;
+	offsetY = 0.005;
+	offsetPressedX = 0.0025;
+	offsetPressedY = 0.0025;
+	soundPush[] = {"\ca\ui\data\sound\new1", 0.09, 1};
+	soundClick[] = {"\ca\ui\data\sound\mouse3", 0.07, 1};
+	soundEnter[] = {"",0.1,1};
+	soundEscape[] = {"ui\ui_cc",0.2,1};
+
+	default = false;
+
+	text = "";
+
+	//Default button dimensions.	
+	w = 0.275;
+	h = 0.04;
+};
+
+class GUIButtonDarker:GUIButton
+{
+	colorBackground[] = {0.25,0.25,0.25,1};
+	colorBackgroundActive[] = {0.4,0.4,0.4,1};
+	colorFocused[] = {0.25,0.25,0.25,1};
+};
+
+class GUICheckBox
+{
+	type = GUICHECKBOX;
+	idc = IDCUNDEFINED;
+	style = GUICENTER;
+	colorText[] = {0.75,0.75,0.75,1};
+	colorDisabled[] = {0.35,0.35,0.35,0.25};
+	colorBackground[] = {0.35,0.35,0.35,0.25};
+	colorBackgroundActive[] = {0.35,0.35,0.35,0.25};
+	colorBackgroundDisabled[] = {0.35,0.35,0.35,0.25};
+	colorFocused[] = {0.35,0.35,0.35,0.25};
+	colorShadow[] = {0.1,0.1,0.1,0.25};
+	colorBorder[] = {0.7,0.7,0.7,0.5};
+	font = DEFAULTFONT;
+	sizeEx = 0.025;
+	offsetX = ;
+	offsetY = ;
+	offsetPressedX = ;
+	offsetPressedY = ;
+	/*
+	borderSize = .002;
+	soundClick[] = {"ui\ui_ok",0.2,1};
+	soundEnter[] = {"",0.1,1};
+	soundEscape[] = {"ui\ui_cc",0.2,1};
+	soundPush[] = {"",0.2,1};
+	default = false;
+	*/
+
+	//Default button dimensions.	
+	w = 0.275;
+	h = 0.04;
+};
+
+class GUIClickableText
+{
+	type = GUICLICKABLETEXT;
+	idc = IDCUNDEFINED;
+	style = GUILEFT;
+	color[] = {0.75,0.75,0.75,1};
+	colorActive[] = {1,1,1,1};
+	font = DEFAULTFONT;
+	sizeEx = 0.025;
+	soundClick[] = {"ui\ui_ok",0.2,1};
+	soundEnter[] = {"ui\ui_over",0.2,1};
+	soundEscape[] = {"ui\ui_cc",0.2,1};
+	soundPush[] = {, 0.2, 1};
+	default = false;
+
+	//Default text dimensions.	
+	w = 0.275;
+	h = 0.04;
+	
+	text = "";
+};
+
+class GUIEditableText
+{
+	type = GUIEDITABLETEXT;
+	idc = IDCUNDEFINED;
+	style = GUILEFT;
+	font = DEFAULTFONT;
+	autocomplete = false;
+	sizeEx = 0.02;
+	colorSelection[] = {0.3,0.3,0.3,1};
+	colorText[] = {0.75,0.75,0.75,1};
+	text = ;
+
+	//Default button dimensions.	
+	w = 0.275;
+	h = 0.1;
+};
+
+class GUIImage
+{
+	type = GUIText;
+	idc = IDCUNDEFINED;
+	style = GUIIMAGE;
+	colorText[] = {0.75,0.75,0.75,1};
+	colorBackground[] = {0,0,0,0};
+	font = DEFAULTFONT;
+	sizeEx = 0.025;
+
+	soundClick[] = {"ui\ui_ok",0.2,1};
+	soundEnter[] = {"ui\ui_over",0.2,1};
+	soundEscape[] = {"ui\ui_cc",0.2,1};
+	soundPush[] = {, 0.2, 1};
+	default = false;
+
+	//Default button dimensions.	
+	w = 0.275;
+	h = 0.04;
+
+	text = "";
+};
+
+class GUIImageAspectRatio:GUIImage
+{
+	style = GUIIMAGEASPECTRATIO;
+};
+
+class GUIList
+{
+	style = GUILEFT;
+	idc = IDCUNDEFINED;
+	colorBackground[] = {0.35,0.35,0.35,1};
+	colorSelect[] = {0.4,0.4,0.4,1};
+	colorSelectBackground[] = {0.6,0.6,0.6,1};
+	colorText[] = {0.75,0.75,0.75,1};
+	font = DEFAULTFONT;
+	sizeEx = 0.029;
+	rowHeight = 0.04;
+	soundSelect[] = {"",0.1,1};
+	soundExpand[] = {"",0.1,1};
+	soundCollapse[] = {"",0.1,1};
+
+	//Default list dimensions.	
+	w = 0.275;
+	h = 0.04;
+};
+
+class GUIListBox:GUIList
+{
+	type = GUILIST;
+	rowHeight = 0.03;
+};
+
+class GUITransparentListBox:GUIListBox
+{
+	colorBackground[] = {0,0,0,0};
+	colorSelect[] = {0,0,0,0};
+	colorSelectBackground[] = {0,0,0,0};
+	colorText[] = {0,0,0,0};
+};
+
+class GUIComboBox:GuiList
+{
+	type = GUICOMBO;
+	wholeHeight = 0.3;
+};
+
+class GUISlider
+{
+	idc = IDCUNDEFINED;
+	type = GUISLIDER;
+	style = 1024;
+	color[] = {0.75,0.75,0.75,1};
+	colorActive[] = {1,1,1,1};
+	soundSelect[] = {"",0.1,1};
+	soundExpand[] = {"",0.1,1};
+	soundCollapse[] = {"",0.1,1};
+
+	//sizeEx = 0.025;
+
+	w = 0.275;
+	h = 0.04;
+};
+
+class DefaultMenu
+{
+	idd = IDCDEFAULT;
+	movingEnable = true;
+	controlsBackground[] = {BackgroundWindow};
+	objects[] = {};
+
+	class BackgroundWindow:GuiText
+	{
+		style = GUISTYLEHUD;
+		colorBackground[] = {0.1,0.1,0.1,1.0};
+
+		text = "";
+		x = 0.325;
+		y = 0.075;
+		w = 0.4;
+		h = 0.85;
+	};
+
+	class BackgroundWindowLight:BackgroundWindow
+	{
+		colorBackground[] = {0.4,0.4,0.4,1.0};
+	};
+};
+
+class DefaultMenuCC
+{
+	idd = IDCDEFAULT;
+	movingEnable = true;
+	controlsBackground[] = {BackgroundWindow};
+	objects[] = {};
+
+	class BackgroundWindow:GuiText
+	{
+		style = GUISTYLEHUD;
+		colorBackground[] = {0,0,0,0};
+
+		text = "";
+		x = 0.325;
+		y = 0.075;
+		w = 0.4;
+		h = 0.85;
+	};
+
+	class BackgroundWindowLight:BackgroundWindow
+	{
+		colorBackground[] = {0,0,0,0.89};
+	};
+};
+
+class DefaultMenuUnitCam
+{
+	idd = IDCDEFAULT;
+	movingEnable = true;
+	controlsBackground[] = {BackgroundWindow};
+	objects[] = {};
+
+	class BackgroundWindow:GuiText
+	{
+		style = GUISTYLEHUD;
+		colorBackground[] = {0.1,0.1,0.1,1.0};
+
+		text = "";
+		x = 0;
+		y = 0.075;
+		w = 0.2;
+		h = 0.6;
+	};
+
+	class BackgroundWindowLight:BackgroundWindow
+	{
+		colorBackground[] = {0.4,0.4,0.4,1.0};
+	};
+};
+
+class SupportMenu
+{
+	idd = IDCDEFAULT;
+	movingEnable = true;
+	controlsBackground[] = {BackgroundWindow};
+	objects[] = {};
+
+	class BackgroundWindow:GuiText
+	{
+		style = GUISTYLEHUD;
+		colorBackground[] = {0.1,0.1,0.1,1.0};
+
+		text = "";
+		x = 0.2;
+		y = 0.2;
+		w = 0.6;
+		h = 0.6;
+	};
+
+	class BackgroundWindowLight:BackgroundWindow
+	{
+		colorBackground[] = {0.4,0.4,0.4,1.0};
+	};
+};
+
+// Karel, 01/22/2008
+class GUIActiveText
+{
+	type = 11;
+	style = GUILEFT;
+	SizeEx = 0.05;
+	font = "BitStream";
+	color[]= {1,1,1,0.8};
+	colorActive[] = {1, 1, 1,1};
+	soundEnter[] = {"", 0.1, 1};
+	soundPush[] = {"", 0.1, 1};
+	soundClick[] = {"", 0.1, 1};
+	soundEscape[] = {"", 0.1, 1};
+	text = "";
+};
+class GUItab: GUIActiveText
+{
+//	style = 48 + 0x800;
+	style = 48;
+	x = 0.15;
+	y = 0.15;
+	w = 0.1575;
+	h = 0.05;
+	text = "Warfare\Images\tab_mission.paa";
+	SizeEx = 0.030000;
+	color[]= {1,1,1,1};
+	colorActive[] = {1,1,1,1};
+  	onMouseEnter =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_mission_a.paa"";";
+ 	onMouseExit =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_mission.paa"";";
+	onSetFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_mission_a.paa"";";
+	onKillFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_mission.paa"";";
+};
+class GUIStructuredText
+{
+	access=0;
+	type=13;
+	idc=-1;
+	style=0;
+	h=0.050000;
+	text="";
+	size=0.020833;
+	colorText[]={1,1,1,1};
+	class Attributes
+	{
+		font="Zeppelin32";
+		color="#ffffff";
+		align="left";
+		shadow=0;
+	};
+};
+class GUIButtonLightGreen:GUIButton
+{
+	style = GUICENTER;
+	x = 0.65;
+	y = 0.36;
+	w = 0.24;
+	h = 0.03;
+	colorText[] = {0.82,1.00,0.82,1.0};
+	colorDisabled[] = {0.82,1.00,0.82,1.0};
+	colorBackground[] = {0.24,0.56,0.24,1.0};
+	colorBackgroundActive[] = {0.2,0.5,0.2,1.0};
+	colorBackgroundDisabled[] = {0.82,1.00,0.82,1.0};
+	colorFocused[] = {0.2,0.5,0.2,1.0};
+	colorShadow[] = {0.1,0.1,0.1,1};
+	colorBorder[] = {0,0,0,0};
+};
+class GUIButtonLightRed: GUIButtonLightGreen
+{
+	style = GUICENTER;
+	colorText[] = {1.00,0.82,0.82,1.0};
+	colorDisabled[] = {1.00,0.82,0.82,1.0};
+	colorBackground[] = {0.56,0.24,0.24,1.0};
+	colorBackgroundActive[] = {0.5,0.2,0.2,1.0};
+	colorBackgroundDisabled[] = {1.00,0.82,0.82,1.0};
+	colorFocused[] = {0.5,0.2,0.2,1.0};
+};
+
+//*****************************************************************************************
+//LOADOUT MENU
+//*****************************************************************************************
+
+class LoadoutMenu:DefaultMenu
+{
+	controls[] = {MenuTitle,ResourcesLabel,SpaceLabel,TradeInLabel,CostLabel,LoadTemplate,BuyTemplate,SaveTemplate,TemplateList,PrimaryImage,PrimaryAmmo,
+				  PrimaryAdd,PrimarySubtract,PrimaryList,SecondaryImage,SecondaryAmmo,SecondaryAdd,SecondarySubtract,SecondaryList,SidearmImage,
+				  SidearmList,MiscImage,MiscAmmo,MiscAdd,MiscSubtract,MiscList,Reset,Clear,Cancel,Buy};
+
+	controlsBackground[] = {LoadoutBackgroundWindow};
+
+	class LoadoutBackgroundWindow:BackgroundWindow
+	{
+		x = 0.025;
+		y = 0.1;
+		w = 0.95;
+		h = 0.8;
+	};
+
+	class MenuTitle:GUILargeText
+	{
+		style = GUICENTER;
+		x = 0.3625;
+		y = 0.1;
+		w = 0.285;
+		h = 0.05;
+		text = $STRWFLOADOUTS;
+	};
+
+	class ResourcesLabel:GUILargeText
+	{
+		idc = IDCLOADOUTFUNDS;
+		x = 0.05;
+		y = 0.12;
+		w = 0.25;
+		text = "";
+	};
+
+	class SpaceLabel:GUILargeText
+	{
+		idc = IDCLOADOUTSPACE;
+		x = 0.4;
+		y = 0.12;
+		w = 0.15;
+		text = "";
+	};
+
+	class TradeInLabel:GUILargeText
+	{
+		idc = IDCLOADOUTTRADEIN;
+		x = 0.6;
+		y = 0.12;
+		w = 0.2;
+		text = "";
+	};
+
+	class CostLabel:GUILargeText
+	{
+		idc = IDCLOADOUTCOST;
+		x = 0.8;
+		y = 0.12;
+		w = 0.15;
+		text = "";
+	};
+
+	class LoadTemplate:GUIButtonDarker
+	{
+		x = 0.05;
+		y = 0.2;
+		w = 0.22;
+		text = $STRWFLOADTEMPLATE;
+		action = "loadoutLoadTemplate = true";
+	};
+
+	class BuyTemplate:GUIButtonDarker
+	{
+		x = 0.05;
+		y = 0.25;
+		w = 0.22;
+		text = $STRWFBUYTEMPLATE;
+		action = "loadoutBuyTemplate = true";
+	};
+
+	class SaveTemplate:GUIButtonDarker
+	{
+		x = 0.05;
+		y = 0.3;
+		w = 0.22;
+		text = $STRWFSAVECUSTOM;
+		action = "loadoutSaveTemplate = true";
+	};
+
+	//List of weapon loadout templates.
+	class TemplateList:GUIListBox
+	{
+		idc = IDCLOADOUTTEMPLATELIST;
+		x = 0.05;
+		y = 0.35;
+		w = 0.22;
+		h = 0.477;
+	};
+
+	class PrimaryImage:GUITransparentListBox
+	{
+		idc = IDCLOADOUTPRIMARY;
+		x = 0.3;
+		y = 0.2;
+		rowHeight = 0.1;
+		w = 0.16;
+		h = 0.1;
+	};
+
+	class PrimaryAmmo:GUIText
+	{
+		idc = IDCLOADOUTPRIMARYAMMO;
+		x = 0.3;
+		y = 0.305;
+		w = 0.09;
+		text = "";
+	};
+
+	class PrimaryAdd:GUIButtonDarker
+	{
+		x = 0.395;
+		y = 0.305;
+		w = 0.03;
+		text = "+";
+		action = "loadoutPrimaryAdd = true";
+	};
+
+	class PrimarySubtract:GUIButtonDarker
+	{
+		x = 0.43;
+		y = 0.305;
+		w = 0.03;
+		text = "-";
+		action = "loadoutPrimarySubtract = true";
+	};
+
+	class PrimaryList:GUIListBox
+	{
+		idc = IDCLOADOUTPRIMARYLIST;
+		x = .3;
+		y = 0.35;
+		sizeEx = 0.026;
+		rowHeight = 0.028;
+		w = 0.158;
+		h = 0.477;
+	};
+
+	class SecondaryImage:GUITransparentListBox
+	{
+		idc = IDCLOADOUTSECONDARY;
+		x = 0.49;
+		y = 0.2;
+		rowHeight = 0.1;
+		w = 0.16;
+		h = 0.1;
+	};
+
+	class SecondaryAmmo:GUIText
+	{
+		idc = IDCLOADOUTSECONDARYAMMO;
+		x = 0.49;
+		y = 0.305;
+		w = 0.09;
+		text = "";
+	};
+
+	class SecondaryAdd:GUIButtonDarker
+	{
+		x = 0.585;
+		y = 0.305;
+		w = 0.03;
+		text = "+";
+		action = "loadoutSecondaryAdd = true";
+	};
+
+	class SecondarySubtract:GUIButtonDarker
+	{
+		x = 0.62;
+		y = 0.305;
+		w = 0.03;
+		text = "-";
+		action = "loadoutSecondarySubtract = true";
+	};
+
+	class SecondaryList:GUIListBox
+	{
+		idc = IDCLOADOUTSECONDARYLIST;
+		sizeEx = 0.026;
+		x = 0.49;
+		y = 0.35;
+		w = 0.158;
+		h = 0.16;
+	};
+
+	class SidearmImage:GUITransparentListBox
+	{
+		idc = IDCLOADOUTSIDEARM;
+		x = 0.49;
+		y = 0.54;
+		rowHeight = 0.1;
+		w = 0.16;
+		h = 0.1;
+	};
+
+	class SidearmList:GUIListBox
+	{
+		idc = IDCLOADOUTSIDEARMLIST;
+		sizeEx = 0.026;
+		x = 0.49;
+		y = 0.65;
+		w = 0.16;
+		h = 0.177;
+	};
+
+	class MiscImage:GUITransparentListBox
+	{
+		idc = IDCLOADOUTMISC;
+		x = .68;
+		y = 0.2;
+		rowHeight = 0.1;
+		w = 0.16;
+		h = 0.1;
+	};
+	class MiscAmmo:GUIText
+	{
+		idc = IDCLOADOUTMISCAMMO;
+		x = 0.68;
+		y = 0.305;
+		w = 0.09;
+		text = "";
+	};
+
+	class MiscAdd:GUIButtonDarker
+	{
+		x = 0.772;
+		y = 0.305;
+		w = 0.03;
+		text = "+";
+		action = "loadoutMiscAdd = true";
+	};
+
+	class MiscSubtract:GUIButtonDarker
+	{
+		x = 0.807;
+		y = 0.305;
+		w = 0.03;
+		text = "-";
+		action = "loadoutMiscSubtract = true";
+	};
+
+	class MiscList:GUIListBox
+	{
+		idc = IDCLOADOUTMISCLIST;
+		sizeEx = 0.026;
+		x = 0.68;
+		y = 0.35;
+		rowHeight = 0.03;
+		w = 0.27;
+		h = 0.477;
+	};
+
+	class Reset:GUIButtonDarker
+	{
+		x = 0.1;
+		y = 0.84;
+		w = 0.18;
+		text = $STRWFRESET;
+		action = "loadoutReset = true";
+	};
+
+	class Clear:GUIButtonDarker
+	{
+		x = 0.3065;
+		y = 0.84;
+		w = 0.18;
+		text = $STRWFCLEAR;
+		action = "loadoutClear = true";
+	};
+
+	class Cancel:GUIButtonDarker
+	{
+		x = 0.513;
+		y = 0.84;
+		w = 0.18;
+		text = $STRWFCANCEL;
+		action = "loadoutCancel = true";
+	};
+
+	class Buy:GUIButtonDarker
+	{
+		idc = IDCLOADOUTBUY;
+		x = 0.7+.02;
+		y = 0.84;
+		w = 0.18;
+		text = $STRWFBUY;
+		action = "loadoutBuy = true";
+	};
+};
+
+class LoadoutMenuLight:LoadoutMenu
+{
+	controlsBackground[] = {LoadoutBackgroundWindow,LoadoutBackgroundWindow1};
+
+	class LoadoutBackgroundWindow1:BackgroundWindowLight
+	{
+		x = 0.025;
+		y = 0.1;
+		w = 0.95;
+		h = 0.8;
+	};
+};
+
+//*****************************************************************************************
+//FACTORY MENU
+//*****************************************************************************************
+
+//Base menu from which all vehicle menus are derived.
+class FactoryMenu:DefaultMenu
+{
+	controls[] = {MenuTitle,StatusLabel,InfoBox,ImageBox,AddEmptyButton,AddToPlayerButton,AddList,ExitButton};
+	controlsBackground[] = {FactoryBackgroundWindow};
+
+	class FactoryBackgroundWindow:BackgroundWindow
+	{
+		x = 0.325;
+		y = 0.02;
+		w = 0.35;
+		h = 0.7;
+	};
+
+	class MenuTitle:GuiLargeText
+	{
+		idc = IDCMENUTITLE;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.025;
+		x = 0.325;
+		y = 0.00125;
+		w = 0.35;
+		h = 0.08;
+		text = "";
+	};
+
+	class StatusLabel:GuiText
+	{
+		idc = IDCMENUSTATUSLABEL;
+		style = GUICENTER;
+		x = 0.3375;
+		y = 0.06;
+		w = 0.325;
+		h = 0.04;
+		text = "";
+	};
+
+	class InfoBox:GUIList
+	{
+		idc = IDCMENUINFO;
+		type = GUILIST;
+		x = 0.3375;
+		y = 0.11;
+		w = 0.17;
+		h = 0.08;
+	};
+
+	class ImageBox:GUIList
+	{
+		idc = IDCMENUIMAGE;
+		type = GUILIST;
+		rowHeight = 0.08;
+		x = 0.53;
+		y = 0.11;
+		w = 0.13;
+		h = 0.08;
+	};
+
+	//Add vehicle to selected team.
+	class AddToTeamButton:GUIButtonDarker
+	{
+		style = GUICENTER;
+		x = 0.3375;
+		y = 0.21;
+		w = 0.17;
+
+		action = "menuAddToTeam = true";
+		text = $STRWFADDTO;
+	};
+
+	//Add vehicle to selected team.
+	class AddToTeamList:GuiComboBox
+	{
+		idc = IDCMENUTEAMLIST;
+		x = 0.53;
+		y = 0.21;
+		w = 0.13;
+	};
+
+	//Add empty vehicle.
+	class AddEmptyButton:GUIButtonDarker
+	{
+		idc = IDCMENUBUTTON;
+		style = GUICENTER;
+		x = 0.3375;
+		y = 0.26;
+		w = 0.325;
+
+		action = "menuAddEmpty = true";
+		text = $STRWFADDEMPTY;
+	};
+
+	//Add vehicle to player team.
+	class AddToPlayerButton:GUIButtonDarker
+	{
+		idc = IDCMENUBUTTON1;
+		style = GUICENTER;
+		x = 0.3375;
+		y = 0.31;
+		w = 0.325;
+
+		action = "menuAddToPlayer = true";
+		text = $STRWFADDMANNED;
+	};
+
+	//Drop down list of units.  
+	class AddList:GUIListBox
+	{
+		idc = IDCMENULIST;
+		x = 0.3375;
+		y = 0.36;
+		w = 0.325;
+		h = 0.3;
+	};
+
+	class ExitButton:GUIButtonDarker
+	{
+		x = 0.3375;
+		y = 0.67;
+		w = 0.325;
+
+		action = "openMenuType = 0;CloseDialog 0";
+		text = $STRWFEXIT;
+	};
+};
+
+class FactoryMenuLight:FactoryMenu
+{
+	controlsBackground[] = {FactoryBackgroundWindow,FactoryBackgroundWindow1};
+
+	class FactoryBackgroundWindow1:BackgroundWindowLight
+	{
+		x = 0.325;
+		y = 0.02;
+		w = 0.35;
+		h = 0.7;
+	};
+};
+
+class CommanderFactoryMenu:FactoryMenu
+{
+	controls[] = {MenuTitle,StatusLabel,InfoBox,ImageBox,AddToTeamButton,AddToTeamList,AddEmptyButton,AddToPlayerButton,AddList,ExitButton};
+};
+
+class CommanderFactoryMenuLight:FactoryMenuLight
+{
+	controls[] = {MenuTitle,StatusLabel,InfoBox,ImageBox,AddToTeamButton,AddToTeamList,AddEmptyButton,AddToPlayerButton,AddList,ExitButton};
+};
+
+class CommandCenter:DefaultMenuCC
+{
+	controls[] = {MArea,NGButton,ExButton};
+	
+	onKeyDown = "menuKey = KeyName (_this select 1)";
+	onKeyUp = "menuKey = """"";
+	onLoad = "_this Exec ""Client\Special_SatCam.sqs""; BI_construction_NVG = false";
+	onUnload = "BI_construction_NVG = nil;";
+	
+	class MArea:GUIButton
+	{
+		idc = IDCMENUIMAGE;
+		colorBackground[] = {0,0,0,0};
+		colorBackgroundActive[] = {0,0,0,0};
+		colorBackgroundDisabled[] = {0,0,0,0};
+		colorFocused[] = {0,0,0,0};
+		colorShadow[] = {0,0,0,0};
+		colorBorder[] = {0,0,0,0};
+
+		x = 0.0;
+		y = 0.05;
+		w = 1.0;
+		h = 0.8;
+
+		onMouseMoving = "mouseFocus = true;mouseX = (_this Select 1) / 1 - 0.5;mouseY = (_this Select 2) / 0.8 - 0.5;mousePos = _this";
+		onMouseButtonDown = "mouseButtonDown = _this Select 1";
+		onMouseButtonUp = "mouseButtonUp = _this Select 1";
+		onMouseZChanged = "mouseButtonWheel = _this Select 1";
+	};
+	
+	class NGButton:GUIButtonDarker
+	{
+		x = 0.285;
+		y = 0;
+		w = 0.2;
+
+		action = "if (BI_construction_NVG) then {camUseNVG false; BI_construction_NVG = false} else {camUseNVG true; BI_construction_NVG = true;};";
+		text = "NVG";
+		onMouseMoving = "mouseFocus = false";
+	};	
+	
+	class ExButton:GUIButtonDarker
+	{
+		x = 0.5;
+		y = 0;
+		w = 0.2;
+
+		action = "openMenuType = 0;CloseDialog 0";
+		text = $STRWFEXIT;
+	};
+	
+};
+
+class UnitCam:DefaultMenuUnitCam
+{
+	controls[] = {UnitCamList,UnitCamListText,NGButton,ExButton,CameraView,CameraFPS};
+	
+	onLoad = "_this Exec ""Client\Special_UniCam.sqs""; BI_construction_NVG = false;ToggleCam = false;";
+	onUnload = "BI_construction_NVG = nil;ToggleCam = false;";
+	
+	class UnitCamList: GUIListBox
+	{
+		IDC = 230001;
+		x = 0.005;
+		y = 0.1175;
+		w = 0.190;
+		h = 0.45;
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = {0.1,0.1,0.1,1.0};
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+	};
+	
+	class UnitCamListText:GuiText
+	{
+		style = GUICENTER;
+		x = 0;
+		y = 0.085;
+		w = 0.2;
+		h = 0.03;
+		text = "Units List";
+	};
+	
+	class NGButton:GUIButtonDarker
+	{
+		x = 0.002;
+		y = 0.575;
+		w = 0.09;
+
+		action = "if (BI_construction_NVG) then {camUseNVG false; BI_construction_NVG = false} else {camUseNVG true; BI_construction_NVG = true;};";
+		text = "NVG";
+		onMouseMoving = "mouseFocus = false";
+	};	
+	
+	class ExButton:GUIButtonDarker
+	{
+		x = 0.102;
+		y = 0.575;
+		w = 0.09;
+
+		action = "openMenuType = 0;CloseDialog 0";
+		text = $STRWFEXIT;
+	};
+	
+	class CameraView:GUIButtonDarker
+	{
+		x = 0.002;
+		y = 0.625;
+		w = 0.09;
+
+		action = "ToggleCam = true";
+		text = "1st Pers";
+	};	
+	
+	class CameraFPS:GUIButtonDarker
+	{
+		x = 0.102;
+		y = 0.625;
+		w = 0.09;
+
+		action = "ToggleCam = false";
+		text = "3rd Pers";
+	};	
+};
+
+class classMenu:DefaultMenuUnitCam
+{
+	controls[] = {Class_Title,HFButton,ExButton,Button1,Button2};
+	
+	onLoad = "_this Exec ""Client\Special_Class.sqs"";";
+		
+	class Class_Title:GUILargeText
+	{
+		idc = IDCGENERICLABEL;
+		style = GUILEFT;
+		sizeEx = 0.025;
+		x = 0.002;
+		y = 0.07;
+		w = 0.15;
+		h = 0.062500;
+		text = "Class Actions :";
+	};
+
+	class HFButton:GUIButtonDarker
+	{
+		x = 0.002;
+		y = 0.625;
+		w = 0.09;
+
+		action = "classButton = 2";
+		text = "Head Fix";
+	};	
+		
+	class ExButton:GUIButtonDarker
+	{
+		x = 0.102;
+		y = 0.625;
+		w = 0.09;
+
+		action = "openMenuType = 0;CloseDialog 0";
+		text = $STRWFEXIT;
+	};
+	
+	class Button1:GUIButtonDarker
+	{
+		IDC = 666001;
+		x = 0.002;
+		y = 0.12;
+		w = 0.09;
+
+		action = "classButton = 1";
+		text = "";
+	};	
+	
+	class Button2:GUIButtonDarker
+	{
+		IDC = 666002;
+		x = 0.102;
+		y = 0.12;
+		w = 0.09;
+
+		action = "classButton = 3";
+		text = "";
+	};	
+
+};
+
+class ConstructionMenu:DefaultMenu
+{
+	controls[] = {InfoBackground,/*InfoMouseStop,/*InfoLabel,InfoLabel1,*/
+				  MouseArea,HelpPanelBackground,HelpPanelClose,HelpPanel,
+				  Toolbar,ToolbarLabel,ToolbarMouseStop,ToolbarLabel1,StructureBackground,StructureDivider,
+				  /*FirstPersonToggle,*/ExitButton,HelpButton,NVGButton,warfarelogo,MessageBar,
+				  StructureImage0,StructureLabel0,StructureHighlighted0,StructureImage1,StructureLabel1,StructureHighlighted1,
+
+				  StructureImage2,StructureLabel2,StructureHighlighted2,StructureImage3,StructureLabel3,StructureHighlighted3,
+				  StructureImage4,StructureLabel4,StructureHighlighted4,StructureImage5,StructureLabel5,StructureHighlighted5,
+				  StructureImage6,StructureLabel6,StructureHighlighted6,StructureImage7,StructureLabel7,StructureHighlighted7,
+				  StructureImage8,StructureLabel8,StructureHighlighted8,StructureImage9,StructureLabel9,StructureHighlighted9,
+				  StructureImage10,StructureLabel10,StructureHighlighted10,StructureImage11,StructureLabel11,StructureHighlighted11,
+				  StructureImage12,StructureLabel12,StructureHighlighted12,StructureImage13,StructureLabel13,StructureHighlighted13
+				  };
+
+	controlsBackground[] = {};
+
+	onKeyDown = "menuKey = KeyName (_this select 1)";
+	onKeyUp = "menuKey = """"";
+	onLoad = "_this Exec ""Client\GUI\GUI_Construction.sqs""; BI_construction_NVG = false";
+	onUnload = "BI_construction_NVG = nil;";
+
+	class InfoBackground:GuiImage
+	{
+		idc = -1;
+		x=-10.00;
+		y=-00.00;
+		w=+30.00;
+		h=+00.05;
+		text = "\ca\ui\data\marker_brush_horizontal_ca.paa";
+		colorText[] = {color1RGB,0.9};
+		colorBackground[]={0,0,0,0};
+	};
+		
+	class StructureBackground:GuiImage
+	{
+		x = -10;
+		y = 0.89;
+		w = 30;
+		h = 0.11;
+		colorText[] = {color1RGB,0.9};
+		colorBackground[]={0,0,0,0};
+		text = "\ca\ui\data\ui_gradient_title_gs.paa";
+	};
+
+	class warfarelogo: GUIImageAspectRatio
+	{
+		x = -0.154-0.08;
+		y = -0.077;
+		w = 0.8;
+		h = 0.2;
+		text = "\Warfare\Images\warfare_logo_grn.paa";
+		colorText[] = {1,1,1,1.2};
+	};
+	class xExitButton: GUIActiveText
+	{
+		IDC = 220117;
+		style = 48 + 0x800;
+		x = 0.960;
+		y = 0.85;
+		w = 0.035;
+		h = 0.05;
+		text = "\Warfare\Images\button_x.paa";
+		color[] = {color2RGB, 0.7};
+		colorActive[] = {0.72,0.48,0.24,1.0};
+		SizeEx = 0.030000;
+		action = "CloseDialog 0;menuExit = true";
+	};
+	class InfoMouseStop:GuiButton
+	{
+		x = 0.0;
+		y = 0.0;
+		w = 1.0;
+		h = 0.08;
+		
+		colorBackground[] = {0,0,0,0};
+		colorBackgroundActive[] = {0,0,0,0};
+		colorBackgroundDisabled[] = {0,0,0,0};
+		colorFocused[] = {0,0,0,0};
+		colorShadow[] = {0,0,0,0};
+		colorBorder[] = {0,0,0,0};
+
+		onMouseMoving = "mouseFocus = false";
+	};
+
+	class InfoLabel:GuiLargeText
+	{
+		idc = IDCMENUTITLE;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.025;
+		x = 0.325;
+		y = 0.001;
+		w = 0.35;
+		h = 0.04;
+		colorText[] = {1.0,1.0,1.0,1};
+
+		text = $STRWFCONSTRUCTION;
+	};
+
+	class InfoLabel1:GuiLargeText
+	{
+		idc = IDCMENUINFO;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.025;
+		x = 0.325;
+		y = 0.025;
+		w = 0.35;
+		h = 0.08;
+		colorText[] = {1.0,1.0,1.0,1};
+
+		text = $STRWFCONSTRUCTIONINSTRUCTIONS;
+	};
+
+	class MouseArea:GUIButton
+	{
+		idc = IDCMENUIMAGE;
+		colorBackground[] = {0,0,0,0};
+		colorBackgroundActive[] = {0,0,0,0};
+		colorBackgroundDisabled[] = {0,0,0,0};
+		colorFocused[] = {0,0,0,0};
+		colorShadow[] = {0,0,0,0};
+		colorBorder[] = {0,0,0,0};
+
+		x = 0.0;
+		y = 0.05;
+		w = 1.0;
+		h = 0.8;
+
+		onMouseMoving = "mouseFocus = true;mouseX = (_this Select 1) / 1 - 0.5;mouseY = (_this Select 2) / 0.8 - 0.5;mousePos = _this";
+		onMouseButtonDown = "mouseButtonDown = _this Select 1";
+		onMouseButtonUp = "mouseButtonUp = _this Select 1";
+		onMouseZChanged = "mouseButtonWheel = _this Select 1";
+	};
+
+	class FirstPersonToggle:GUICheckBox
+	{
+		idc = IDCMENUCHECKBOX;
+		//sizeEx = 0.025;
+		color[] = {1,1,1,1};
+		x = 0.0;
+		y = 0.85;
+		w = 0.19;
+		h = 0.035;
+		action = "";
+	};
+
+	class Toolbar:GuiImage
+	{
+		x = 0.0;
+		y = 0.85;
+		w = 1.0;
+		h = 0.04;
+		
+		text = "\ca\ui\data\ui_gradient_title_gs.paa";
+		colorText[] = {0.72,0.48,0.24,1.0};
+	};
+
+	class ToolbarMouseStop:GuiButton
+	{
+		x = 0.0;
+		y = 0.85;
+		w = 0.75;
+		h = 0.04;
+
+		colorBackground[] = {0,0,0,0};
+		colorBackgroundActive[] = {0,0,0,0};
+		colorBackgroundDisabled[] = {0,0,0,0};
+		colorFocused[] = {0,0,0,0};
+		colorShadow[] = {0,0,0,0};
+		colorBorder[] = {0,0,0,0};
+
+		onMouseMoving = "mouseFocus = false";
+	};
+
+	class ToolbarLabel:GuiLargeText
+	{
+		idc = IDCMENULIST;
+		x = 0.1;
+		y = 0.85;
+		w = 0.4;
+		h = 0.04;
+	};
+
+	class ToolbarLabel1:GuiLargeText
+	{
+		idc = IDCMENULIST1;
+		x = 0.5;
+		y = 0.85;
+		w = 0.4;
+		h = 0.04;
+	};
+
+	class StructureDivider:GuiLargeText
+	{
+		x = 0.4975;
+		y = 0.89;
+		w = 0.005;
+		h = 0.11;
+
+		colorBackground[] = {0.5,0.5,0.5,0.5};
+	};
+
+	class StructureImage:GUIClickableText
+	{
+		idc = IDCGENERICIMAGE;
+		style = GUIIMAGEASPECTRATIO;
+		y = 0.895;
+		w = 0.08;
+		h = 0.08;
+		text = "";
+	};
+	class StructureHighlighted:StructureImage
+	{
+		idc = IDCUNDEFINED;
+		text = "\Ca\UI\Data\clear_empty.paa";
+		onMouseEnter =	"(_this select 0) CtrlSetText """";";
+		onMouseExit =	"(_this select 0) CtrlSetText """";";
+		onMouseMoving = "mouseFocus = false";
+	};
+
+	class StructureLabel:GuiText
+	{
+		style = GUICENTER;
+		y = 0.965;
+		w = 0.08;
+		h = 0.04;
+	};
+
+	class StructureImage0:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE;
+		x = 0.0;
+		action = "menuBuy = 0";
+	};
+
+	class StructureLabel0:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL;
+		x = 0.0;
+	};
+
+	class StructureHighlighted0:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON;
+		x = 0.0;
+	};
+
+	class StructureImage1:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 1;
+		x = 0.071 * 1;
+		action = "menuBuy = 1";
+	};
+
+	class StructureLabel1:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 1;
+		x = 0.071 * 1;
+	};
+
+	class StructureHighlighted1:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 1;
+		x = 0.071 * 1;
+	};
+
+	class StructureImage2:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 2;
+		x = 0.071 * 2;
+		action = "menuBuy = 2";
+	};
+
+	class StructureLabel2:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 2;
+		x = 0.071 * 2;
+	};
+
+	class StructureHighlighted2:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 2;
+		x = 0.071 * 2;
+	};
+
+	class StructureImage3:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 3;
+		x = 0.071 * 3;
+		action = "menuBuy = 3";
+	};
+
+	class StructureLabel3:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 3;
+		x = 0.071 * 3;
+	};
+
+	class StructureHighlighted3:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 3;
+		x = 0.071 * 3;
+	};
+
+	class StructureImage4:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 4;
+		x = 0.071 * 4;
+		action = "menuBuy = 4";
+	};
+
+	class StructureLabel4:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 4;
+		x = 0.071 * 4;
+	};
+
+	class StructureHighlighted4:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 4;
+		x = 0.071 * 4;
+	};
+
+	class StructureImage5:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 5;
+		x = 0.071 * 5;
+		action = "menuBuy = 5";
+	};
+
+	class StructureLabel5:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 5;
+		x = 0.071 * 5;
+	};
+
+	class StructureHighlighted5:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 5;
+		x = 0.071 * 5;
+	};
+
+	class StructureImage6:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 6;
+		x = 0.071 * 6;
+		action = "menuBuy = 6";
+	};
+
+	class StructureLabel6:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 6;
+		x = 0.071 * 6;
+	};
+
+	class StructureHighlighted6:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 6;
+		x = 0.071 * 6;
+	};
+
+	class StructureImage7:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 7;
+		x = 0.071 * 7;
+		action = "menuBuy = 7";
+	};
+
+	class StructureLabel7:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 7;
+		x = 0.071 * 7;
+	};
+
+	class StructureHighlighted7:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 7;
+		x = 0.071 * 7;
+	};
+
+	class StructureImage8:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 8;
+		x = 0.071 * 8;
+		action = "menuBuy = 8";
+	};
+
+	class StructureLabel8:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 8;
+		x = 0.071 * 8;
+	};
+
+	class StructureHighlighted8:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 8;
+		x = 0.071 * 8;
+	};
+
+	class StructureImage9:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 9;
+		x = 0.071 * 9;
+		action = "menuBuy = 9";
+	};
+
+	class StructureLabel9:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 9;
+		x = 0.071 * 9;
+	};
+
+	class StructureHighlighted9:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 9;
+		x = 0.071 * 9;
+	};
+
+	class StructureImage10:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 10;
+		x = 0.071 * 10;
+		action = "menuBuy = 10";
+	};
+
+	class StructureLabel10:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 10;
+		x = 0.071 * 10;
+	};
+
+	class StructureHighlighted10:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 10;
+		x = 0.071 * 10;
+	};
+
+	class StructureImage11:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 11;
+		x = 0.071 * 11;
+		action = "menuBuy = 11";
+	};
+
+	class StructureLabel11:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 11;
+		x = 0.071 * 11;
+	};
+
+	class StructureHighlighted11:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 11;
+		x = 0.071 * 11;
+	};
+
+	class StructureImage12:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 12;
+		x = 0.071 * 12;
+		action = "menuBuy = 12";
+	};
+
+	class StructureLabel12:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 12;
+		x = 0.071 * 12;
+	};
+
+	class StructureHighlighted12:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 12;
+		x = 0.071 * 12;
+	};
+
+	class StructureImage13:StructureImage
+	{
+		idc = IDCCONSTRUCTIONIMAGE + 13;
+		x = 0.071 * 13;
+		action = "menuBuy = 13";
+	};
+
+	class StructureLabel13:StructureLabel
+	{
+		idc = IDCCONSTRUCTIONLABEL + 13;
+		x = 0.071 * 13;
+	};
+
+	class StructureHighlighted13:StructureHighlighted
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 13;
+		x = 0.071 * 13;
+	};
+
+	class MessageBar:GUIText
+	{
+		style = GUICENTER;
+		idc = IDCMENUSTATUSLABEL;
+		x = 0.2;
+		y = 0.81;
+		w = 0.6;
+		h = 0.04;
+		sizeEx = 0.035;
+		colorText[] = {0.8,0,0,1};
+		colorBackground[] = {0,0,0,0};
+	};
+
+	class HelpPanel:GUIListBox
+	{
+		idc = IDCMENULIST2;
+		x = 0.25;
+		y = 0.1;
+		w = 0.5;
+		h = 0.6;
+
+		colorText[] = {0.8,0.8,0.8,1};
+		colorBackground[] = {0,0,0,0};
+	};
+	class HelpPanelBackground:GUIText
+	{
+		idc = IDCMENUBUTTON;
+		x = 0.225;
+		y = 0.075;
+		w = 0.55;
+		h = 0.75;
+
+		colorBackground[] = {0.3,0.3,0.3,0.9};
+	};
+	class HelpPanelClose:GUIButton
+	{
+		idc = IDCMENUBUTTON1;
+
+		x = 0.4;
+		y = 0.75;
+		w = 0.2;
+		h = 0.04;
+
+		action = "menuExit = true";
+		text = "Close";
+	};
+
+	class ExitButton:GuiButton
+	{
+		x = 0.8;
+		y = 0.85;
+		w = 0.2;
+		h = 0.04;
+
+		offsetX = 0;
+		offsetY = 0;
+		offsetPressedX = 0;
+		offsetPressedY = 0;
+
+		colorText[] = {0.75,0.75,0.75,1};
+		colorBackground[] = {0,0,0,0.15};
+		colorBackgroundActive[] = {0.5,0.5,0.5,0.15};
+		colorFocused[] = {0.35,0.35,0.35,0.25};
+		colorShadow[] = {0.1,0.1,0.1,0};
+
+		action = "CloseDialog 0;menuExit = true";
+		text = $STRWFEXIT;
+		onMouseMoving = "mouseFocus = false";
+	};
+	class HelpButton:ExitButton
+	{
+		x = 0.75;
+		y = 0.85;
+		w = 0.05;
+		h = 0.04;
+		sizeEx = 0.04;
+		action = "menuHelp = true";
+		text = "?";
+		onMouseMoving = "mouseFocus = false";
+	};
+	class NVGButton:ExitButton
+	{
+		x = 0.68;
+		y = 0.85;
+		w = 0.07;
+		h = 0.04;
+		sizeEx = 0.03;
+		action = "if (BI_construction_NVG) then {camUseNVG false; BI_construction_NVG = false} else {camUseNVG true; BI_construction_NVG = true;};";
+		text = "NVG";
+		onMouseMoving = "mouseFocus = false";
+	};
+};
+
+//*****************************************************************************************
+//TOWN CAPTURE PROGRESS INDICATOR & USE BUILDING INDICATOR
+//*****************************************************************************************
+class RscTitles
+{
+//Mando Hitching
+#include "mando_hitch\mando_hitch_titles.h"
+
+	titles[] = {WF_Splash,CampCaptureProgress,TownCaptureProgress,EndOfGameStats,UseObject};
+
+	//--- Karel 03/03/2008
+	class WF_Splash
+	{
+		idd = -1;
+		movingEnable = true;
+		duration = 5;
+		fadein = 0;
+		name = "Warfare Splash";
+		class controls
+		{
+			class BackgroundWindow:GuiText
+			{
+				colorBackground[] = {0,0,0,1};
+				text = "";
+				x = -1;
+				y = 0;
+				w = 3;
+				h = 1;
+			};
+			class InfoBackground:GuiImage
+			{
+				idc = -1;
+				x=-1.0;
+				y=+0.375;
+				w=+3.0;
+				h=+0.24;
+				text = "\ca\ui\data\marker_brush_horizontal_ca.paa";
+				colorText[] = {1,1,1,0.1};
+				colorBackground[]={0,0,0,0};
+			};
+			class warfarelogo: GUIImageAspectRatio
+			{
+				x = 0.1;
+				y = 0.2;
+				w = 0.8;
+				h = 0.5;
+				text = "\Warfare\Images\warfare_logo_brown.paa";
+				colorText[] = {1,1,1,1};
+			};
+			class cti: GUIText
+			{
+				style = GUICENTER;
+				x = 0.0;
+				y = 0.45;
+				w = 1.0;
+				h = 0.2;
+				sizeEx = 0.06;
+				text = "$STRWFSPLASH";
+				colorText[] = {1,1,1,1};
+			};
+
+
+			class copyright: GUIText
+			{
+				style = GUICENTER;
+				x = 0.0;
+				y = 0.95;
+				w = 1.0;
+				h = 0.02;
+				sizeEx = 0.025;
+				text = "$STRWFCOPYRIGHT";
+				colorText[] = {1,1,1,0.5};
+			};
+		};
+	};
+
+	class UseObject:DefaultMenu
+	{
+		duration = 15000;
+		name = "UseObject";
+
+		onLoad = "_this Exec ""Client\GUI\GUI_SetCurrentCutDisplay.sqs""";
+		onUnload = "_this Exec ""Client\GUI\GUI_ClearCurrentCutDisplay.sqs""";
+
+		controls[] = {ObjectKeyLabel,UsableObjectIcon1,UsableObjectIcon2,UsableObjectIcon3,UsableObjectIcon4,UsableObjectIcon5};
+		controlsBackground[] = {UseObjectBackground};
+
+		class UseObjectBackground:BackgroundWindow
+		{
+			idc = IDCMENUIMAGE;
+			x = 0.93;
+			y = 0.595;
+			w = 0.07;
+			h = 0.03;
+
+			colorBackground[] = {0.4,0.4,0.4,1.0};
+		};
+
+		class ObjectKeyLabel:GuiLargeText
+		{
+			idc = IDCMENUINFO;
+			style = GUICENTER;
+			sizeEx = 0.022;
+			x = 0.935;
+			y = 0.6;
+			w = 0.06;
+			h = 0.02;
+			colorText[] = {1.0,1.0,1.0,1};
+			text = "";
+		};
+		class UsableObjectIcon1:GUIImageAspectRatio
+		{
+			IDC = IDCGENERICIMAGE;
+			x = 0.93;
+			y = 0.54;
+			w = 0.07;
+			h = 0.06;
+			colortext[] = {1,1,1,0.4};
+			text = "";
+		};
+		class UsableObjectIcon2:UsableObjectIcon1
+		{
+			IDC = IDCGENERICIMAGE + 1;
+			y = 0.54-(0.06*1);
+		};
+		class UsableObjectIcon3:UsableObjectIcon1
+		{
+			IDC = IDCGENERICIMAGE + 2;
+			y = 0.54-(0.06*2);
+		};
+		class UsableObjectIcon4:UsableObjectIcon1
+		{
+			IDC = IDCGENERICIMAGE + 3;
+			y = 0.54-(0.06*3);
+		};
+		class UsableObjectIcon5:UsableObjectIcon1
+		{
+			IDC = IDCGENERICIMAGE + 4;
+			y = 0.54-(0.06*4);
+		};
+	};
+
+	class CampCaptureProgress:DefaultMenu
+	{
+		duration = 15000;
+		name = "CampCaptureProgress";
+
+		onLoad = "_this Exec ""Client\GUI\GUI_SetCurrentCutDisplay.sqs""";
+		onUnload = "_this Exec ""Client\GUI\GUI_ClearCurrentCutDisplay.sqs""";
+
+		controls[] = {ProgressBar,InfoLabel};
+		controlsBackground[] = {ProgressBarBackground};
+
+		class ProgressBarBackground:BackgroundWindow
+		{
+			idc = IDCGENERICLABEL;
+			x = 0.3;
+			y = 0.01;
+			w = 0.4;
+			h = 0.06;
+
+			colorBackground[] = {0.4,0.4,0.4,1.0};
+		};
+
+		class ProgressBar:BackgroundWindow
+		{
+			idc = IDCGENERICTEXT;
+			x = 0.31;
+			y = 0.02;
+			w = 0.38;
+			h = 0.04;
+
+			colorBackground[] = {0.9,0.0,0.0,1.0};
+		};
+
+		class InfoLabel:GuiLargeText
+		{
+			idc = IDCMENUTITLE;
+			style = GUICENTER;
+			font = "Bitstream";
+			sizeEx = 0.03;
+			x = 0.32;
+			y = 0.02;
+			w = 0.36;
+			h = 0.04;
+			colorText[] = {1.0,1.0,1.0,1};
+			text = $STRWFCAPTURINGCAMP;
+		};
+	};
+
+	class TownCaptureProgress:DefaultMenu
+	{
+		duration = 15000;
+		name = "TownCaptureProgress";
+
+		onLoad = "_this Exec ""Client\GUI\GUI_SetCurrentCutDisplay.sqs""";    
+		onUnload = "_this Exec ""Client\GUI\GUI_ClearCurrentCutDisplay.sqs""";    
+
+		controls[] = {ProgressBar,InfoLabel};
+		controlsBackground[] = {ProgressBarBackground};
+
+		class ProgressBarBackground:BackgroundWindow
+		{
+			idc = IDCGENERICLABEL;
+			x = 0.3;
+			y = 0.01;
+			w = 0.4;
+			h = 0.06;
+
+			colorBackground[] = {0.4,0.4,0.4,1.0};
+		};
+
+		class ProgressBar:BackgroundWindow
+		{
+			idc = IDCGENERICTEXT;
+			x = 0.31;
+			y = 0.02;
+			w = 0.38;
+			h = 0.04;
+
+			colorBackground[] = {0.0,0.8,0.0,1.0};
+		};
+
+		class InfoLabel:GuiLargeText
+		{
+			idc = IDCGENERICTEXT + 1;
+			style = GUICENTER;
+			font = "Bitstream";
+			sizeEx = 0.03;
+			x = 0.32;
+			y = 0.02;
+			w = 0.36;
+			h = 0.04;
+			colorText[] = {1.0,1.0,1.0,1};
+			text = $STRWFCAPTURINGTOWN;
+		};
+	};
+
+	class EndOfGameStats:DefaultMenu
+	{
+		duration = 30000;
+		name = "EndOfGameStats";
+
+		onLoad = "_this Exec ""Client\GUI\GUI_SetCurrentTitleDisplay.sqs""";    
+		onUnload = "_this Exec ""Client\GUI\GUI_ClearCurrentTitleDisplay.sqs""";    
+
+		controls[] = {SideWinsText,EastImage,WestImage,SoldiersRecruitedLabel,SoldiersLostLabel,VehiclesCreatedLabel,VehiclesLostLabel,
+					  EastSoldiersRecruitedCount,EastSoldiersRecruitedBar,WestSoldiersRecruitedCount,WestSoldiersRecruitedBar,
+					  EastSoldiersLostCount,EastSoldiersLostBar,WestSoldiersLostCount,WestSoldiersLostBar,
+					  EastVehiclesCreatedCount,EastVehiclesCreatedBar,WestVehiclesCreatedCount,WestVehiclesCreatedBar,
+					  EastVehiclesLostCount,EastVehiclesLostBar,WestVehiclesLostCount,WestVehiclesLostBar};
+
+		//--- Karel 30/02/2008
+		controlsBackground[] = {MainBackground};
+
+		class MainBackground:GuiImage
+		{
+			color[] = {0,0,0,1};
+			colorText[] = color1;
+			text = "\ca\ui\data\ui_gradient_start_gs.paa";
+			x = -10;
+			y = 0;
+			w = 30;
+			h = 1;
+		};
+
+
+		class SideWinsText:GuiLargeText
+		{
+			idc = IDCMENUINFO;
+			style = GUICENTER;
+			font = "Bitstream";
+			sizeEx = 0.05;
+			x = 0.3;
+			y = 0.1;
+			w = 0.3;
+			h = 0.08;
+			colorText[] = {1.0,1.0,1.0,1};
+		};
+
+		class EastImage:GUIImageAspectRatio
+		{
+			x = 0.1;
+			y = 0.05;
+			w = 0.2;
+			h = 0.2;
+			text = "\ca\misc\data\sever_vlajka.paa";
+		};
+		class WestImage:EastImage
+		{
+			x = 0.6;
+			text = "\ca\misc\data\usa_vlajka.pac";
+		};
+
+		class SoldiersRecruitedLabel:GuiLargeText
+		{
+			style = GUICENTER;
+			font = "Bitstream";
+			sizeEx = 0.03;
+			x = 0.05;
+			y = 0.25;
+			w = 0.9;
+			h = 0.04;
+			colorText[] = {1.0,1.0,1.0,1};
+			text = $STRWFSOLDIERSRECRUITED;
+		};
+
+		class SoldiersRecruitedCountBase:GuiLargeText
+		{
+			idc = IDCEAST;
+			style = GUILEFT;
+			font = "Bitstream";
+			sizeEx = 0.06;
+			x = 0.05;
+			y = 0.3;
+			w = 0.2;
+			h = 0.1;
+			colorText[] = {1.0,1.0,1.0,1};
+		};
+
+		class EastSoldiersRecruitedCount:SoldiersRecruitedCountBase
+		{
+			idc = IDCEAST;
+		};
+
+		class EastSoldiersRecruitedBar:BackgroundWindow
+		{
+			idc = IDCEAST + 1;
+			x = 0.05;
+			y = 0.31;
+			w = 0.4;
+			h = 0.08;
+
+			colorBackground[] = {0.0,0.9,0.0,1.0};
+		};
+
+		class WestSoldiersRecruitedCount:SoldiersRecruitedCountBase
+		{
+			idc = IDCWEST;
+			x = 0.55;
+		};
+
+		class WestSoldiersRecruitedBar:EastSoldiersRecruitedBar
+		{
+			idc = IDCWEST + 1;
+			x = 0.55;
+		};
+
+		class SoldiersLostLabel:SoldiersRecruitedLabel
+		{
+			y = 0.4;
+			text = $STRWFSOLDIERSLOST;
+		};
+
+		class EastSoldiersLostCount:SoldiersRecruitedCountBase
+		{
+			idc = IDCEAST + 2;
+			y = 0.45;
+		};
+
+		class EastSoldiersLostBar:EastSoldiersRecruitedBar
+		{
+			idc = IDCEAST + 3;
+			y = 0.46;
+			colorBackground[] = {0.9,0.0,0.0,1.0};
+		};
+
+		class WestSoldiersLostCount:SoldiersRecruitedCountBase
+		{
+			idc = IDCWEST + 2;
+			y = 0.45;
+			x = 0.55;
+		};
+
+		class WestSoldiersLostBar:EastSoldiersLostBar
+		{
+			idc = IDCWEST + 3;
+			x = 0.55;
+		};
+
+		class VehiclesCreatedLabel:SoldiersRecruitedLabel
+		{
+			y = 0.55;
+			text = $STRWFVEHICLESBUILT;
+		};
+
+		class EastVehiclesCreatedCount:SoldiersRecruitedCountBase
+		{
+			idc = IDCEAST + 4;
+			y = 0.6;
+		};
+
+		class EastVehiclesCreatedBar:EastSoldiersRecruitedBar
+		{
+			idc = IDCEAST + 5;
+			y = 0.61;
+			colorBackground[] = {0.0,0.9,0.0,1.0};
+		};
+
+		class WestVehiclesCreatedCount:SoldiersRecruitedCountBase
+		{
+			idc = IDCWEST + 4;
+			x = 0.55;
+			y = 0.6;
+		};
+
+		class WestVehiclesCreatedBar:EastVehiclesCreatedBar
+		{
+			idc = IDCWEST + 5;
+			x = 0.55;
+		};
+
+		class VehiclesLostLabel:SoldiersRecruitedLabel
+		{
+			y = 0.7;
+			text = $STRWFVEHICLESLOST;
+		};
+
+		class EastVehiclesLostCount:SoldiersRecruitedCountBase
+		{
+			idc = IDCEAST + 6;
+			y = 0.75;
+		};
+
+		class EastVehiclesLostBar:EastSoldiersRecruitedBar
+		{
+			idc = IDCEAST + 7;
+			y = 0.76;
+			colorBackground[] = {0.9,0.0,0.0,1.0};
+		};
+
+		class WestVehiclesLostCount:SoldiersRecruitedCountBase
+		{
+			idc = IDCWEST + 6;
+			x = 0.55;
+			y = 0.75;
+		};
+
+		class WestVehiclesLostBar:EastVehiclesLostBar
+		{
+			idc = IDCWEST + 7;
+			x = 0.55;
+		};
+	};
+};
+
+//*****************************************************************************************
+//COMMAND INTERFACE
+//*****************************************************************************************
+
+class CommandMenu:DefaultMenu
+{
+	controls[] = {InfoBackground,InfoLabel,CommandLabel,MapArea,TeamTypeLabel,TeamTypeList,TeamsToolbar,TeamsLabel,
+				  TeamButton1,TeamButton2,TeamButton3,TeamButton4,TeamButton5,TeamButton6,TeamButton7,TeamButton8,
+				  TeamButton9,TeamButton10,TeamButton11,TeamButton12,TeamButton13,TeamButton14,TeamButton15,TeamButton16,
+				  CommandsBackground,CommandsToolbarLabel,
+				  CommandButton1,CommandButton2,CommandButton3,CommandButton4,CommandButton5,CommandButton6,
+				  ExitButton};
+
+	controlsBackground[] = {};
+
+	onLoad = "_this Exec ""Client\GUI\GUI_Command.sqs""";
+
+	class InfoBackground:GuiImage
+	{
+		x = 0.0;
+		y = 0.0;
+		w = 1.0;
+		h = 0.5;
+		
+		text = "\ca\ui\data\ui_gradient_middle_gs.paa";
+	};
+
+	class InfoLabel:GuiLargeText
+	{
+		idc = IDCMENUTITLE;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.025;
+		x = 0.2;
+		y = 0.001;
+		w = 0.35;
+		h = 0.04;
+		colorText[] = {1.0,1.0,1.0,1};
+
+		text = "";
+	};
+
+	class CommandLabel:GuiText
+	{
+		idc = IDCMENUINFO;
+		style = GUICENTER;
+		font = "Bitstream";
+		x = 0.0;
+		y = 0.001;
+		w = 0.3;
+		h = 0.04;
+		colorText[] = {1.0,0.0,0.0,1};
+
+		text = "";
+	};
+
+	class TeamTypeLabel:GuiText
+	{
+		style = GUICENTER;
+		font = "Bitstream";
+		x = 0.45;
+		y = 0.001;
+		w = 0.2;
+		h = 0.04;
+		colorText[] = {1.0,1.0,1.0,1};
+
+		text = $STRWFTYPE;
+	};
+
+	class TeamTypeList:GuiComboBox
+	{
+		idc = IDCMENULIST;
+		x = 0.6;
+		y = 0.001;
+		w = 0.2;
+	};
+
+	class TeamsToolbar:GuiImage
+	{
+		x = 0.0;
+		y = 0.845;
+		w = 1.0;
+		h = 0.055;
+		
+		text = "\ca\ui\data\ui_gradient_title_gs.paa";
+	};
+
+	class TeamsLabel:GuiText
+	{
+		style = GUIRIGHT;
+		font = "Bitstream";
+		x = 0.0;
+		y = 0.855;
+		w = 0.067;
+		h = 0.04;
+		colorText[] = {1.0,1.0,1.0,1};
+
+		text = $STRWFAITEAM;
+	};
+
+	class TeamButton:GuiButton
+	{
+		y = 0.855;
+		w = 0.045;
+		h = 0.04;
+
+		offsetX = 0;
+		offsetY = 0;
+		offsetPressedX = 0;
+		offsetPressedY = 0;
+
+		colorText[] = {0.75,0.75,0.75,1};
+		colorBackground[] = {0.3,0.3,0.3,0.4};
+		colorBackgroundActive[] = {0.75,0.75,0.75,0.4};
+		colorFocused[] = {0.35,0.35,0.35,0.8};
+		colorShadow[] = {0,0,0,0};
+	};
+
+	class TeamButton1:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON;
+
+		x = 0.06;
+		text = "1";
+		action = "menuTeam = 1";
+	};
+
+	class TeamButton2:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 1;
+
+		x = 0.11;
+		text = "2";
+		action = "menuTeam = 2";
+	};
+
+	class TeamButton3:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 2;
+
+		x = 0.16;
+		text = "3";
+		action = "menuTeam = 3";
+	};
+
+	class TeamButton4:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 3;
+
+		x = 0.21;
+		text = "4";
+		action = "menuTeam = 4";
+	};
+
+	class TeamButton5:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 4;
+
+		x = 0.26;
+		text = "5";
+		action = "menuTeam = 5";
+	};
+
+	class TeamButton6:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 5;
+
+		x = 0.31;
+		text = "6";
+		action = "menuTeam = 6";
+	};
+
+	class TeamButton7:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 6;
+
+		x = 0.36;
+		text = "7";
+		action = "menuTeam = 7";
+	};
+
+	class TeamButton8:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 7;
+
+		x = 0.41;
+		text = "8";
+		action = "menuTeam = 8";
+	};
+
+	class TeamButton9:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 8;
+
+		x = 0.46;
+		text = "9";
+		action = "menuTeam = 9";
+	};
+
+	class TeamButton10:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 9;
+
+		x = 0.51;
+		text = "10";
+		action = "menuTeam = 10";
+	};
+
+	class TeamButton11:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 10;
+
+		x = 0.56;
+		text = "11";
+		action = "menuTeam = 11";
+	};
+
+	class TeamButton12:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 11;
+
+		x = 0.61;
+		text = "12";
+		action = "menuTeam = 12";
+	};
+
+	class TeamButton13:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 12;
+
+		x = 0.66;
+		text = "13";
+		action = "menuTeam = 13";
+	};
+
+	class TeamButton14:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 13;
+
+		x = 0.71;
+		text = "14";
+		action = "menuTeam = 14";
+	};
+
+	class TeamButton15:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 14;
+
+		x = 0.76;
+		text = "15";
+		action = "menuTeam = 15";
+	};
+
+	class TeamButton16:TeamButton
+	{
+		idc = IDCCONSTRUCTIONBUTTON + 15;
+
+		x = 0.81;
+		text = "16";
+		action = "menuTeam = 16";
+	};
+
+	class CommandsBackground:GUIText
+	{
+		x = 0.0;
+		y = 0.9;
+		w = 1.0;
+		h = 0.1;
+
+		colorBackground[] = {0,0,0,1};
+	};
+
+	class CommandsToolbarLabel:GuiLargeText
+	{
+		idc = IDCMENULIST;
+		x = 0.1;
+		y = 0.85;
+		w = 0.9;
+		h = 0.04;
+	};
+
+	class CommandButton:GuiButton
+	{
+		y = 0.91;
+		w = 0.145;
+		h = 0.05;
+
+		colorBackground[] = {0.2,0.2,0.2,1};
+		colorBackgroundActive[] = {0.3,0.3,0.3,1};
+		colorFocused[] = {0.4,0.4,0.4,1};
+		colorShadow[] = {0.1,0.1,0.1,1};
+		colorBorder[] = {0.7,0.7,0.7,0.5};
+	};
+
+	class CommandButton1:CommandButton
+	{
+		x = 0.025;
+		text = $STRWFMOVE;
+		action = "menuCommand = MISMOVETODESTINATION";
+	};
+
+	class CommandButton2:CommandButton
+	{
+		x = 0.186;
+		//text = $STRWFASSAULT;
+		//action = "menuCommand = MISASSAULT";
+		text = $STRWFNA;
+		action = "menuCommand = MISCAPTURELOCATIONS";
+	};
+
+	class CommandButton3:CommandButton
+	{
+		x = 0.347;
+		text = $STRWFCAPTURETOWN;
+		action = "menuCommand = MISCAPTURELOCATIONS";
+	};
+
+	class CommandButton4:CommandButton
+	{
+		x = 0.508;
+		text = $STRWFDEFENDBASE;
+		action = "menuCommand = MISDEFENDBASE";
+	};
+
+	class CommandButton5:CommandButton
+	{
+		x = 0.669;
+		//text = $STRWFDEFENDLOCATIONS;
+		//action = "menuCommand = MISDEFENDLOCATIONS";
+		text = $STRWFNA;
+		action = "menuCommand = MISCAPTURELOCATIONS";
+	};
+
+	class CommandButton6:CommandButton
+	{
+		x = 0.83;
+		text = $STRWFPATROL;
+		action = "menuCommand = MISPATROL";
+	};
+
+	class ExitButton:TeamButton
+	{
+		x = 0.935;
+		y = 0.855;
+		w = 0.06;
+		text = $STRWFEXIT;
+		action = "CloseDialog 0;menuExit = true";
+	};
+
+	class MapArea:GUIImage
+	{
+		type = GUIMAP;
+		idc = IDCMENUIMAGE;
+
+		colorBackground[] = {0.8,0.8,0.8,1};
+		colorText[] = {0, 0, 0, 1};
+
+		colorSea[] = {0.56, 0.8, 0.98, 0.5};
+		colorForest[] = {0.6, 0.8, 0.2, 0.5};
+		colorRocks[] = {0.5, 0.5, 0.5, 0.5};
+		colorCountlines[] = {0.65, 0.45, 0.27, 0.5};
+		colorMainCountlines[] = {0.65, 0.45, 0.27, 1};
+		colorCountlinesWater[] = {0, 0.53, 1, 0.5};
+		colorMainCountlinesWater[] = {0, 0.53, 1, 1};
+		colorForestBorder[] = {0.4, 0.8, 0, 1};
+		colorRocksBorder[] = {0.5, 0.5, 0.5, 1};
+		colorPowerLines[] = {0, 0, 0, 1};
+		colorNames[] = {0, 0, 0, 1};
+		colorInactive[] = {1, 1, 1, 0.5};
+		colorLevels[] = {0, 0, 0, 1};
+		fontLabel = "TahomaB";
+		sizeExLabel = 0.04;
+		fontGrid = "TahomaB";
+		sizeExGrid = 0.04;
+		fontUnits = "TahomaB";
+		sizeExUnits = 0.04;
+		fontNames = "TahomaB";
+		sizeExNames = 0.04;
+		fontInfo = "TahomaB";
+		sizeExInfo = 0.04;
+		fontLevel = "TahomaB";
+		sizeExLevel = 0.04;
+		text = "#(argb,8,8,3)color(1,1,1,1)";
+		stickX[] = {0.2, {"Gamma", 1, 1.5}};
+		stickY[] = {0.2, {"Gamma", 1, 1.5}};
+		ptsPerSquareSea = 6;
+		ptsPerSquareTxt = 8;
+		ptsPerSquareCLn = 8;
+		ptsPerSquareExp = 8;
+		ptsPerSquareCost = 8;
+		ptsPerSquareFor = "4.0f";
+		ptsPerSquareForEdge = "10.0f";
+		ptsPerSquareRoad = 2;
+		ptsPerSquareObj = 10;
+		showCountourInterval = "true";
+
+		x = 0.0;
+		y = 0.05;
+		w = 1.0;
+		h = 0.8;
+
+		onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)";
+		onMouseButtonDown = "mouseButtonDown = _this Select 1";
+		onMouseButtonUp = "mouseButtonUp = _this Select 1";
+	
+		class Bunker
+		{
+			icon = "\ca\ui\data\map_bunker_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 14;
+			importance = 1.5 * 14 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Bush
+		{
+			icon = "\ca\ui\data\map_bush_ca.paa";
+			color[] = {0.55, 0.64, 0.43, 1};
+			size = 14;
+			importance = 0.2 * 14 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class BusStop
+		{
+			icon = "\ca\ui\data\map_busstop_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 10;
+			importance = 1 * 10 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Command
+		{
+			icon = "#(argb,8,8,3)color(1,1,1,1)";
+			color[] = {0, 0.9, 0, 1};
+			size = 18;
+			importance = 1;
+			coefMin = 1;
+			coefMax = 1;
+		};
+		
+		class Cross
+		{
+			icon = "\ca\ui\data\map_cross_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 0.7 * 16 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Fortress
+		{
+			icon = "\ca\ui\data\map_bunker_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Fuelstation
+		{
+			icon = "#(argb,8,8,3)color(0,0,0,1)";
+			color[] = {0, 0, 0, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.75;
+			coefMax = 4;
+		};
+		
+		class Fountain
+		{
+			icon = "\ca\ui\data\map_fountain_ca.paa";
+			color[] = {0, 0.35, 0.7, 1};
+			size = 12;
+			importance = 1 * 12 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Hospital
+		{
+			icon = "\ca\ui\data\map_hospital_ca.paa";
+			color[] = {0.78, 0, 0.05, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		
+		class Chapel
+		{
+			icon = "\ca\ui\data\map_chapel_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 1 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Church
+		{
+			icon = "\ca\ui\data\map_church_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Lighthouse
+		{
+			icon = "\ca\ui\data\map_lighthouse_ca.paa";
+			color[] = {0.78, 0, 0.05, 1};
+			size = 20;
+			importance = 3 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Quay
+		{
+			icon = "\ca\ui\data\map_quay_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		
+		class Rock
+		{
+			icon = "\ca\ui\data\map_rock_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 12;
+			importance = 0.5 * 12 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Ruin
+		{
+			icon = "\ca\ui\data\map_ruin_ca.paa";
+			color[] = {0.78, 0, 0.05, 1};
+			size = 16;
+			importance = 1.2 * 16 * 0.05;
+			coefMin = 1;
+			coefMax = 4;
+		};
+		
+		class SmallTree
+		{
+			icon = "\ca\ui\data\map_smalltree_ca.paa";
+			color[] = {0.55, 0.64, 0.43, 1};
+			size = 12;
+			importance = 0.6 * 12 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Stack
+		{
+			icon = "\ca\ui\data\map_stack_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 20;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Tree
+		{
+			icon = "\ca\ui\data\map_tree_ca.paa";
+			color[] = {0.55, 0.64, 0.43, 1};
+			size = 12;
+			importance = 0.9 * 16 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Tourism {
+			icon = "\ca\ui\data\map_tourism_ca.paa";
+			color[] = {0.78, 0, 0.05, 1};
+			size = 16;
+			importance = 1 * 16 * 0.05;
+			coefMin = 0.7;
+			coefMax = 4;
+		};
+
+		class Transmitter
+		{
+			icon = "\ca\ui\data\map_transmitter_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 20;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class ViewTower
+		{
+			icon = "\ca\ui\data\map_viewtower_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 2.5 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		
+		class Watertower
+		{
+			icon = "\ca\ui\data\map_watertower_ca.paa";
+			color[] = {0, 0.35, 0.7, 1};
+			size = 32;
+			importance = 1.2 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Waypoint
+		{
+			icon = "\ca\ui\data\map_waypoint_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 14;
+			importance = 2.5 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		
+		class WaypointCompleted
+		{
+			icon = "\ca\ui\data\map_waypoint_completed_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 14;
+			importance = 2.5 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		class ActiveMarker
+		{
+			icon = "";
+			color[] = {0, 0, 1, 1};
+			size = 14;
+			importance = 2.5 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+	};
+};
+
+//*****************************************************************************************
+//BASE OF ALL MENUS
+//*****************************************************************************************
+//Keyword: xbase
+class OptionsBaseMenu:CommandMenu
+{
+	idd = 220100;
+
+	onKeyDown = "if ((_this select 1) In ActionKeys ""TeamSwitch"") then {menuExit = true}";
+
+	controlsBackground[] = {MainBackground,HeadBackgroundBorder,HeadBackground,MenuBackgroundBorder,MenuBackground,MenuBackgroundStatusbar};
+	controls[] = {tab_empty1,tab_empty2,tab_empty3,tab_empty4,tab_empty5,
+		tab_mission,tab_team,tab_gear,tab_voteforcommander,warfarelogo,playername,playerrank,playerrankimage,infofunds,
+				  infoteam,infomission,infomissions,infotowns,button_construction,button_close,MessageBar
+	};
+
+	//Background
+	class MainBackground:GuiText
+	{
+		IDC = 220100;
+		colorBackground[] = {0.82,1.00,0.82,0};
+		text = "";
+		x = -10;
+		y = 0;
+		w = 30;
+		h = 1;
+	};
+
+	class HeadBackgroundBorder:GuiText
+	{
+		colorBackground[] = color2;
+		text = "";
+		x = 0.1-0.001;
+		y = 0.05-0.001;
+		w = 0.8+0.002;
+		h = 0.09+0.003;
+	};
+	class HeadBackground:GuiImage
+	{
+		colorBackground[] = color1;
+		colorText[] = color1;
+		text = "\ca\ui\data\ui_gradient_reverse_gs.paa";
+		x = 0.1;
+		y = 0.05;
+		w = 0.8;
+		h = 0.09;
+	};
+
+	class MenuBackgroundBorder:GuiText
+	{
+		colorBackground[] = color2;
+		text = "";
+		x = 0.1-0.001;
+		y = 0.2;
+		w = 0.8+0.002;
+		h = 0.75+0.002;
+	};
+	class MenuBackground:GuiImage
+	{
+		colorBackground[] = color1;
+		colorText[] = color1;
+		text = "\Warfare\Images\ui_gradient_cti.paa";
+		x = 0.1;
+		y = 0.2;
+		w = 0.8;
+		h = 0.7;
+	};
+	class xMenuBackground:GuiText
+	{
+		colorBackground[] = color1;
+		text = "";
+		x = 0.1;
+		y = 0.2;
+		w = 0.8;
+		h = 0.7;
+	};
+	class MenuBackgroundStatusbar:GuiImage
+	{
+		colorBackground[] = color1;
+		colorText[] = color1;
+		text = "\ca\ui\data\ui_gradient_title_gs.paa";
+		x = 0.1;
+		y = 0.901;
+		w = 0.8;
+		h = 0.049;
+	};
+
+	//--- Tabs
+	class tab_empty1: GUIImage
+	{
+		idc=-1;
+		style = 48;
+		x = 0.1+(0*0.16125);
+		y = 0.15;
+		w = 0.1575;
+		h = 0.05;
+		colortext[] = {1,1,1,0.5};
+		text = "\Warfare\Images\tab_empty.paa";
+	};
+	class tab_empty2: tab_empty1
+	{
+		x = 0.1+(1*0.16125);
+	};
+	class tab_empty3: tab_empty1
+	{
+		x = 0.1+(2*0.16125);
+	};
+	class tab_empty4: tab_empty1
+	{
+		x = 0.1+(3*0.16125);
+	};
+	class tab_empty5: tab_empty1
+	{
+		x = 0.1+(4*0.16125) - 0.001;
+	};
+
+	class tab_mission: GUItab
+	{
+		IDC = 220101;
+		text = "\Warfare\Images\tab_mission.paa";
+		x = 0.1+(0*0.16125);
+
+		//--- Active tab
+  		onMouseEnter =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_mission_a.paa"";";
+ 		onMouseExit =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_mission.paa"";";
+		onSetFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_mission_a.paa"";";
+		onKillFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_mission.paa"";";
+
+		action = "menuButton = 53";
+	};
+	class tab_team: GUItab
+	{
+		IDC = 220102;
+		text = "\Warfare\Images\tab_team.paa";
+		x = 0.1+(1*0.16125);
+  		onMouseEnter =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_team_a.paa"";";
+ 		onMouseExit =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_team.paa"";";
+		onSetFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_team_a.paa"";";
+		onKillFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_team.paa"";";
+		action = "menuButton = 52";
+	};
+	class tab_gear: GUItab
+	{
+		IDC = 220103;
+		text = "\Warfare\Images\tab_gear.paa";
+  		onMouseEnter =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_gear_a.paa"";";
+ 		onMouseExit =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_gear.paa"";";
+		onSetFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_gear_a.paa"";";
+		onKillFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_gear.paa"";";
+		x = 0.1+(2*0.16125);
+		action = "menuButton = 54";
+	};
+	class tab_help: GUItab
+	{
+		IDC = 220104;
+		text = "Client\Images\tab_com_c.paa";
+  		onMouseEnter =	"(_this select 0) ctrlSetText ""Client\Images\tab_com_c_a.paa"";";
+ 		onMouseExit =	"(_this select 0) ctrlSetText ""Client\Images\tab_com_c.paa"";";
+		onSetFocus =	"(_this select 0) ctrlSetText ""Client\Images\tab_com_c_a.paa"";";
+		onKillFocus =	"(_this select 0) ctrlSetText ""Client\Images\tab_com_c.paa"";";
+		x = 0.1+(3*0.16125);
+		action = "menuButton = 1";
+	};
+	class tab_voteforcommander:GUItab
+	{
+		IDC = 220105;
+		text = "\Warfare\Images\tab_vote.paa";
+		x = 0.1+(4*0.16125)- 0.001;
+
+		onMouseEnter =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_vote_a.paa"";";
+		onMouseExit =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_vote.paa"";";
+		onSetFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_vote_a.paa"";";
+		onKillFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_vote.paa"";";
+		action = "menuButton = 11";
+	};
+
+	class warfarelogo: GUIImageAspectRatio
+	{
+		x = -0.154;
+		y = -0.075;
+		w = 0.8;
+		h = 0.2;
+		text = "\Warfare\Images\warfare_logo_grn.paa";
+		colorText[] = {1,1,1,1.2};
+	};
+
+	class copyright: GUIText
+	{
+		style = GUIRIGHT;
+		x = 0.608;
+		y = 0.029;
+		w = 0.3;
+		h = 0.02;
+		sizeEx = 0.025;
+		text = "$STRWF_COPYRIGHT";
+		colorText[] = {0,0,0,0.8};
+	};
+	class playername: GUIText
+	{
+		IDC = 220111;
+		x = 0.22;
+		y = 0.06;
+		w = 0.195;
+		h = 0.04;
+		sizeEx = 0.05;
+		text = "<Name>";
+		colorText[] = {0.82,1.00,0.82,1.0};
+	};
+	class playerrank: GUIText
+	{
+		IDC = 220112;
+		style = GUIRIGHT;
+		x = 0.125;
+		y = 0.078;
+		w = 0.1;
+		h = 0.02;
+		sizeEx = 0.025;
+		text = "<Rank>";
+		colorText[] = {0.82,1.00,0.82,1.0};
+	};
+	class playerrankimage: GUIImageAspectRatio
+	{
+		IDC = 220113;
+		x = 0.105;
+		y = 0.06;
+		w = 0.04;
+		h = 0.04;
+		text = "\Warfare\Images\rank_CORPORAL.paa";
+	};
+	class infofunds: GUIStructuredText
+	{
+		IDC = 220114;
+		x = 0.1;
+		y = 0.11;
+		w = 0.3;
+		h = 0.025;
+		size=0.03;
+	};
+	class infotowns: GUIStructuredText
+	{
+		IDC = 220120;
+		x = 0.38;
+		y = 0.075;
+		w = 0.25;
+		h = 0.025;
+		size=0.03;
+	};
+	class infoteam: GUIStructuredText
+	{
+		IDC = 220115;
+		x = 0.39;
+		y = 0.11;
+		w = 0.3;
+		h = 0.025;
+		size=0.03;
+	};
+	class infomissions: GUIStructuredText
+	{
+		IDC = 220121;
+		x = 0.5;
+		y = 0.11;
+		w = 0.35;
+		h = 0.025;
+		size=0.03;
+	};
+	class infomission: GUIStructuredText
+	{
+		IDC = 220116;
+		x = 0.5;
+		y = 0.075;
+		w = 0.35;
+		h = 0.025;
+		size=0.03;
+	};
+	class button_construction: GUIActiveText
+	{
+		IDC = 220118;
+		style = 48 + 0x800;
+		x = 0.78;
+		y = 0.057;
+		w = 0.075;
+		h = 0.075;
+		text = "\Warfare\Images\button_const.paa";
+		color[] = {color2RGB, 0.8};
+		colorActive[] = {0.72,0.48,0.24,1.0};
+		SizeEx = 0.03;
+		action = "menuButton = 55";
+	};
+	class button_close: button_construction
+	{
+		IDC = 220119;
+		x = 0.860;
+		w = 0.035;
+		h = 0.05;
+		text = "\Warfare\Images\button_x.paa";
+		action = "CloseDialog 0;menuExit = true";
+	};
+	class MessageBar:GUIText
+	{
+		idc = IDCERRORMESSAGE;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.05;
+		x = 0.0875;
+		y = 0.9;
+		w = 0.825;
+		h = 0.05;
+		colorBackground[] = {0.5,0.5,0.5,0.0};
+		colorText[] = {1.0,1.0,1.0,1};
+	};
+};
+
+//*****************************************************************************************
+// MISSION MENU
+//*****************************************************************************************
+class MissionMap: OptionsBaseMenu
+{
+	idd = 220100;
+	controlsBackground[] = {MainBackground,HeadBackgroundBorder,HeadBackground,MenuBackgroundBorder,MenuBackground,MenuBackgroundStatusbar};
+	controls[] = {MissionMapArea,tab_empty1,tab_empty2,tab_empty3,tab_empty4,tab_empty5,
+				  tab_mission_selected,tab_team,tab_gear,tab_help,tab_voteforcommander,warfarelogo,playername,playerrank,playerrankimage,infofunds,
+				  infoteam,infomission,infomissions,infotowns,button_construction,button_close,MessageBar,
+				  sidebar_mission,sidebar_missionlist,MissionBriefing,ButtonPreviewAcceptMission,ButtonAbortMission,ButtonCancelMission,YesNoPrompt,YesButton,
+				  NoButton,sidebar_waypoint,ButtonAddWaypoints,ButtonClearWaypoints,sidebar_support,ButtonSetSupport,ButtonSetSupportRadius,
+				  ButtonAcceptSupport,ButtonCommandTeams,SelectedTeamLabel,SelectedTeamTypeLabel,TeamTypeList,TeamList,
+				  ButtonMove,ButtonCaptureTowns,ButtonDefendBase,ButtonPatrol,ButtonRespawn,button_plus,button_minus,button_class,button_support,
+				  ButtonTeleport
+	};
+
+	onLoad = "_this Exec ""Client\GUI\GUI_UpdateMissionMap.sqs""";
+
+	//--- Tabs
+	class tab_mission_selected: tab_mission
+	{
+		//IDC = 220102;
+		text = "\Warfare\Images\tab_mission_s.paa";
+  		onMouseEnter =	"";
+ 		onMouseExit =	"";
+		onSetFocus =	"";
+		onKillFocus =	"";
+	};
+
+	class MissionMapArea:MapArea
+	{
+		x = 0.1+0.015;
+		y = 0.2+0.02;
+		w = 0.55-0.03;
+		h = 0.7-0.04;
+	};
+
+	//--- Mission
+	class sidebar_mission: GUIText
+	{
+		IDC = 221001;
+		style = 2;
+		x = 0.65;
+		y = 0.22;
+		w = 0.24;
+		h = 0.024;
+		sizeEx = 0.027;
+		text = "$STRWFMISSION";
+		colorText[] = color1;
+		colorBackground[] = color2;
+	};
+	class sidebar_missionlist: GUIListBox
+	{
+		IDC = 221002;
+		x = 0.65;
+		y = 0.25;
+		w = 0.24;
+		h = 0.2;
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+		onLBDblClick = "menuMissionClicked = true";
+	};
+
+	//*******************
+	//Mike - 2/7/8		*
+	//*******************
+	class MissionBriefing: GUIListBox
+	{
+		IDC = 221003;
+		x = 0.65;
+		y = 0.25;
+		w = 0.24;
+		h = 0.5;
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+		rowHeight = 0.027;
+		sizeEx = 0.02;
+	};
+	class ButtonPreviewAcceptMission: GUIButtonLightGreen
+	{
+		IDC = 221004;
+		style = GUICENTER;
+		x = 0.65;
+		y = 0.418+0.047;
+		w = 0.24;
+		h = 0.035;
+		text = "PREVIEW";
+		action = "menuButton = 2";
+	};
+	class ButtonCancelMission: GUIButtonLightRed
+	{
+		IDC = 221005;
+		style = GUICENTER;
+		x = 0.65;
+		y = 0.848;
+		w = 0.24;
+		h = 0.035;
+		text = "CANCEL";
+		action = "menuButton = 100";
+	};
+	class ButtonAbortMission:GUIButtonLightRed
+	{
+		IDC = 221030;
+		style = GUICENTER;
+		x = 0.65;
+		y = 0.51;
+		w = 0.24;
+		h = 0.035;
+		text = "ABORT MISSION";
+		action = "menuButton = 101";
+	};
+
+	class YesNoPrompt:GUIText
+	{
+		idc = IDCGENERICLABEL + 25;
+		style = GUIRIGHT;
+		font = "Bitstream";
+		sizeEx = 0.05;
+		x = 0.0875;
+		y = 0.9;
+		w = 0.6;
+		h = 0.05;
+		colorBackground[] = {0.5,0.5,0.5,0.0};
+		colorText[] = {1.0,1.0,1.0,1};
+	};
+
+	class YesButton:GUIButtonLightGreen
+	{
+		idc = IDCGENERICBUTTON + 25;
+		x = 0.69;
+		y = 0.905;
+		w = 0.1;
+		h = 0.04;
+
+		text = $STRWFYES;
+		action = "menuYes = true";
+	};
+
+	class NoButton:GUIButtonLightRed
+	{
+		idc = IDCGENERICBUTTON + 26;
+		x = 0.8;
+		y = 0.905;
+		w = 0.1;
+		h = 0.04;
+
+		text = $STRWFNO;
+		action = "menuNo = true";
+	};
+
+	class sidebar_waypoint: GUIText
+	{
+		IDC = 221006;
+		style = 2;
+		x = 0.65;
+		y = 0.557;
+		w = 0.24;
+		h = 0.024;
+		sizeEx = 0.027;
+		text = "$STRWFWAYPOINTS";
+		colorText[] = color1;
+		colorBackground[] = color2;
+	};
+
+	class ButtonAddWaypoints:GUIButtonLightGreen
+	{
+		IDC = 221007;
+		x = 0.65;
+		y = 0.59;
+		w = 0.115;
+		h = 0.035;
+		text = $STRWFADD;
+		action = "menuButton = 4";
+	};
+
+	class ButtonClearWaypoints:GUIButtonLightRed
+	{
+		IDC = 221008;
+		x = 0.655+0.12;
+		//y = 0.58;
+		y = 0.59;
+		w = 0.115;
+		h = 0.035;
+		text = $STRWFCLEAR;
+		action = "menuButton = 10";
+	};
+
+	class sidebar_support: GUIText
+	{
+		IDC = 221009;
+		style = 2;
+		x = 0.65;
+		y = 0.64;
+		w = 0.24;
+		h = 0.024;
+		sizeEx = 0.027;
+		text = "FIRE SUPPORT";
+		colorText[] = color1;
+		colorBackground[] = color2;
+	};
+	class ButtonSetSupport:GUIButtonLightGreen
+	{
+		IDC = 221010;
+		x = 0.65;
+		y = 0.673;
+		w = 0.1;
+		h = 0.04;
+		text = $STRWFSET;
+		action = "menuButton = 12";
+	};
+	class ButtonSetSupportRadius:GUISlider
+	{
+		IDC = 221011;
+		x = 0.76;
+		y = 0.673;
+		w = 0.13;
+		h = 0.04;
+	};
+	class ButtonAcceptSupport:GUIButtonLightGreen
+	{
+		IDC = 221012;
+		style = GUICENTER;
+		x = 0.65;
+		y = 0.723;
+		w = 0.24;
+		h = 0.035;
+		text = "Request Fire Mission";
+		action = "menuButton = 13";
+	};
+
+	class ButtonCommandTeams:GUIButtonLightGreen
+	{
+		IDC = 221013;
+		style = GUICENTER;
+		x = 0.65;
+		y = 0.773;
+		w = 0.24;
+		h = 0.05;
+		text = "Command Teams";
+		action = "menuButton = 14";
+	};
+
+	class SelectedTeamLabel:GUIText
+	{
+		IDC = 221014;
+		x = 0.65;
+		y = 0.22;
+		w = 0.24;
+		h = 0.035;
+
+		colorText[] = color1;
+		colorBackground[] = color2;
+	};
+
+	class SelectedTeamTypeLabel:GUIText
+	{
+		IDC = 221015;
+		x = 0.65;
+		y = 0.27;
+		w = 0.06;
+		h = 0.035;
+
+		text = "Type:";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+
+	class TeamTypeList:GuiComboBox
+	{
+		IDC = 221016;
+		x = 0.71;
+		y = 0.27;
+		w = 0.12;
+		h = 0.035;
+		sizeEx = 0.02;
+		rowHeight = 0.02;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+	};
+
+	class TeamList:GuiListBox
+	{
+		IDC = 221017;
+		x = 0.84;
+		y = 0.27;
+		w = 0.05;
+		h = 0.56;
+
+		sizeEx = 0.035;
+		rowHeight = 0.035;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+	};
+
+	class ButtonMove:GUIButtonLightGreen
+	{
+		IDC = 221018;
+		x = 0.65;
+		y = 0.32;
+		w = 0.18;
+		h = 0.035;
+		text = $STRWFMOVE;
+		action = "menuButton = 15";
+	};
+
+	class ButtonCaptureTowns:ButtonMove
+	{
+		IDC = 221019;
+		y = 0.37;
+		text = $STRWFCAPTURETOWNS;
+		action = "menuButton = 16";
+	};
+
+	class ButtonDefendBase:ButtonMove
+	{
+		IDC = 221020;
+		y = 0.42;
+		text = $STRWFDEFENDBASE;
+		action = "menuButton = 17";
+	};
+
+	class ButtonPatrol:ButtonMove
+	{
+		IDC = 221021;
+		y = 0.47;
+		text = $STRWFPATROL;
+		action = "menuButton = 18";
+	};
+
+	class ButtonRespawn:ButtonMove
+	{
+		IDC = 221022;
+		y = 0.52;
+		text = "Respawn";
+		action = "menuButton = 19";
+	};
+	
+	class button_plus:GUIButtonLightGreen
+	{
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.05;
+		text = "+";
+		action = "menuButton = 601";
+		x = 0.115625+0.04;
+		y = 0.903;
+		w = 0.03;
+		h = 0.04;
+	};
+	
+	class button_minus:GUIButtonLightGreen
+	{
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.05;
+		text = "-";
+		action = "menuButton = 602";
+		x = 0.115625;
+		y = 0.903;
+		w = 0.03;
+		h = 0.04;
+	};
+	
+	class button_class:GUIButtonLightRed
+	{
+		IDC = 15263;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.05;
+		text = "C";
+		action = "menuButton = 603";
+		x = 0.115625+0.08;
+		y = 0.903;
+		w = 0.03;
+		h = 0.04;
+	};
+	class button_support:GUIButtonLightRed
+	{
+		IDC = 15264;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.05;
+		text = "S";
+		action = "menuButton = 604";
+		x = 0.115625+0.12;
+		y = 0.903;
+		w = 0.03;
+		h = 0.04;
+	};
+
+	//*******************
+	//End Mike - 2/7/8	*
+	//*******************
+
+	class ButtonTeleport: GUIButtonLightGreen
+	{
+		idc = IDCGENERICBUTTON + 10;
+		style = GUICENTER;
+		x = 0.65;
+		y = 0.845;
+		w = 0.24;
+		h = 0.035;
+		//sizeEx = 0.035;
+		text = " FAST TRAVEL >>>";
+		//text = $STRWFFASTTRAVEL;
+		action = "menuButton = 3";
+	};
+};
+
+//*****************************************************************************************
+//TEAM MENU
+//*****************************************************************************************
+//Keyword: xteam
+class TeamMenu:OptionsBaseMenu
+{
+	idd = 220100;
+	controlsBackground[] = {MainBackground,HeadBackgroundBorder,HeadBackground,MenuBackgroundBorder,MenuBackground,MenuBackgroundStatusbar};
+	controls[] = {tab_empty1,tab_empty2,tab_empty3,tab_empty4,tab_empty5,
+				tab_mission,tab_team_selected,tab_gear,tab_help,tab_voteforcommander,warfarelogo,playername,playerrank,playerrankimage,infofunds,
+				  infoteam,infomission,infomissions,infotowns,button_construction,button_close,MessageBar,
+				  BarracksButton,BarracksImage,LightButton,LightImage,HeavyButton,HeavyImage,AircraftButton,AircraftImage,
+				  DepotButton,DepotImage,AirportButton,AirportImage,UnitList,BuyImage,BuyButton,BuyEmptyButton,DisbandButton,UnflipButton,
+				  TransferButton,TransferSlider,TransferAmountLabel,TransferTeamSelection,QueueLabel,TeamStatusLabel,QueueList,
+				  QueueButton,TeamStatusButton
+				 };
+
+	onLoad = "_this Exec ""Client\GUI\GUI_UpdateTeamMenu.sqs""";
+
+	//--- Tabs
+	class tab_team_selected:tab_team
+	{
+		IDC = 220102;
+		text = "\Warfare\Images\tab_team_s.paa";
+  		onMouseEnter =	"";
+ 		onMouseExit =	"";
+		onSetFocus =	"";
+		onKillFocus =	"";
+	};
+
+	//--- Karel 02/29/2008
+	class BarracksButton: GUIActiveText
+	{
+		idc = IDCGENERICBUTTON + 0;
+		style = 48 + 0x800;
+		x = 0.116;
+		y = 0.285417;
+		w = 0.055;
+		h = 0.079167;
+		text = "\Warfare\Images\icon_barracks.paa";
+		color[] = color2;
+		colorActive[] = {0.72,0.48,0.24,1.0};
+		action = "menuFactoryType = 0";
+	};
+	class LightButton: BarracksButton
+	{
+		idc = IDCGENERICBUTTON + 1;
+		x = 0.116 + .058 * 1;
+		text = "\Warfare\Images\icon_light.paa";
+		action = "menuFactoryType = 1";
+	};
+	class HeavyButton: BarracksButton
+	{
+		idc = IDCGENERICBUTTON + 2;
+		x = 0.116 + .058 * 2;
+		text = "\Warfare\Images\icon_heavy.paa";
+		action = "menuFactoryType = 2";
+	};
+	class AircraftButton: BarracksButton
+	{
+		idc = IDCGENERICBUTTON + 3;
+		x = 0.116 + .058 * 3;
+		text = "\Warfare\Images\icon_aircraft.paa";
+		action = "menuFactoryType = 3";
+	};
+	class AirportButton: BarracksButton
+	{
+		idc = IDCGENERICBUTTON + 4;
+		x = 0.116 + .058 * 4;
+		text = "\Warfare\Images\icon_airport.paa";
+		action = "menuFactoryType = 4";
+	};
+	class DepotButton: BarracksButton
+	{
+		idc = IDCGENERICBUTTON + 5;
+		x = 0.116 + .058 * 5;
+		text = "\Warfare\Images\icon_service_station.paa";
+		action = "menuFactoryType = 5";
+	};
+
+	class BarracksImage:GUIImageAspectRatio
+	{
+		x = 0.116;
+		y = 0.285417;
+		w = 0.055;
+		h = 0.079167;
+		colorText[] = {1,1,1,0.15};
+		text = "\Warfare\Images\icon_barracks.paa";
+	};
+	class LightImage:BarracksImage
+	{
+		x = 0.116 + .058 * 1;
+		text = "\Warfare\Images\icon_light.paa";
+	};
+	class HeavyImage:BarracksImage
+	{
+		x = 0.116 + .058 * 2;
+		text = "\Warfare\Images\icon_heavy.paa";
+	};
+	class AircraftImage:BarracksImage
+	{
+		x = 0.116 + .058 * 3;
+		text = "\Warfare\Images\icon_aircraft.paa";
+	};
+	class AirportImage:BarracksImage
+	{
+		x = 0.116 + .058 * 4;
+		text = "\Warfare\Images\icon_airport.paa";
+	};
+	class DepotImage:BarracksImage
+	{
+		x = 0.116 + .058 * 5;
+		text = "\Warfare\Images\icon_service_station.paa";
+	};
+
+	class UnitList:GUIListBox
+	{
+		idc = IDCGENERICLIST;
+		x = 0.115625;
+		y = 0.364583;
+		w = 0.343750;
+		h = 0.450000;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+
+		onLBDblClick = "menuListClicked = true";
+	};
+	class BuyImage:GUIImageAspectRatio
+	{
+		idc = IDCGENERICBUTTON + 10;
+		x = 0.256250;
+		y = 0.814583;
+		w = 0.062500;
+		h = 0.083333;
+	};
+	class BuyButton:GUIButtonLightGreen
+	{
+		idc = IDCGENERICBUTTON + 11;
+		x = 0.115625;
+		y = 0.831250;
+		w = 0.125000;
+		h = 0.052083;
+		text = "Buy";
+		action = "menuButton = 2";
+	};
+	class BuyEmptyButton:GUIButtonLightGreen
+	{
+		idc = IDCGENERICBUTTON + 12;
+		x = 0.334375;
+		y = 0.831250;
+		w = 0.125000;
+		h = 0.052083;
+		text = "Buy Empty";
+		action = "menuButton = 3";
+	};
+	class TransferButton:GUIButtonLightGreen
+	{
+		x = 0.115625;
+		y = 0.220833;
+		w = 0.114063;
+		h = 0.058333;
+		text = "Transfer";
+		action = "menuButton = 4";
+	};
+	class TransferSlider:GUISlider
+	{
+		idc = IDCMENUSLIDER;
+		x = 0.256250;
+		y = 0.220833;
+		w = 0.234375;
+		h = 0.058333;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+	};
+	class TransferAmountLabel:GUILargeText
+	{
+		style = GUIRIGHT;
+		idc = IDCGENERICLABEL;
+		x = 0.504688;
+		y = 0.220833;
+		w = 0.146875;
+		h = 0.058333;
+
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class TransferTeamSelection:GuiComboBox
+	{
+		idc = IDCGENERICLIST + 1;
+		x = 0.664063;
+		y = 0.220833;
+		w = 0.218750;
+		h = 0.058333;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+	};
+	class QueueLabel:GUILargeText
+	{
+		idc = IDCGENERICLABEL + 1;
+		style = GUICENTER;
+		x = 0.482813;
+		y = 0.304167;
+		w = 0.2;
+		h = 0.052083;
+		text = "Build Queue";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class TeamStatusLabel:GUILargeText
+	{
+		idc = IDCGENERICLABEL + 2;
+		style = GUICENTER;
+		x = 0.68;
+		y = 0.304167;
+		w = 0.2;
+		h = 0.052083;
+		text = "Team Status";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class QueueButton:GUIButtonLightGreen
+	{
+		idc = IDCGENERICBUTTON + 13;
+		x = 0.482813;
+		y = 0.304167;
+		w = 0.2;
+		h = 0.052083;
+		text = "Build Queue";
+		type = GUIBUTTON;
+		style = GUICENTER;
+		colorText[] = {0.82,1.0,0.82,1.0};
+		action = "menuTeam = false;CtrlShow [IDCGENERICBUTTON + 13,false];CtrlShow [IDCGENERICBUTTON + 14,true];CtrlShow [IDCGENERICBUTTON + 15,false];CtrlShow [IDCGENERICBUTTON + 16,false];";
+	};
+	class TeamStatusButton:GUIButtonLightGreen
+	{
+		idc = IDCGENERICBUTTON + 14;
+		x = 0.68;
+		y = 0.304167;
+		w = 0.2;
+		h = 0.052083;
+		text = "Team Status";
+		style = GUICENTER;
+		colorText[] = {0.82,1.0,0.82,1.0};
+		action = "menuTeam = true;CtrlShow [IDCGENERICBUTTON + 14,false];CtrlShow [IDCGENERICBUTTON + 13,true];CtrlShow [IDCGENERICBUTTON + 15,true];CtrlShow [IDCGENERICBUTTON + 16,true];";
+	};
+
+	class QueueList:GUIListBox
+	{
+		idc = IDCGENERICLIST + 2;
+
+		x = 0.482813;
+		y = 0.364583;
+		w = 0.400000;
+		h = 0.252500;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+	};
+	class DisbandButton:GUIButtonLightRed
+	{
+		idc = IDCGENERICBUTTON + 15;
+		x = 0.482813;
+		y = 0.63125;
+		w = 0.1875;
+		h = 0.052083;
+		text = "Disband Selected";
+		action = "menuButton = 5";
+	};
+	class UnflipButton:GUIButtonLightRed
+	{
+		idc = IDCGENERICBUTTON + 16;
+		x = 0.695313;
+		y = 0.63125;
+		w = 0.1875;
+		h = 0.052083;
+		text = "Unflip Vehicles";
+		action = "menuButton = 6";
+	};
+};
+
+//*****************************************************************************************
+//GEAR MENU
+//*****************************************************************************************
+
+class GearMenu:OptionsBaseMenu
+{
+	idd = 220100;
+	controlsBackground[] =
+	{
+		MainBackground,HeadBackgroundBorder,HeadBackground,MenuBackgroundBorder,MenuBackground
+	};
+	controls[] = {tab_empty1,tab_empty2,tab_empty3,tab_empty4,tab_empty5,
+				tab_mission,tab_team,tab_gear_selected,tab_help,tab_voteforcommander,warfarelogo,playername,playerrank,playerrankimage,infofunds,
+				infoteam,infomission,infomissions,infotowns,button_construction,button_close,MessageBar,
+				TemplateLabel,TemplateList,WeaponsLabel,PrimaryList,SecondaryList,SidearmList,MiscList,AmmoLabel,AmmoList,AISelection,
+				MainHighlighted,Main,SecondaryHighlighted,Secondary,SidearmHighlighted,Sidearm,
+				InventoryHighlighted1,InventoryHighlighted2,InventoryHighlighted3,InventoryHighlighted4,
+				InventoryHighlighted5,InventoryHighlighted6,InventoryHighlighted7,InventoryHighlighted8,
+				InventoryHighlighted9,InventoryHighlighted10,InventoryHighlighted11,InventoryHighlighted12,
+				InventoryButton1,InventoryButton2,InventoryButton3,InventoryButton4,InventoryButton5,InventoryButton6,
+				InventoryButton7,InventoryButton8,InventoryButton9,InventoryButton10,InventoryButton11,InventoryButton12,
+				SidearmInventoryHighlighted1,SidearmInventoryHighlighted2,SidearmInventoryHighlighted3,
+				SidearmInventoryHighlighted4,SidearmInventoryHighlighted5,SidearmInventoryHighlighted6,
+				SidearmInventoryHighlighted7,SidearmInventoryHighlighted8,
+				SidearmInventoryButton1,SidearmInventoryButton2,SidearmInventoryButton3,SidearmInventoryButton4,
+				SidearmInventoryButton5,SidearmInventoryButton6,SidearmInventoryButton7,SidearmInventoryButton8,
+				CurrentLabel,Current1Label,UpgradeLabel,Upgrade1Label,CostLabel,Cost1Label,UpgradeButton,ResetButton				
+	};
+
+	onLoad = "_this Exec ""Client\GUI\GUI_UpdateGearMenu.sqs""";
+
+	class MenuBackground:GuiImage
+	{
+		colorBackground[] = color1;
+		colorText[] = color1;
+		text = "\Warfare\Images\ui_gradient_cti.paa";
+		x = 0.1;
+		y = 0.2;
+		w = 0.8;
+		h = 0.75;
+	};
+
+	class tab_gear_selected: tab_gear
+	{
+		x = 0.1+(2*0.16125);
+		text = "\Warfare\Images\tab_gear.paa";
+		onMouseEnter =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_gear_s.paa"";";
+		onMouseExit =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_gear_s.paa"";";
+		onSetFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_gear_s.paa"";";
+		onKillFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_gear_s.paa"";";
+		action = "";
+	};
+
+	class TemplateLabel:GUILargeText
+	{
+		x = 0.115625;
+		y = 0.21;
+		w = 0.25;
+		h = 0.04;
+		text = "Complete Loadouts";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class TemplateList:GUIListBox
+	{
+		idc = IDCGENERICLIST;
+		x = 0.115625;
+		y = 0.25;
+		w = 0.25;
+		h = 0.32;
+
+		sizeEx = 0.02;
+		rowHeight = 0.02;
+		onLBDblClick = "menuTemplateListClicked = true";
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+	};
+	class AmmoLabel:GUILargeText
+	{
+		x = 0.115625;
+		y = 0.575;
+		w = 0.25;
+		h = 0.04;
+		text = "Ammo";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class AmmoList:TemplateList
+	{
+		idc = IDCGENERICLIST + 5;
+		y = 0.615;
+		w = 0.25;
+		h = 0.31;
+		onLBDblClick = "menuAmmoListClicked = true";
+	};
+	
+	class AISelection:GuiComboBox
+	{
+		idc = 1987;
+		x = 0.635;
+		y = 0.220833;
+		w = 0.25;
+		h = 0.058333;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		onLBSelChanged = "unitIndex = 1";
+	};
+	
+	class WeaponsLabel:GUILargeText
+	{
+		x = 0.635;
+		y = 0.28;
+		w = 0.25;
+		h = 0.04;
+		text = "Weapons";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class PrimaryList:TemplateList
+	{
+		idc = IDCGENERICLIST + 1;
+		x = 0.635;
+		y = 0.32;
+		w = 0.25;
+		h = 0.25;
+		onLBDblClick = "menuPrimaryListClicked = true";
+	};
+	class SecondaryList:TemplateList
+	{
+		idc = IDCGENERICLIST + 2;
+		x = 0.635;
+		y = 0.575;
+		w = 0.25;
+		h = 0.1;
+		onLBDblClick = "menuSecondaryListClicked = true";
+	};
+	class SidearmList:TemplateList
+	{
+		idc = IDCGENERICLIST + 3;
+		x = 0.635;
+		y = 0.68;
+		w = 0.25;
+		h = 0.05;
+		onLBDblClick = "menuSidearmListClicked = true";
+	};
+	class MiscList:TemplateList
+	{
+		idc = IDCGENERICLIST + 4;
+		x = 0.635;
+		y = 0.735;
+		w = 0.25;
+		h = 0.19;
+		onLBDblClick = "menuMiscListClicked = true";
+	};
+	class Main:GUIClickableText
+	{
+		idc = IDCGENERICIMAGE;
+		style = GUIIMAGEASPECTRATIO;
+		x = 0.381250;
+		y = 0.350000;
+		w = 0.232813;
+		h = 0.095833;
+		text = "\Ca\UI\Data\ui_gear_gun_gs.paa";
+		action = "menuButton = 100";
+	};
+	class MainHighlighted:Main
+	{
+		idc = IDCUNDEFINED;
+		text = "\Ca\UI\Data\clear_empty.paa";
+		onMouseEnter =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\ui_gear_gun_gs.paa"";";
+		onMouseExit =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\clear_empty.paa"";";
+	};
+	class Secondary:GUIClickableText
+	{
+		idc = IDCGENERICIMAGE + 1;
+		style = GUIIMAGEASPECTRATIO;
+		x = 0.381250;
+		y = 0.454167;
+		w = 0.232813;
+		h = 0.095833;
+		text = "\Ca\UI\Data\ui_gear_sec_gs.paa";
+		colorFocused[] = {0.35,0.35,0.35,1};
+		action = "menuButton = 101";
+	};
+	class SecondaryHighlighted:Secondary
+	{
+		idc = IDCUNDEFINED;
+		text = "\Ca\UI\Data\clear_empty.paa";
+		onMouseEnter =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\ui_gear_sec_gs.paa"";";
+		onMouseExit =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\clear_empty.paa"";";
+	};
+	class InventoryButton1:GUIClickableText
+	{
+		idc = IDCGENERICIMAGE + 3;
+		style = GUIIMAGEASPECTRATIO;
+		x = 0.381250;
+		y = 0.558333;
+		w = 0.037500;
+		h = 0.050000;
+		text = "\Ca\UI\Data\ui_gear_mag_gs.paa";
+		colorFocused[] = {0.35,0.35,0.35,1};
+		action = "menuButton = 104";
+	};
+	class InventoryHighlighted1:InventoryButton1
+	{
+		idc = IDCUNDEFINED;
+		text = "\Ca\UI\Data\clear_empty.paa";
+		onMouseEnter =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\ui_gear_mag_gs.paa"";";
+		onMouseExit =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\clear_empty.paa"";";
+	};
+	class InventoryButton2:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 4;
+		x = 0.420313;
+		y = 0.558333;
+		action = "menuButton = 105";
+	};
+	class InventoryHighlighted2:InventoryHighlighted1
+	{
+		x = 0.420313;
+		y = 0.558333;
+	};
+	class InventoryButton3:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 5;
+		x = 0.459375;
+		y = 0.558333;
+		action = "menuButton = 106";
+	};
+	class InventoryHighlighted3:InventoryHighlighted1
+	{
+		x = 0.459375;
+		y = 0.558333;
+	};
+	class InventoryButton4:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 6;
+		x = 0.498438;
+		y = 0.558333;
+		action = "menuButton = 107";
+	};
+	class InventoryHighlighted4:InventoryHighlighted1
+	{
+		x = 0.498438;
+		y = 0.558333;
+	};
+	class InventoryButton5:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 7;
+		x = 0.537500;
+		y = 0.558333;
+		action = "menuButton = 108";
+	};
+	class InventoryHighlighted5:InventoryHighlighted1
+	{
+		x = 0.537500;
+		y = 0.558333;
+	};
+	class InventoryButton6:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 8;
+		x = 0.576563;
+		y = 0.558333;
+		action = "menuButton = 109";
+	};
+	class InventoryHighlighted6:InventoryHighlighted1
+	{
+		x = 0.576563;
+		y = 0.558333;
+	};
+	class InventoryButton7:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 9;
+		x = 0.381250;
+		y = 0.610417;
+		action = "menuButton = 110";
+	};
+	class InventoryHighlighted7:InventoryHighlighted1
+	{
+		x = 0.381250;
+		y = 0.610417;
+	};
+	class InventoryButton8:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 10;
+		x = 0.420313;
+		y = 0.610417;
+		action = "menuButton = 111";
+	};
+	class InventoryHighlighted8:InventoryHighlighted1
+	{
+		x = 0.420313;
+		y = 0.610417;
+	};
+	class InventoryButton9:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 11;
+		x = 0.459375;
+		y = 0.610417;
+		action = "menuButton = 112";
+	};
+	class InventoryHighlighted9:InventoryHighlighted1
+	{
+		x = 0.459375;
+		y = 0.610417;
+	};
+	class InventoryButton10:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 12;
+		x = 0.498438;
+		y = 0.610417;
+		action = "menuButton = 113";
+	};
+	class InventoryHighlighted10:InventoryHighlighted1
+	{
+		x = 0.498438;
+		y = 0.610417;
+	};
+	class InventoryButton11:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 13;
+		x = 0.537500;
+		y = 0.610417;
+		action = "menuButton = 114";
+	};
+	class InventoryHighlighted11:InventoryHighlighted1
+	{
+		x = 0.537500;
+		y = 0.610417;
+	};
+	class InventoryButton12:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 14;
+		x = 0.576563;
+		y = 0.610417;
+		action = "menuButton = 115";
+	};
+	class InventoryHighlighted12:InventoryHighlighted1
+	{
+		x = 0.576563;
+		y = 0.610417;
+	};
+	class Sidearm:GUIClickableText
+	{
+		idc = IDCGENERICIMAGE + 2;
+		style = GUIIMAGEASPECTRATIO;
+		x = 0.439063;
+		y = 0.670833;
+		w = 0.118750;
+		h = 0.095833;
+		text = "\Ca\UI\Data\ui_gear_hgun_gs.paa";
+		action = "menuButton = 103";
+	};
+	class SidearmHighlighted:Sidearm
+	{
+		idc = IDCUNDEFINED;
+		text = "\Ca\UI\Data\clear_empty.paa";
+		onMouseEnter =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\ui_gear_hgun_gs.paa"";";
+		onMouseExit =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\clear_empty.paa"";";
+	};
+
+	class SidearmInventoryButton1:InventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 15;
+		x = 0.381250;
+		y = 0.775000;
+		w = 0.027;
+		h = 0.036;
+		text = "\Ca\UI\Data\ui_gear_hgunmag_gs.paa";
+		action = "menuButton = 116";
+	};
+	class SidearmInventoryHighlighted1:InventoryHighlighted1
+	{
+		x = 0.381250;
+		y = 0.775000;
+		w = 0.027;
+		h = 0.036;
+		onMouseEnter =	"(_this select 0) CtrlSetText ""\Ca\UI\Data\ui_gear_hgunmag_gs.paa"";";
+	};
+	class SidearmInventoryButton2:SidearmInventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 16;
+		x = 0.40825;
+		action = "menuButton = 117";
+	};
+	class SidearmInventoryHighlighted2:SidearmInventoryHighlighted1
+	{
+		x = 0.40825;
+	};
+	class SidearmInventoryButton3:SidearmInventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 17;
+		x = 0.43525;
+		action = "menuButton = 118";
+	};
+	class SidearmInventoryHighlighted3:SidearmInventoryHighlighted1
+	{
+		x = 0.43525;
+	};
+	class SidearmInventoryButton4:SidearmInventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 18;
+		x = 0.46225;
+		action = "menuButton = 119";
+	};
+	class SidearmInventoryHighlighted4:SidearmInventoryHighlighted1
+	{
+		x = 0.46225;
+	};
+	class SidearmInventoryButton5:SidearmInventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 19;
+		x = 0.48925;
+		action = "menuButton = 120";
+	};
+	class SidearmInventoryHighlighted5:SidearmInventoryHighlighted1
+	{
+		x = 0.48925;
+	};
+	class SidearmInventoryButton6:SidearmInventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 20;
+		x = 0.51625;
+		action = "menuButton = 121";
+	};
+	class SidearmInventoryHighlighted6:SidearmInventoryHighlighted1
+	{
+		x = 0.51625;
+	};
+	class SidearmInventoryButton7:SidearmInventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 21;
+		x = 0.54325;
+		action = "menuButton = 121";
+	};
+	class SidearmInventoryHighlighted7:SidearmInventoryHighlighted1
+	{
+		x = 0.54325;
+	};
+	class SidearmInventoryButton8:SidearmInventoryButton1
+	{
+		idc = IDCGENERICIMAGE + 22;
+		x = 0.57025;
+		action = "menuButton = 122";
+	};
+	class SidearmInventoryHighlighted8:SidearmInventoryHighlighted1
+	{
+		x = 0.57025;
+	};
+
+	class CurrentLabel:GUILargeText
+	{
+		style = GUIRIGHT;
+		x = 0.35;
+		y = 0.222917;
+		w = 0.18;
+		h = 0.039583;
+		text = "Current Value:";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class Current1Label:GUILargeText
+	{
+		idc = IDCGENERICLABEL;
+		style = GUILEFT;
+		x = 0.52;
+		y = 0.222917;
+		w = 0.062500;
+		h = 0.039583;
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class UpgradeLabel:GUILargeText
+	{
+		style = GUIRIGHT;
+		x = 0.35;
+		y = 0.264583;
+		w = 0.18;
+		h = 0.039583;
+		text = "New Value:";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class Upgrade1Label:GUILargeText
+	{
+		idc = IDCGENERICLABEL + 1;
+		style = GUILEFT;
+		x = 0.52;
+		y = 0.264583;
+		w = 0.062500;
+		h = 0.039583;
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class CostLabel:GUILargeText
+	{
+		style = GUIRIGHT;
+		x = 0.35;
+		y = 0.306250;
+		w = 0.18;
+		h = 0.039583;
+		text = "Upgrade Cost:";
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class Cost1Label:GUILargeText
+	{
+		idc = IDCGENERICLABEL + 2;
+		style = GUILEFT;
+		x = 0.52;
+		y = 0.306250;
+		w = 0.062500;
+		h = 0.039583;
+		colorText[] = {0.82,1.0,0.82,1.0};
+	};
+	class UpgradeButton:GUIButtonLightGreen
+	{
+		x = 0.381250;
+		y = 0.891667;
+		w = 0.232813;
+		h = 0.039583;
+		text = "Buy Upgrade";
+		action = "menuButton = 123";
+	};
+	class ResetButton:GUIButtonLightGreen
+	{
+		x = 0.381250;
+		y = 0.843750;
+		w = 0.232813;
+		h = 0.039583;
+		text = "Reset";
+		action = "menuButton = 124";
+	};
+};
+
+//*****************************************************************************************
+//HELP MENU - pimped into CC...
+//*****************************************************************************************
+
+class HelpMenu:OptionsBaseMenu
+{
+	idd = 220100;
+	controlsBackground[] =
+	{
+		MainBackground,HeadBackgroundBorder,HeadBackground,MenuBackgroundBorder,MenuBackground
+	};
+	controls[] = {tab_empty1,tab_empty2,tab_empty3,tab_empty4,tab_empty5,
+				tab_mission,tab_team,tab_gear,tab_help_selected,tab_voteforcommander,warfarelogo,playername,playerrank,playerrankimage,infofunds,
+				infoteam,infomission,infomissions,infotowns,button_construction,button_close,MessageBar,
+				Title_cc,Upgrades_Title,Upgrades_List,Upgrades_Money,Upgrades_Supply,Upgrades_Button,Upgrades_Time,Upgrades_InProgress,Upgrades_CurrentSupply,Upgrades_SatButton,Upgrades_UnitsButton,
+				Upgrades_RespawnST,SupplyTruckSpawn,SupplyTruckSpawn_Label
+	};
+
+	onLoad = "_this Exec ""Client\GUI\GUI_UpdateHelpMenu.sqs""";
+
+	class MenuBackground:GuiImage
+	{
+		colorBackground[] = color1;
+		colorText[] = color1;
+		text = "\Warfare\Images\ui_gradient_cti.paa";
+		x = 0.1;
+		y = 0.2;
+		w = 0.8;
+		h = 0.75;
+	};
+
+	class tab_help_selected: tab_help
+	{
+		text = "Client\Images\tab_com_c_s.paa";
+		onMouseEnter =	"(_this select 0) ctrlSetText ""Client\Images\tab_com_c_s.paa"";";
+		onMouseExit =	"(_this select 0) ctrlSetText ""Client\Images\tab_com_c_s.paa"";";
+		onSetFocus =	"(_this select 0) ctrlSetText ""Client\Images\tab_com_c_s.paa"";";
+		onKillFocus =	"(_this select 0) ctrlSetText ""Client\Images\tab_com_c_s.paa"";";
+	};
+	
+	class Title_cc:GUILargeText
+	{
+		idc = IDCGENERICLABEL;
+		style = GUILEFT;
+		sizeEx = 0.055;
+		x = 0.112500;
+		y = 0.220833;
+		w = 0.775000;
+		h = 0.062500;
+		text = "Command Center :";
+	};
+	
+	class Upgrades_Title:GUILargeText
+	{
+		idc = IDCGENERICLABEL;
+		style = GUILEFT;
+		sizeEx = 0.025;
+		x = 0.15;
+		y = 0.295;
+		w = 0.15;
+		h = 0.062500;
+		text = "Upgrades :";
+	};
+	
+	class Upgrades_List:GUIListBox
+	{
+		idc = 665001;
+
+		x = 0.15;
+		y = 0.35;
+		w = 0.3;
+		h = 0.4;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+	};
+	
+	class Upgrades_Money:GuiText
+	{
+		IDC = 665002;
+		text = "Needed Money : ";
+		x = 0.15;
+		y = 0.76;
+		w = 0.3;
+		h = 0.035;
+		
+		colorText[] = {0.82,1.00,0.82,1.0};
+	};
+	
+	class Upgrades_Supply:GuiText
+	{
+		IDC = 665003;
+		text = "Needed Supply : ";
+		x = 0.15;
+		y = 0.8;
+		w = 0.3;
+		h = 0.035;
+		
+		colorText[] = {0.82,1.00,0.82,1.0};
+	};
+	
+	class Upgrades_Time:GuiText
+	{
+		IDC = 665004;
+		text = "Needed Time   : ";
+		x = 0.15;
+		y = 0.84;
+		w = 0.3;
+		h = 0.035;
+		
+		colorText[] = {0.82,1.00,0.82,1.0};
+	};
+	
+	class Upgrades_InProgress:GuiText
+	{
+		IDC = 665005;
+		text = "Upgrade In Progress : N/A";
+		x = 0.45;
+		y = 0.2;
+		w = 0.5;
+		h = 0.035;
+		
+		colorText[] = {0.82,1.00,0.82,1.0};
+	};
+	
+	class Upgrades_CurrentSupply:GuiText
+	{
+		IDC = 665006;
+		text = "Supply :";
+		x = 0.45;
+		y = 0.23;
+		w = 0.3;
+		h = 0.035;
+		
+		colorText[] = {0.82,1.00,0.82,1.0};
+	};
+	
+	class Upgrades_Button:GUIButtonLightGreen
+	{
+		IDC = 665007;
+		x = 0.75;
+		y = 0.823750;
+		w = 0.12;
+		h = 0.039583;
+		text = "Upgrade";
+		action = "upgradeButton = 10";
+	};
+	
+	class Upgrades_SatButton:GUIButtonLightGreen
+	{
+		IDC = 665008;
+		x = 0.75;
+		y = 0.35;
+		w = 0.12;
+		h = 0.039583;
+		text = "Sat Cam";
+		action = "upgradeButton = 11";
+	};
+	
+	class Upgrades_UnitsButton:GUIButtonLightGreen
+	{
+		IDC = 665009;
+		x = 0.75;
+		y = 0.40;
+		w = 0.12;
+		h = 0.039583;
+		text = "Units Cam";
+		action = "upgradeButton = 12";
+	};
+	
+	class Upgrades_RespawnST:GUIButtonLightRed
+	{
+		IDC = 665010;
+		x = 0.62;
+		y = 0.823750;
+		w = 0.12;
+		h = 0.039583;
+		text = "Respawn ST";
+		action = "upgradeButton = 13";
+	};
+	
+	class SupplyTruckSpawn:GuiComboBox
+	{
+		idc = 1988;
+		x = 0.62;
+		y = 0.75;
+		w = 0.25;
+		h = 0.058333;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		onLBSelChanged = "STIndex = 1";
+	};
+	
+	class SupplyTruckSpawn_Label:GuiText
+	{
+		IDC = 1989;
+		text = "Trucks Spawn:";
+		x = 0.62;
+		y = 0.70;
+		w = 0.25;
+		h = 0.035;
+		
+		colorText[] = {0.82,1.00,0.82,1.0};
+	};
+	
+};
+
+//*****************************************************************************************
+//COMMADER VOTE MENU
+//*****************************************************************************************
+//Karel - 02/08/2008
+//Keyword: xvote
+
+class CommanderVoteMenu:OptionsBaseMenu
+{
+	idd = 220200;
+	controlsBackground[] =
+	{
+		MainBackground,HeadBackgroundBorder,HeadBackground,MenuBackgroundBorder,MenuBackground,MenuBackgroundStatusbar1
+	};
+
+	controls[] = {tab_empty1,tab_empty2,tab_empty3,tab_empty4,tab_empty5,
+				tab_mission,tab_team,tab_gear,tab_help,tab_voteforcommander_selected,warfarelogo,playername,playerrank,playerrankimage,infofunds,
+				  infoteam,infomission,infomissions,infotowns,button_construction,button_close,MessageBar,
+				  MenuTitle,InfoBox,VoteCountList,SelectionList
+	};
+
+	onLoad = "_this Exec ""Client\GUI\GUI_UpdateCommanderVoteMenu.sqs""";
+
+	class MenuBackgroundBorder1:GuiText
+	{
+		colorBackground[] = color2;
+		x = 0.1-0.001;
+		y = 0.2;
+		w = 0.8+0.002;
+		h = 0.05;
+	};
+	class MenuBackgroundStatusbar1:MenuBackgroundStatusbar
+	{
+		y = 0.2;
+		h = 0.049;
+		text = "\Warfare\Images\ui_gradient_cti.paa";
+	};
+
+	class MenuBackground:GuiImage
+	{
+		colorBackground[] = color1;
+		colorText[] = color1;
+		text = "\Warfare\Images\ui_gradient_cti.paa";
+		x = 0.1;
+		y = 0.25;
+		w = 0.8;
+		h = 0.7;
+	};
+
+	class tab_voteforcommander_selected: tab_voteforcommander
+	{
+		text = "\Warfare\Images\tab_vote_s.paa";
+		onMouseEnter =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_vote_s.paa"";";
+		onMouseExit =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_vote_s.paa"";";
+		onSetFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_vote_s.paa"";";
+		onKillFocus =	"(_this select 0) ctrlSetText ""\Warfare\Images\tab_vote_s.paa"";";
+	};
+
+	class MenuTitle:GuiLargeText
+	{
+		idc = IDCMENUTITLE;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.045;
+		x = 0.3;
+		y = 0.199;
+		w = 0.4;
+		h = 0.05;
+		text = $STRWFVOTEFORCOMMANDER;
+		colorText[] = color2;
+	};
+
+	class InfoBox:GuiText
+	{
+		idc = IDCMENUINFO;
+		style = GUICENTER;
+		x = 0.3;
+		y = 0.242;
+		w = 0.4;
+		h = 0.06;
+		sizeEx = 0.035;
+		text = "";
+		colorText[] = color2;
+	};
+
+	class VoteCountList:GuiListBox
+	{
+		style = GUIRIGHT;
+		idc = IDCMENULIST1;
+		x = 0.11;
+		y = 0.29;
+		w = 0.05;
+		h = 0.645;
+		sizeEx = 0.035;
+		rowHeight = 0.038;
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+	};
+
+	class SelectionList:GuiListBox
+	{
+		idc = IDCMENULIST;
+		x = 0.16;
+		y = 0.29;
+		w = 0.73;
+		h = 0.645;
+		sizeEx = 0.035;
+		rowHeight = 0.038;
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = color1;
+		colorSelect[] = {0.4,0,0,1};
+		colorSelectBackground[] = {0.72,0.48,0.24,1.0};
+	};
+};
+
+//*****************************************************************************************
+//RESPAWN MAP INTERFACE
+//*****************************************************************************************
+
+class RespawnMap:CommandMenu
+{
+	controls[] = {RespawnTimerBar,RespawnMapArea,RespawnLocationLabel,MessageBar};
+
+	controlsBackground[] = {MenuBackground};
+
+	onLoad = "_this Exec ""Client\GUI\GUI_UpdateRespawnMap.sqs""";
+
+	class MenuBackground:GuiText
+	{
+		colorBackground[] = {0.4,0.4,0.4,1.0};
+
+		text = "";
+		x = 0.0;
+		y = 0.0;
+		w = 1.0;
+		h = 1.0;
+	};
+
+	class RespawnTimerBar:GUIText
+	{
+		idc = IDCMENUTITLE;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.06;
+		x = 0.01;
+		y = 0.02;
+		w = 0.98;
+		h = 0.06;
+	};
+
+	class RespawnMapArea:MapArea
+	{
+		x = 0.0;
+		y = 0.16;
+		w = 1.0;
+		h = 0.79;
+	};
+
+	class RespawnLocationLabel:GUIText
+	{
+		idc = IDCMENUINFO;
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.05;
+		x = 0.0;
+		y = 0.11;
+		w = 1.0;
+		h = 0.04;
+		colorText[] = {1.0,1.0,1.0,1};
+	};
+
+	class MessageBar:GUIText
+	{
+		style = GUICENTER;
+		font = "Bitstream";
+		sizeEx = 0.05;
+		x = 0.05;
+		y = 0.96;
+		w = 0.9;
+		h = 0.04;
+		colorText[] = {0.0,1.0,0.0,1};
+		text = $STRWFCLICKONRESPAWNLOCATION;
+	};
+};
+
+class SupportInterface:SupportMenu
+{
+	controls[] = {Support_Title,ExitButton,ArtilleryRound,ArtilleryAmmo,ICBM,MapArea};
+	
+	onLoad = "_this Exec ""Client\Special_Support.sqs"";";
+	
+	class Support_Title:GUILargeText
+	{
+		idc = IDCGENERICLABEL;
+		style = GUILEFT;
+		sizeEx = 0.036;
+		x = 0.21;
+		y = 0.21;
+		w = 0.2;
+		h = 0.062500;
+		text = "Support Menu:";
+	};
+	
+	class ExitButton:GUIButtonDarker
+	{
+		x = 0.58;
+		y = 0.73;
+		w = 0.2;
+
+		action = "CloseDialog 0";
+		text = $STRWFEXIT;
+	};
+	
+	class ArtilleryRound:GUILargeText
+	{
+		idc = IDCGENERICLABEL;
+		style = GUILEFT;
+		sizeEx = 0.03;
+		x = 0.54;
+		y = 0.27;
+		w = 0.22;
+		h = 0.062500;
+		text = "Artillery Round:";
+	};
+	
+	class ArtilleryAmmo:GuiComboBox
+	{
+		idc = 6051;
+		x = 0.54;
+		y = 0.33;
+		w = 0.24;
+		h = 0.058333;
+
+		colorText[] = {0.82,1.00,0.82,1.0};
+		colorBackground[] = {0.1,0.1,0.1,1.0};
+		onLBSelChanged = "SupportIndex = 1";
+	};
+	
+	class ICBM:GUIButtonDarker
+	{
+		idc = 6052;
+		x = 0.54;
+		y = 0.40;
+		w = 0.24;
+
+		action = "Special = 1";
+		text = "Nuclear Strike";
+	};
+
+	class MapArea:GUIImage
+	{
+		type = GUIMAP;
+		idc = 6053;
+
+		colorBackground[] = {0.8,0.8,0.8,1};
+		colorText[] = {0, 0, 0, 1};
+
+		colorSea[] = {0.56, 0.8, 0.98, 0.5};
+		colorForest[] = {0.6, 0.8, 0.2, 0.5};
+		colorRocks[] = {0.5, 0.5, 0.5, 0.5};
+		colorCountlines[] = {0.65, 0.45, 0.27, 0.5};
+		colorMainCountlines[] = {0.65, 0.45, 0.27, 1};
+		colorCountlinesWater[] = {0, 0.53, 1, 0.5};
+		colorMainCountlinesWater[] = {0, 0.53, 1, 1};
+		colorForestBorder[] = {0.4, 0.8, 0, 1};
+		colorRocksBorder[] = {0.5, 0.5, 0.5, 1};
+		colorPowerLines[] = {0, 0, 0, 1};
+		colorNames[] = {0, 0, 0, 1};
+		colorInactive[] = {1, 1, 1, 0.5};
+		colorLevels[] = {0, 0, 0, 1};
+		fontLabel = "TahomaB";
+		sizeExLabel = 0.04;
+		fontGrid = "TahomaB";
+		sizeExGrid = 0.04;
+		fontUnits = "TahomaB";
+		sizeExUnits = 0.04;
+		fontNames = "TahomaB";
+		sizeExNames = 0.04;
+		fontInfo = "TahomaB";
+		sizeExInfo = 0.04;
+		fontLevel = "TahomaB";
+		sizeExLevel = 0.04;
+		text = "#(argb,8,8,3)color(1,1,1,1)";
+		stickX[] = {0.2, {"Gamma", 1, 1.5}};
+		stickY[] = {0.2, {"Gamma", 1, 1.5}};
+		ptsPerSquareSea = 6;
+		ptsPerSquareTxt = 8;
+		ptsPerSquareCLn = 8;
+		ptsPerSquareExp = 8;
+		ptsPerSquareCost = 8;
+		ptsPerSquareFor = "4.0f";
+		ptsPerSquareForEdge = "10.0f";
+		ptsPerSquareRoad = 2;
+		ptsPerSquareObj = 10;
+		showCountourInterval = "true";
+
+		x = 0.22;
+		y = 0.28;
+		w = 0.3;
+		h = 0.3;
+
+		onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)";
+		onMouseButtonDown = "mouseButtonDown = _this Select 1";
+		onMouseButtonUp = "mouseButtonUp = _this Select 1";
+	
+		class Bunker
+		{
+			icon = "\ca\ui\data\map_bunker_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 14;
+			importance = 1.5 * 14 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Bush
+		{
+			icon = "\ca\ui\data\map_bush_ca.paa";
+			color[] = {0.55, 0.64, 0.43, 1};
+			size = 14;
+			importance = 0.2 * 14 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class BusStop
+		{
+			icon = "\ca\ui\data\map_busstop_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 10;
+			importance = 1 * 10 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Command
+		{
+			icon = "#(argb,8,8,3)color(1,1,1,1)";
+			color[] = {0, 0.9, 0, 1};
+			size = 18;
+			importance = 1;
+			coefMin = 1;
+			coefMax = 1;
+		};
+		
+		class Cross
+		{
+			icon = "\ca\ui\data\map_cross_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 0.7 * 16 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Fortress
+		{
+			icon = "\ca\ui\data\map_bunker_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Fuelstation
+		{
+			icon = "#(argb,8,8,3)color(0,0,0,1)";
+			color[] = {0, 0, 0, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.75;
+			coefMax = 4;
+		};
+		
+		class Fountain
+		{
+			icon = "\ca\ui\data\map_fountain_ca.paa";
+			color[] = {0, 0.35, 0.7, 1};
+			size = 12;
+			importance = 1 * 12 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Hospital
+		{
+			icon = "\ca\ui\data\map_hospital_ca.paa";
+			color[] = {0.78, 0, 0.05, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		
+		class Chapel
+		{
+			icon = "\ca\ui\data\map_chapel_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 1 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Church
+		{
+			icon = "\ca\ui\data\map_church_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Lighthouse
+		{
+			icon = "\ca\ui\data\map_lighthouse_ca.paa";
+			color[] = {0.78, 0, 0.05, 1};
+			size = 20;
+			importance = 3 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Quay
+		{
+			icon = "\ca\ui\data\map_quay_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		
+		class Rock
+		{
+			icon = "\ca\ui\data\map_rock_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 12;
+			importance = 0.5 * 12 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Ruin
+		{
+			icon = "\ca\ui\data\map_ruin_ca.paa";
+			color[] = {0.78, 0, 0.05, 1};
+			size = 16;
+			importance = 1.2 * 16 * 0.05;
+			coefMin = 1;
+			coefMax = 4;
+		};
+		
+		class SmallTree
+		{
+			icon = "\ca\ui\data\map_smalltree_ca.paa";
+			color[] = {0.55, 0.64, 0.43, 1};
+			size = 12;
+			importance = 0.6 * 12 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Stack
+		{
+			icon = "\ca\ui\data\map_stack_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 20;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Tree
+		{
+			icon = "\ca\ui\data\map_tree_ca.paa";
+			color[] = {0.55, 0.64, 0.43, 1};
+			size = 12;
+			importance = 0.9 * 16 * 0.05;
+			coefMin = 0.25;
+			coefMax = 4;
+		};
+		
+		class Tourism {
+			icon = "\ca\ui\data\map_tourism_ca.paa";
+			color[] = {0.78, 0, 0.05, 1};
+			size = 16;
+			importance = 1 * 16 * 0.05;
+			coefMin = 0.7;
+			coefMax = 4;
+		};
+
+		class Transmitter
+		{
+			icon = "\ca\ui\data\map_transmitter_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 20;
+			importance = 2 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class ViewTower
+		{
+			icon = "\ca\ui\data\map_viewtower_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 16;
+			importance = 2.5 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		
+		class Watertower
+		{
+			icon = "\ca\ui\data\map_watertower_ca.paa";
+			color[] = {0, 0.35, 0.7, 1};
+			size = 32;
+			importance = 1.2 * 16 * 0.05;
+			coefMin = 0.9;
+			coefMax = 4;
+		};
+		
+		class Waypoint
+		{
+			icon = "\ca\ui\data\map_waypoint_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 14;
+			importance = 2.5 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		
+		class WaypointCompleted
+		{
+			icon = "\ca\ui\data\map_waypoint_completed_ca.paa";
+			color[] = {0, 0, 1, 1};
+			size = 14;
+			importance = 2.5 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+		class ActiveMarker
+		{
+			icon = "";
+			color[] = {0, 0, 1, 1};
+			size = 14;
+			importance = 2.5 * 16 * 0.05;
+			coefMin = 0.5;
+			coefMax = 4;
+		};
+	};
+};
+
+//*****************************************************************************************
+//RESPAWN TIMER
+//*****************************************************************************************
+
+class RespawnTimer:DefaultMenu
+{
+	controls[] = {RespawnBar};
+	controlsBackground[] = {RespawnBackground};
+
+	onLoad = "_this Exec ""Client\GUI\GUI_UpdateRespawnTimer.sqs""";
+
+	class RespawnBackground:GuiText
+	{
+		colorBackground[] = {0.4,0.4,0.4,1.0};
+
+		text = "";
+		x = 0.0;
+		y = 0.0;
+		w = 1.0;
+		h = 0.1;
+	};
+
+	class RespawnBar:GUIText
+	{
+		idc = IDCMENUSTATUSLABEL;
+		style = GUICENTER;
+		font = "Bitstream";
+		colorText[] = {1.0,1.0,1.0,1};
+		sizeEx = 0.06;
+		x = 0.01;
+		y = 0.02;
+		w = 0.98;
+		h = 0.06;
+	};
+};
+
+//Created 2/13/7

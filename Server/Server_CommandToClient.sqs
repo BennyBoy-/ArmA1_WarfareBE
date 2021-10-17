@@ -1,0 +1,38 @@
+;Last modified 4/2/7
+;*****************************************************************************************
+;Description: Send a command to a specific client.
+;*****************************************************************************************
+
+_side = _this Select 0
+_clientID = _this Select 1
+_command = _this Select 2
+_parameters = Count _this
+
+_sideID = WESTID
+if (_side == East) then {_sideID = EASTID};
+
+#CheckCommandAvailability
+~0.05
+
+	;Prevent the same command from being issued at the same time.
+	if ((clientCommandPVTimeLeft Select _command) > 0) then {Goto "CheckCommandAvailability"};
+
+#SendCommand
+
+_paramMask = CMD0PARAMETERS
+
+;If additional parameters were passed then transmit them.
+if (_parameters > 3) then {_paramMask = CMD1PARAMETERS;Call Compile Format["%1P1 = _this Select 3;PublicVariable ""%1P1""",clientCommandPV Select _command]};
+if (_parameters > 4) then {_paramMask = CMD2PARAMETERS;Call Compile Format["%1P2 = _this Select 4;PublicVariable ""%1P2""",clientCommandPV Select _command]};
+if (_parameters > 5) then {_paramMask = CMD3PARAMETERS;Call Compile Format["%1P3 = _this Select 5;PublicVariable ""%1P3""",clientCommandPV Select _command]};
+
+;Set PV & transmit it.
+Call Compile Format["%1 = _sideID + _clientID + _paramMask;PublicVariable ""%1""",clientCommandPV Select _command]
+
+;To prevent server-overwrites.  Lock the command for a little while before server can send it again.
+clientCommandPVTimeLeft Set [_command,0.25]
+~0.25
+clientCommandPVTimeLeft Set [_command,0]
+
+;*****************************************************************************************
+;1/22/7 MM - Created file.

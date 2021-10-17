@@ -1,0 +1,8 @@
+;Last modified 8/18/8
+;*****************************************************************************************
+
+if (sideJoined == East) then {constructionVehicle = NearestObject[GetPos player,eastStructureNames Select EASTHEADQUARTERSTYPE];CreateDialog "ConstructionMenu"};
+if (sideJoined == West) then {constructionVehicle = NearestObject[GetPos player,westStructureNames Select WESTHEADQUARTERSTYPE];CreateDialog "ConstructionMenu"};
+
+;*****************************************************************************************
+;5/11/7 MM - Created file.

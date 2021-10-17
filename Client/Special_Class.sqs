@@ -1,0 +1,168 @@
+;Class Actions by Benny.
+	
+Goto "InitMenu"
+
+#Update
+
+	~0.5
+	
+	if (!(Alive player) || Side player != sideJoined || menuExit) then {CloseDialog 0;Goto "Quit"};
+	if (!dialog) then {Goto "Quit"};
+	
+	if (classButton == 1) then {Goto "Button1"};
+	if (classButton == 2) then {Goto "HeadFix"};
+	if (classButton == 3) then {Goto "Button2"};
+
+	Goto "Update"
+	
+#InitMenu
+	
+	classButton = -1
+	
+	showMessagesOnScreen = true
+	_type = typeOf player
+	switch (_type) do {case "SoldierWMiner": {ctrlSetText [666001, "Repair"]};case "SoldierEMiner": {ctrlSetText [666001, "Repair"]};case "SoldierWSaboteurPipe2": {ctrlSetText [666001, "Bomb"];ctrlSetText [666002, "Detonate"]};case "SoldierESaboteurBizon": {ctrlSetText [666001, "Bomb"];ctrlSetText [666002, "Detonate"]};};
+	
+	IDC = [666001,666002]
+	{_text = ctrlText _x; if (_text == "") then {CtrlShow[_x,false]}} forEach IDC
+	
+	Goto "Update"
+	
+#Button1
+
+	classButton = -1
+	
+	_text = ctrlText 666001
+	switch (_text) do {case "Repair": {Goto "Repair"};case "Bomb": {Goto "Bomb"};};
+	
+	Goto "Update"
+	
+#Button2
+
+	classButton = -1
+	
+	_text = ctrlText 666002
+	switch (_text) do {case "Detonate": {Goto "Detonate"};};
+	
+	Goto "Update"
+	
+#HeadFix
+
+	classButton = -1
+	
+	_lastpos = position player
+	_lastdir = getDir player
+	_vehi = "Skoda" createVehicle [0,0,2000]
+	player moveInCargo _vehi
+	DeleteVehicle _vehi
+	player setPos _lastpos
+	player setDir _lastdir
+
+	Goto "Quit"
+	
+#Repair
+
+	classButton = -1
+
+	if (player != vehicle player) then {[playerSide, "HQ"] sideChat "You cannot repair while you are in a vehicle.";Goto "Update";};
+
+	_objs = nearestObjects [position player, ["Motorcycle","Car","Tank","Ship","Helicopter","Plane","StaticWeapon"], 5];
+	if (Count _objs < 1) then {[playerSide, "HQ"] sideChat "No nearby vehicle to repair.";Goto "Quit";};
+
+	_sorted = [player,_objs] Call SortByDistance;
+	_vehi = _sorted select 0;
+
+	if (GetDammage _vehi <= 0) then {[playerSide, "HQ"] sideChat "Vehicle don't need any repair.";Goto "Quit"}
+
+	;Check if the repair is ready to be used again.
+	if (IsNil "RepairTime") then {RepairTime = time - 1000};
+	if (time - RepairTime < 60) then {[playerSide, "HQ"] sideChat "You cannot repair at the moment.";Goto "Quit"};
+	RepairTime = time
+
+	if (GetDammage _vehi >= 1) then {[playerSide, "HQ"] sideChat "Vehicle is FUBAR!, aborting repair.";Goto "Quit"};
+	if (_vehi Distance player > 7) then {[playerSide, "HQ"] sideChat "Vehicle has moved, aborting repair.";Goto "Quit"};
+	if !(alive Player) then {Goto "Quit"}
+	
+	[playerSide, "HQ"] sideChat "Begining vehicle repair."
+	_currentdmg = GetDammage _vehi
+	_currentfuel = Fuel _vehi
+
+	player playMove "AinvPknlMstpSlayWrflDnon_medic";
+	~8.0
+	player playMove "AinvPknlMstpSlayWrflDnon_medic";
+	~8.0
+	
+	if (_vehi Distance player > 7) then {[playerSide, "HQ"] sideChat "Vehicle has moved, aborting repair.";Goto "Quit"};
+	if !(alive Player) then {Goto "Quit"}
+		
+	if (GetDammage _vehi < 1) then {_vehi SetDammage (_currentdmg-0.25);_vehi SetFuel (_currentfuel+0.05);[playerSide, "HQ"] sideChat "Vehicle has been 25% repaired."} else {[playerSide, "HQ"] sideChat "Vehicle is FUBAR!, aborting repair.";Goto "Exit"};
+	if (GetDammage _vehi < 0) then {_vehi SetDammage 0};
+	
+	Goto "Quit"
+	
+#Bomb
+
+	classButton = -1
+	
+	if (player != vehicle player) then {[playerSide, "HQ"] sideChat "You cannot place a bomb while you are in a vehicle.";Goto "Update";};
+
+	_magz = magazines player
+	if !("PipeBomb" in _magz) then {[playerSide, "HQ"] sidechat "At last one satchel is needed to perform this action.";Goto "Quit"};
+	
+	_objs = nearestObjects [position player, ["Car","Tank","Ship","Air","StaticWeapon"], 5];
+	
+	if (IsNil "BombTime") then {BombTime = time - 1000};
+	if (time - BombTime < 90) then {[playerSide, "HQ"] sideChat "Cannot perform this action at the moment.";Goto "Quit"};
+	BombTime = time
+	
+	[playerSide, "HQ"] sidechat "Placing a modified satchel...";
+	player removeMagazine "PipeBomb"
+	player playMove "AinvPknlMstpSlayWrflDnon_healed";
+
+	~8
+	
+	if (Count _objs < 1) then {Goto "Manual";};
+	
+	_sorted = [player,_objs] Call SortByDistance;
+	_vehi = _sorted select 0;
+	
+	if (player Distance _vehi > 8) then {[playerSide, "HQ"] sidechat "Vehicle moved! aborting sabotage...";Goto "Quit"}
+	[playerSide, "HQ"] sidechat "Satchel Placed on the vehicle."
+	
+	TrappedVehi = _vehi
+	if !(isNull (Bomb)) then {deleteVehicle Bomb}
+	
+	Goto "Quit"
+	
+	#Manual
+	
+	TrappedVehi = objNull
+	Bomb = "PipeBomb" createVehicle (position player)
+	
+	Goto "Quit"
+	
+#Detonate
+	
+	classButton = -1
+
+	if ((isNull (TrappedVehi)) && !(isNull (Bomb))) then {Goto "DetoManual"}
+	if (isNull (TrappedVehi)) then {[playerSide, "HQ"] sidechat "Cannot detonate until the bomb has been set.";Goto "Quit";};
+	if (player Distance TrappedVehi > 2500) then {[playerSide, "HQ"] sidechat "The bomb only got a 2500 meters range. Bomb is out of range...";Goto "Quit"};
+	_explosion = "Bo_GBU12_LGB" createVehicle (position TrappedVehi);
+	_explosion setPos [getpos TrappedVehi select 0,getpos TrappedVehi select 1,getpos TrappedVehi select 2]
+	TrappedVehi = objNull;
+	
+	Goto "Quit"
+	
+	#DetoManual
+	
+	if (player Distance Bomb > 2500) then {[playerSide, "HQ"] sidechat "The bomb only got a 2500 meters range. Bomb is out of range...";Goto "Quit"};
+	_explosion = "Bo_GBU12_LGB" createVehicle (position Bomb);
+	DeleteVehicle Bomb;
+	
+	Goto "Quit"
+	
+#Quit
+	
+	closedialog 0
+	Exit

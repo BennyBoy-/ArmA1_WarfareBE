@@ -1,0 +1,154 @@
+;Last modified 3/19/8
+
+_display = _this Select 0
+
+_display Call InitInfoBar
+
+Goto "InitMenu"
+
+#Update
+~0.1
+
+#SkipUpdateDelay
+
+	;If unit dies or is no longer on his/her side (team killing).
+	if (!(Alive player) || Side player != sideJoined || menuExit) then {CloseDialog 0;Goto "Quit"};
+	if (!dialog) then {Goto "Quit"};
+
+	_display Call DisplayInfoBar
+
+	_commanderTeam = [sideJoined] Call GetCommanderFromVotes
+	if (IsNull _commanderTeam) then {_name = Localize "STRWFAI"} else {_name = Name Leader _commanderTeam};
+
+	_voteTime = Call Compile Format["%1CommanderVoteTime",sideJoinedText]
+	CtrlSetText [IDCMenuInfo,Format ["(%1) %2: %3",_name,Localize "STRWFTIMELEFT",_voteTime]]
+
+
+	if (_voteTime <= 0 && showHelp) then {CloseDialog 0;CreateDialog "HelpMenu";Goto "Quit"};
+	if (_voteTime <= 0) then {CloseDialog 0;Goto "Quit"};
+
+	_refresh = false
+	_teams = Call Compile Format["%1Teams",sideJoinedText]
+	_playerTeams = []
+	{if (IsPlayer Leader _x) then {_playerTeams = _playerTeams + [_x]};} ForEach _teams
+
+	_count = 0
+	_votes = [sideJoined] Call GetCommanderVotes
+
+	{if (_x != (_votes Select _count)) then {_refresh = true};_count = _count + 1} ForEach _lastVotes
+	{if (!(_x In _lastTeams)) then {_refresh = true};} ForEach _playerTeams
+	{if (!(_x In _playerTeams)) then {_refresh = true};} ForEach _lastTeams
+	if (!_refresh) then {Goto "UpdateActions"};
+
+	_reselect = false
+	_selected = lbCurSel IDCMenuList
+	_selectedTeam = lbValue[IDCMenuList,_selected]
+	_selectedText = lbText[IDCMenuList,_selected]
+	_lastVotes = _votes
+
+	if (_selected != -1) then {_reselect = true};
+
+	lbClear IDCMenuList
+	_AI = lbAdd[IDCMenuList,Format["[%1]",Localize "STRWFAI"]]
+	lbSetValue [IDCMenuList,_AI,-1]
+
+	;Vote count
+	lbClear IDCMenuList1
+	lbAdd[IDCMenuList1,Format["%1",_votes Select 0]]
+	CtrlEnable [IDCMenuList1,false]
+	_count = 0
+	_total = 1
+
+	{if (_x In _playerTeams) then {_total = _total + 1;lbAdd[IDCMenuList1,Format["%1",_votes Select (_count + 1)]];_selection = lbAdd[IDCMenuList,Name Leader _x];lbSetValue [IDCMenuList,_selection,_count]};_count = _count + 1} ForEach _teams
+
+	_lastTeams = +_playerTeams
+
+	if (!_reselect) then {Goto "UpdateActions"};
+
+	;If the list has been refreshed then attempt to reselect last team voted for.
+	_selected = 0
+	for [{_count = 0},{_count < _total},{_count = _count + 1}] do {if (lbText[IDCMenuList,_count] == _selectedText) then {_selected = _count};};
+
+	lbSetCurSel[IDCMenuList,_selected]
+
+#UpdateActions
+
+	if (menuButton == 1) then {Goto "OpenHelp"};
+	if (menuButton == 52) then {Goto "OpenTeamMenu"};
+	if (menuButton == 53) then {Goto "OpenMissionMap"};
+	if (menuButton == 54) then {Goto "OpenGearMenu"};
+	if (menuButton == 55) then {Goto "OpenConstruction"};
+
+	_selected = lbCurSel IDCMenuList
+	if (_selected == -1) then {Goto "Update"};
+
+	_selectedTeam = lbValue[IDCMenuList,_selected]
+	if (_selectedTeam != _lastTeam) then {Call Compile Format["%1Team%2Vote = _selectedTeam;PublicVariable ""%1Team%2Vote""",sideJoinedText,clientID]};
+
+	_lastTeam = _selectedTeam
+	Goto "Update"
+
+#InitMenu
+
+	_voteTime = Call Compile Format["%1CommanderVoteTime",sideJoinedText]
+	if (_voteTime <= 0) then {Goto "Quit"};
+
+	_showMessages = showMessagesOnScreen
+	showMessagesOnScreen = false
+
+	;Menu buttons.
+	menuExit = false
+
+	_name = ""
+	_lastTeams = []
+	_lastTeam = -2
+
+	_lastVotes = [sideJoined] Call GetCommanderVotes
+
+	Goto "SkipUpdateDelay"
+
+#OpenConstruction
+
+	menuButton = -1
+
+	if (!IsNull HQInRange) then {CloseDialog 0;constructionVehicle = HQInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull campInRange) then {CloseDialog 0;constructionVehicle = campInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+	if (!IsNull repairTruckInRange) then {CloseDialog 0;constructionVehicle = repairTruckInRange;CreateDialog "ConstructionMenu";Goto "Quit"};
+
+	Goto "Update"
+
+#OpenHelp
+
+	CloseDialog 0
+	CreateDialog "HelpMenu"
+	Goto "Quit"
+
+#OpenMissionMap
+
+	CloseDialog 0
+	CreateDialog "MissionMap"
+	Goto "Quit"
+
+#OpenTeamMenu
+
+	CloseDialog 0
+	CreateDialog "TeamMenu"
+	Goto "Quit"
+
+#OpenGearMenu
+
+	menuButton = -1
+	if (IsNull campInRange && !barracksInRange) then {Goto "Update"};
+
+	CloseDialog 0
+	CreateDialog "GearMenu"
+	Goto "Quit"
+
+#Quit
+
+	showHelp = false
+	showMessagesOnScreen = _showMessages
+
+	Exit
+
+;7/8/7 MM - Created file.

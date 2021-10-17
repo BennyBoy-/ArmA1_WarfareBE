@@ -1,0 +1,258 @@
+;Last modified 4/3/8
+;*****************************************************************************************
+;Description: This is run by the server when it starts a mission.
+;*****************************************************************************************
+;Compile function loops.
+AITownDefense = Compile PreprocessFile "Server\AI\AI_TownDefense.sqf"
+AITownResitance = Compile PreprocessFile "Server\AI\AI_Resistance.sqf"
+UpdateSquad = Compile PreprocessFile "Server\AI\Advanced\Advanced_UpdateSquad.sqf"
+UpdateSquadRespawn = Compile PreprocessFile "Server\AI\Advanced\Advanced_UpdateSquadRespawn.sqf"
+AIbuyunits =  Compile PreprocessFile "Server\Server_AITeamBuyUnits.sqf"
+AIbuyunit =   Compile PreprocessFile "Server\Server_AITeamBuyUnit.sqf"
+AIGroup =   Compile PreprocessFile "Server\AI\AI_Group.sqf"
+Sbuyunit =    Compile PreprocessFile "Server\Server_BuyUnit.sqf"
+UpdateTownDefense = Compile PreprocessFile "Server\Server_UpdateTownDefense.sqf"
+SetAIwaypoint = Compile PreprocessFile "Server\AI\Advanced\setwaypoint.sqf"
+
+;Compile regular functions
+AddFundsToSide = Compile PreprocessFile "Server\Functions\Server_AddFundsToSide.sqf"
+GetAITeamID = Compile PreprocessFile "Server\Functions\Server_GetAITeamID.sqf"
+SetCampsToSide = Compile PreprocessFile "Server\Functions\Server_SetCampsToSide.sqf"
+SendGameStats = Compile PreprocessFile "Server\Functions\Server_SendGameStats.sqf"
+StructureDamaged = Compile PreprocessFile "Server\Functions\Server_StructureDamaged.sqf"
+StructureDestroyed = Compile PreprocessFile "Server\Functions\Server_StructureDestroyed.sqf"
+MHQKilled = compile preprocessFile "Server\Functions\Server_AddKilledMHQFunc.sqf"
+
+eastCommanderVoteTime = VOTETIME
+westCommanderVoteTime = VOTETIME
+
+PublicVariable "eastCommanderVoteTime"
+PublicVariable "westCommanderVoteTime"
+
+civilianCasualties = 0
+eastCasualties = 0
+westCasualties = 0
+resistanceCasualties = 0
+
+westVehiclesCreated = 0
+westVehiclesLost = 0
+westUnitsCreated = 0
+
+eastVehiclesCreated = 0
+eastVehiclesLost = 0
+eastUnitsCreated = 0
+
+resistanceVehiclesCreated = 0
+resistanceVehiclesLost = 0
+resistanceUnitsCreated = 0
+
+westTimeUnderAttack = 0
+eastTimeUnderAttack = 0
+
+[] Spawn SendGameStats
+
+@ (commonFunctionsCompiled)
+
+~1
+
+startingLocations = []
+_total = 0
+
+#InitLocation
+
+	if (IsNil Format["StartingLocation%1",_total]) then {Goto "PlaceSides"};
+
+	startingLocations = startingLocations + [Call Compile Format["StartingLocation%1",_total]]
+
+	_total = _total + 1
+	if (_total < 100) then {Goto "InitLocation"};
+
+#PlaceSides
+
+	_eastLocation = startingLocations Select (Random (_total - 1))
+	_westLocation = startingLocations Select (Random (_total - 1))
+
+	if (_eastLocation == _westLocation) then {Goto "PlaceSides"};
+	if (_eastLocation Distance _westLocation < SIDESTARTINGDISTANCE) then {Goto "PlaceSides"};
+
+	eastStartingLocation = _eastLocation
+	westStartingLocation = _westLocation
+
+	PublicVariable "eastStartingLocation"
+	PublicVariable "westStartingLocation"
+
+	EastMHQ SetPos GetPos _eastLocation
+	WestMHQ SetPos GetPos _westLocation
+
+	{Leader _x SetPos ([GetPos _eastLocation,5,25] Call GetRandomPosition)} ForEach eastTeams
+	{Leader _x SetPos ([GetPos _westLocation,5,25] Call GetRandomPosition)} ForEach westTeams
+
+EastBase = EastMHQ
+WestBase = WestMHQ
+
+PublicVariable "EastBase"
+PublicVariable "WestBase"
+
+eastMHQDeployed = false
+westMHQDeployed = false
+
+PublicVariable "eastMHQDeployed"
+PublicVariable "westMHQDeployed"
+
+;exe
+eastMHQRepairing = false;
+westMHQRepairing = false;
+
+publicVariable "eastMHQRepairing";
+publicVariable "westMHQrepairing";
+
+@ (commonInitComplete)
+
+eastAITeams = eastTeams
+westAITeams = westTeams
+
+westKnownSalvage = []
+eastKnownSalvage = []
+
+eastAISalvagers = []
+westAISalvagers = []
+
+eastAISupplyTrucks = []
+westAISupplyTrucks = []
+
+eastBaseStructures = []
+westBaseStructures = []
+
+EastAIBase = false
+WestAIBase = false
+
+CurentSelArray = [WestBase];
+CurentSelEastArray = [EastBase];
+
+[] Exec "Server\Server_CommandFromClient.sqs"
+[] Execvm "Server\Config\Config_Resistance.sqf"
+[] Execvm "Server\Config\Config_BaseLayouts.sqf"
+[] Exec "Server\Server_UpdateClientTownValues.sqs"
+
+[] Exec "Server\Server_Update.sqs"
+[] Execvm "Server\Server_UpdateTime.sqf"
+[] Execvm "Server\Server_UpdateResources.sqf"
+
+[East] Exec "Server\Server_UpdateBaseRecon.sqs"
+[West] Exec "Server\Server_UpdateBaseRecon.sqs"
+
+~1
+
+;Vote for commanders
+[East,false] Exec "Server\Server_VoteForCommander.sqs"
+[West,false] Exec "Server\Server_VoteForCommander.sqs"
+
+gameInitialized = true
+
+if (Local player && Side player == East) then {Goto "CreateWestRespawn"};
+
+#CreateEastRespawn
+
+	CreateMarkerLocal ["Respawn_east",GetPos EastBase]
+	"Respawn_east" SetMarkerTypeLocal "Empty"
+	"Respawn_east" SetMarkerColorLocal "ColorGreen"
+
+	if (Local player) then {Goto "InitStartSquads"};
+
+#CreateWestRespawn
+
+	CreateMarkerLocal ["Respawn_west",GetPos WestBase]
+	"Respawn_west" SetMarkerTypeLocal "Empty"
+	"Respawn_west" SetMarkerColorLocal "ColorGreen"
+
+#InitStartSquads
+
+	;Create some starting vehicles.
+	_hummer = "HMMWV" CreateVehicle GetPos westStartingLocation
+	[_hummer,West] Call InitUnit
+	[_hummer,GetPos westStartingLocation,12,22,true] Call PlaceNear
+	[_hummer,West] Exec "Server\Server_UpdateBaseVehicle.sqs"
+	~0.5
+	_truck = "Truck5T" CreateVehicle GetPos westStartingLocation
+	[_truck,West] Call InitUnit
+	[_truck,GetPos westStartingLocation,12,22,true] Call PlaceNear
+	[_truck,West] Exec "Server\Server_UpdateBaseVehicle.sqs"
+	~0.5
+
+	_UAZ = "UAZ" CreateVehicle GetPos eastStartingLocation
+	[_UAZ,East] Call InitUnit
+	[_UAZ,GetPos eastStartingLocation,12,22,true] Call PlaceNear
+	[_UAZ,East] Exec "Server\Server_UpdateBaseVehicle.sqs"
+	~0.5
+	_ural = "Ural" CreateVehicle GetPos eastStartingLocation
+	[_ural,East] Call InitUnit
+	[_ural,GetPos eastStartingLocation,12,22,true] Call PlaceNear
+	[_ural,East] Exec "Server\Server_UpdateBaseVehicle.sqs"
+	~0.5
+
+#SetRespawns
+
+	"Respawn_east" SetMarkerPosLocal GetPos EastBase
+	"Respawn_west" SetMarkerPosLocal GetPos WestBase
+
+#InitAdvancedTeamAI
+
+	;Substitute players.  These AI teams are empty player slots.
+	{[_x] Spawn UpdateSquad;[Leader _x,EastDefaultWeapons,EastDefaultAmmo] Call EquipLoadout} ForEach eastAITeams
+	{[_x] Spawn UpdateSquad;[Leader _x,WestDefaultWeapons,WestDefaultAmmo] Call EquipLoadout} ForEach westAITeams
+
+	;Dedicated AI teams.  Always present in game.
+
+	;Defends the base by manning any stationary defenses.
+	WestBaseDefenseTeam = CreateGroup West
+
+	_leader = WestBaseDefenseTeam CreateUnit[WSOLDIER,([GetPos westStartingLocation,10,25] Call GetRandomPosition),[],1,"FORM"]
+	[_leader,West] Call InitUnit
+	WestBaseDefenseTeam SelectLeader _leader
+	Call Compile Format["WestAI%1Funds = DEFENSETEAMFUNDS",Count westTeams + 1]
+	westDefenseTeams = [WestBaseDefenseTeam]
+	[WestBaseDefenseTeam,false,MISDEFENDBASE] Spawn UpdateSquad
+
+	;Patrols the base.
+	WestBasePatrolTeam = CreateGroup West
+
+	_leader = WestBasePatrolTeam CreateUnit[WSOLDIER,([GetPos westStartingLocation,10,25] Call GetRandomPosition),[],1,"FORM"]
+	[_leader,West] Call InitUnit
+	WestBasePatrolTeam SelectLeader _leader
+	Call Compile Format["WestAI%1Funds = DEFENSETEAMFUNDS",Count westTeams + 2]
+	westDefenseTeams = westDefenseTeams + [WestBasePatrolTeam]
+	[WestBasePatrolTeam,false,MISPATROL] Spawn UpdateSquad
+
+	;Defends the base by manning any stationary defenses.
+	EastBaseDefenseTeam = CreateGroup East
+
+	_leader = EastBaseDefenseTeam CreateUnit[ESOLDIER,([GetPos eastStartingLocation,10,25] Call GetRandomPosition),[],1,"FORM"]
+	[_leader,East] Call InitUnit
+	EastBaseDefenseTeam SelectLeader _leader
+	Call Compile Format["EastAI%1Funds = DEFENSETEAMFUNDS",Count eastTeams + 1]
+	eastDefenseTeams = [EastBaseDefenseTeam]
+	[EastBaseDefenseTeam,false,MISDEFENDBASE] Spawn UpdateSquad
+
+	;Patrols the base.
+	EastBasePatrolTeam = CreateGroup East
+
+	_leader = EastBasePatrolTeam CreateUnit[ESOLDIER,([GetPos eastStartingLocation,10,25] Call GetRandomPosition),[],1,"FORM"]
+	[_leader,East] Call InitUnit
+	EastBasePatrolTeam SelectLeader _leader
+	Call Compile Format["EastAI%1Funds = DEFENSETEAMFUNDS",Count eastTeams + 2]
+	eastDefenseTeams = eastDefenseTeams + [EastBasePatrolTeam]
+	[EastBasePatrolTeam,false,MISPATROL] Spawn UpdateSquad
+	
+	_patrolArray = ["T72_RACS","T72_RACS"];
+	_patrolArrayB = ["T72_RACS","T72_RACS"];
+	_strikeTeam = [GLEADER,GATSOLDIER,GATSOLDIER,GATSOLDIER,GATSOLDIER,GATSOLDIER,GATSOLDIER,GAASOLDIER,GAASOLDIER,GAASOLDIER,GAASOLDIER,GSNIPER,GMEDIC,GSPECOP,GMARKSMAN,GGUARD];
+	_southTown = [Tiberia,Cayo,Gulan,Somato,Chantico,NorthAirport,Paraiso,Somato,Gulan,Cayo];
+	_northTown = [Benoma,Bagango,Obregan,Mercalillo,Bagango,Carmen,Eponia,Carmen,Bagango,Benoma];
+	[_patrolArray,RACS_SouthSpawn,_southTown,0] ExecVM "Server\AI\Resistance\RACS_Patrol.sqf";
+	[_patrolArrayB,RACS_NorthSpawn,_northTown,0] ExecVM "Server\AI\Resistance\RACS_Patrol.sqf";
+	
+	[_strikeTeam,RACS_StrikeTeamS,200] ExecVM "Server\AI\Resistance\RACS_StrikeTeam.sqf";
+	[_strikeTeam,RACS_StrikeTeamN,200] ExecVM "Server\AI\Resistance\RACS_StrikeTeam.sqf";
+
+;*****************************************************************************************
+;1/17/7 MM - Created file.

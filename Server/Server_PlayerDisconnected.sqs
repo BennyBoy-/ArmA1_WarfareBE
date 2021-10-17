@@ -1,0 +1,57 @@
+;Last modified 5/28/8
+;*****************************************************************************************
+_name = _this Select 0
+
+_team = ObjNull
+_side = Resistance
+
+{if (Name Leader _x == _name) then {_side = East;_team = _x};} ForEach eastTeams
+{if (Name Leader _x == _name) then {_side = West;_team = _x};} ForEach westTeams
+
+if (IsNull _team) then {Exit};
+
+_index = Call Compile Format["%1Teams Find _team",Str _side]
+if (_index == -1) then {Exit};
+
+if (IsNil "disconnectCount") then {disconnectCount = 0};
+
+disconnectCount = disconnectCount + 1
+
+_funds = Call Compile Format["%1Player%2Funds",Str _side,_index + 1]
+_rank = Call Compile Format["%1Player%2Rank",Str _side,_index + 1]
+_score = Score Leader _team
+_completed = Call Compile Format["%1Player%2MissionsCompleted",Str _side,_index + 1]
+_failed = Call Compile Format["%1Player%2MissionsFailed",Str _side,_index + 1]
+
+;Get value of team & add to funds.
+_units = Units _team
+_units = _units - [Leader _team]
+_units = _units + ([_team,false] Call GetTeamVehicles)
+{_type = unitBountyNames Find TypeOf _x;if (_type != -1) then {_funds = _funds + (unitBounties Select _type)};} ForEach _units
+
+Call Compile Format["Disconnected%1Name = _name",disconnectCount]
+Call Compile Format["Disconnected%1Funds = _funds",disconnectCount]
+Call Compile Format["Disconnected%1Rank = _rank",disconnectCount]
+Call Compile Format["Disconnected%1Side = _side",disconnectCount]
+Call Compile Format["Disconnected%1Score = _score",disconnectCount]
+Call Compile Format["Disconnected%1MissionsCompleted = _completed",disconnectCount]
+Call Compile Format["Disconnected%1MissionsFailed = _failed",disconnectCount]
+
+Call Compile Format["%1Player%2Funds = 500",Str _side,_index + 1]
+Call Compile Format["%1Player%2Rank = 0",Str _side,_index + 1]
+Call Compile Format["%1Player%2MissionsCompleted = 0",Str _side,_index + 1]
+Call Compile Format["%1Player%2MissionsFailed = 0",Str _side,_index + 1]
+
+Call Compile Format["%1AITeams = %1AITeams + [_team]",_side]
+[_team] Spawn UpdateSquad
+
+if (Call Compile Format["IsNull %1CommanderTeam",_side]) then {Exit};
+if (Call Compile Format["_team != %1CommanderTeam",_side]) then {Exit};
+
+[_side,CMDSIDEMESSAGE,MSGCOMMANDERDISCONNECTED] Exec "Server\Server_CommandToSide.sqs"
+~120
+[_side,true] Exec "Server\Server_VoteForCommander.sqs"
+[_side,CMDSIDEMESSAGE,MSGVOTEFORCOMMANDER] Exec "Server\Server_CommandToSide.sqs"
+
+;*****************************************************************************************
+;11/16/7 MM - Created file.
